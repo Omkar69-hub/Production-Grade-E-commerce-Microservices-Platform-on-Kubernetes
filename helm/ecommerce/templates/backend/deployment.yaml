@@ -1,0 +1,121 @@
+{{- range $name, $svc := .Values.backends }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+    app: {{ $name }}
+spec:
+  replicas: {{ $svc.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" $ | nindent 6 }}
+      app: {{ $name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        {{- include "ecommerce.selectorLabels" $ | nindent 8 }}
+        app: {{ $name }}
+    spec:
+      serviceAccountName: {{ include "ecommerce.fullname" $ }}-sa
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ $name }}
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: {{ $name }}
+          image: "{{ $svc.image }}:{{ $svc.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ include "ecommerce.fullname" $ }}-config
+            - secretRef:
+                name: {{ include "ecommerce.fullname" $ }}-secrets
+          env:
+            {{- if ne $svc.dbName "" }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/{{ $svc.dbName }}"
+            {{- end }}
+          resources:
+            {{- toYaml $.Values.defaultBackendSettings.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+    app: {{ $name }}
+spec:
+  selector:
+    {{- include "ecommerce.selectorLabels" $ | nindent 4 }}
+    app: {{ $name }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+{{- $hpaEnabled := $.Values.defaultBackendSettings.hpa.enabled }}
+{{- $minReplicas := $.Values.defaultBackendSettings.hpa.minReplicas }}
+{{- $maxReplicas := $.Values.defaultBackendSettings.hpa.maxReplicas }}
+{{- $targetCPU := $.Values.defaultBackendSettings.hpa.targetCPUUtilizationPercentage }}
+{{- if $svc.hpa }}
+  {{- if hasKey $svc.hpa "enabled" }}{{ $hpaEnabled = $svc.hpa.enabled }}{{ end }}
+  {{- if hasKey $svc.hpa "minReplicas" }}{{ $minReplicas = $svc.hpa.minReplicas }}{{ end }}
+  {{- if hasKey $svc.hpa "maxReplicas" }}{{ $maxReplicas = $svc.hpa.maxReplicas }}{{ end }}
+  {{- if hasKey $svc.hpa "targetCPUUtilizationPercentage" }}{{ $targetCPU = $svc.hpa.targetCPUUtilizationPercentage }}{{ end }}
+{{- end }}
+
+{{- if $hpaEnabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}-hpa
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $name }}
+  minReplicas: {{ $minReplicas }}
+  maxReplicas: {{ $maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $targetCPU }}
+{{- end }}
+---
+{{- end }}

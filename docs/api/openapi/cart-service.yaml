@@ -1,0 +1,106 @@
+openapi: 3.1.0
+info:
+  title: Cart Service API
+  version: 1.0.0
+  description: Manages user shopping carts utilizing Redis.
+servers:
+  - url: https://api.ecommerce.com/api/v1/cart
+tags:
+  - name: Cart
+    description: Shopping cart operations
+security:
+  - bearerAuth: []
+paths:
+  /:
+    get:
+      tags:
+        - Cart
+      summary: Get current user's cart
+      responses:
+        '200':
+          description: Cart details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    delete:
+      tags:
+        - Cart
+      summary: Clear current user's cart
+      responses:
+        '204':
+          description: Cart cleared
+  /items:
+    post:
+      tags:
+        - Cart
+      summary: Add an item to the cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemInput'
+      responses:
+        '200':
+          description: Item added successfully
+        '400':
+          description: Validation Error (e.g., negative quantity)
+  /items/{productId}:
+    delete:
+      tags:
+        - Cart
+      summary: Remove an item from the cart
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Item removed
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Cart:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalPrice:
+          type: number
+          format: double
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
+    CartItemInput:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1

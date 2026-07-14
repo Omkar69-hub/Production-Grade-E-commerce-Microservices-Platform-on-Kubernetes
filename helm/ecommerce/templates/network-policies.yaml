@@ -1,0 +1,106 @@
+# 1. Default deny all incoming and outgoing traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-default-deny-all
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# 2. Allow ingress controller to access frontend and gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-allow-ingress
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - {key: app, operator: In, values: [api-gateway, frontend]}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 80
+---
+# 3. Allow API gateway to access backend services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-allow-gateway-to-backend
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - {key: app, operator: In, values: [
+        {{- range $name, $backend := .Values.backends }}
+          {{- if ne $name "api-gateway" }}"{{ $name }}",{{ end -}}
+        {{- end }}
+      ]}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+---
+# 4. Allow all backend services to talk to infrastructure (Postgres, Redis, RabbitMQ)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-allow-backend-to-infra
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - {key: app, operator: In, values: [postgres, redis, rabbitmq]}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchExpressions:
+          - {key: app, operator: In, values: [
+            {{- range $name, $backend := .Values.backends }}
+              "{{ $name }}",
+            {{- end }}
+          ]}
+---
+# 5. Allow egress to CoreDNS and internal namespace communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-allow-dns-and-internal-egress
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ .Release.Namespace }}

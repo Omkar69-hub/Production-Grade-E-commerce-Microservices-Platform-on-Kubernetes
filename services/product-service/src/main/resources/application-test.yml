@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///product_test_db
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+app:
+  security:
+    jwt:
+      secret: testSecretKeyThatIsAtLeast32BytesLongForHS256
+
+logging:
+  level:
+    root: ERROR

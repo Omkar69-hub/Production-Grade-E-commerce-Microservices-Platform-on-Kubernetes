@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///order_test_db
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+app:
+  security:
+    jwt:
+      secret: testSecretKeyThatIsAtLeast32BytesLongForHS256
+
+logging:
+  level:
+    root: ERROR

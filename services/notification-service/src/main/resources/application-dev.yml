@@ -1,0 +1,8 @@
+spring:
+  mail:
+    host: localhost
+    port: 1025 # MailHog or similar local SMTP stub
+
+logging:
+  level:
+    com.ecommerce: DEBUG

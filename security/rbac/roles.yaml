@@ -1,0 +1,55 @@
+# Roles and RoleBindings for microservices
+# Restricting to namespace-level access only (Least Privilege)
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secrets-reader-role
+  namespace: e-commerce
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["get", "watch", "list"]
+---
+# Bind Secrets Reader to specific services that need them
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: auth-service-secrets-binding
+  namespace: e-commerce
+subjects:
+- kind: ServiceAccount
+  name: auth-service-sa
+  namespace: e-commerce
+roleRef:
+  kind: Role
+  name: secrets-reader-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payment-service-secrets-binding
+  namespace: e-commerce
+subjects:
+- kind: ServiceAccount
+  name: payment-service-sa
+  namespace: e-commerce
+roleRef:
+  kind: Role
+  name: secrets-reader-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Read-only API access for monitoring (if using specific SA)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: monitoring-reader-role
+  namespace: e-commerce
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "replicasets"]
+  verbs: ["get", "list", "watch"]

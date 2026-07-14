@@ -1,0 +1,120 @@
+global:
+  environment: prod
+
+config:
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+
+secrets:
+  DB_USER: "ecommerce_user"
+  DB_PASSWORD: "ecommerce_password"
+  RABBITMQ_USER: "guest"
+  RABBITMQ_PASSWORD: "guest"
+  JWT_SECRET: "vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256"
+  imagePullSecret: "e30="
+
+infrastructure:
+  storageClass: "standard"
+  postgres:
+    enabled: true
+    storage: 10Gi
+  redis:
+    enabled: true
+    storage: 5Gi
+  rabbitmq:
+    enabled: true
+    storage: 5Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ecommerce.local
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: ecommerce/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+defaultBackendSettings:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+backends:
+  api-gateway:
+    replicaCount: 2
+    image: ecommerce/api-gateway
+    tag: latest
+    dbName: ""
+    needsRabbitMQ: false
+    needsRedis: false
+  auth-service:
+    replicaCount: 2
+    image: ecommerce/auth-service
+    tag: latest
+    dbName: "auth_db"
+    needsRabbitMQ: false
+    needsRedis: true
+  product-service:
+    replicaCount: 2
+    image: ecommerce/product-service
+    tag: latest
+    dbName: "product_db"
+    needsRabbitMQ: false
+    needsRedis: true
+    hpa:
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 75
+  cart-service:
+    replicaCount: 2
+    image: ecommerce/cart-service
+    tag: latest
+    dbName: "cart_db"
+    needsRabbitMQ: false
+    needsRedis: true
+  order-service:
+    replicaCount: 2
+    image: ecommerce/order-service
+    tag: latest
+    dbName: "order_db"
+    needsRabbitMQ: true
+    needsRedis: false
+  payment-service:
+    replicaCount: 2
+    image: ecommerce/payment-service
+    tag: latest
+    dbName: "payment_db"
+    needsRabbitMQ: true
+    needsRedis: false
+  notification-service:
+    replicaCount: 2
+    image: ecommerce/notification-service
+    tag: latest
+    dbName: "notification_db"
+    needsRabbitMQ: true
+    needsRedis: false

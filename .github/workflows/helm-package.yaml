@@ -1,0 +1,35 @@
+name: Helm Packaging
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'helm/ecommerce/**'
+  pull_request:
+    paths:
+      - 'helm/ecommerce/**'
+
+jobs:
+  lint-and-package:
+    name: Lint and Package Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      - name: Helm Lint
+        run: helm lint helm/ecommerce
+
+      - name: Helm Package
+        run: helm package helm/ecommerce -d .helm-packages
+
+      - name: Upload Helm Package Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ecommerce-helm-chart
+          path: .helm-packages/*.tgz
+          retention-days: 7

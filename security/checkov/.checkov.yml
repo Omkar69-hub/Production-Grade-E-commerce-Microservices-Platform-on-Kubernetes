@@ -1,0 +1,31 @@
+# Checkov configuration file for IaC and Kubernetes scanning
+
+branch: main
+directory:
+  - "../../infrastructure/terraform"
+  - "../../kubernetes"
+
+# Soft fail on low severity issues, hard fail on others
+soft-fail: false
+hard-fail-on:
+  - HIGH
+  - CRITICAL
+
+# Output formatting
+output: cli
+quiet: true
+
+# Frameworks to scan
+framework:
+  - terraform
+  - kubernetes
+  - helm
+  - dockerfile
+
+# Specific checks to skip if there is a known exception (none currently)
+# skip-check:
+#   - CKV_AWS_X
+
+# Download external modules (e.g. Terraform registry)
+download-external-modules: true
+evaluate-variables: true

@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea/
+.vscode/
+target/
+build/
+*.class
+*.jar
+*.war
+*.log
+!mvnw
+!mvnw.cmd
+!.mvn/

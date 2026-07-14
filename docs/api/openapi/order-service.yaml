@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: Order Service API
+  version: 1.0.0
+  description: Manages order placement and history.
+servers:
+  - url: https://api.ecommerce.com/api/v1/orders
+tags:
+  - name: Orders
+    description: Order operations
+security:
+  - bearerAuth: []
+paths:
+  /:
+    get:
+      tags:
+        - Orders
+      summary: Get order history for current user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Paginated orders
+    post:
+      tags:
+        - Orders
+      summary: Place a new order from current cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '201':
+          description: Order placed successfully (PENDING status)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Cart is empty
+  /{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order by ID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+        '403':
+          description: Forbidden (Order belongs to someone else)
+        '404':
+          description: Order not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED, SHIPPED]
+        totalAmount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+    OrderInput:
+      type: object
+      required:
+        - shippingAddressId
+        - paymentMethodId
+      properties:
+        shippingAddressId:
+          type: string
+          format: uuid
+        paymentMethodId:
+          type: string
+          format: uuid

@@ -1,0 +1,42 @@
+# Template for Pod and Container Security Contexts ensuring compliance with the Restricted PSS
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-secure-deployment
+  namespace: e-commerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      serviceAccountName: example-sa
+      automountServiceAccountToken: false # Disable auto-mounting unless explicitly needed
+      # Pod Security Context
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: example-app
+        image: your-registry.com/example-app:latest
+        # Container Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp # Allow writing to /tmp if readOnlyRootFilesystem is true
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}

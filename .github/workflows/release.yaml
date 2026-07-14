@@ -1,0 +1,60 @@
+name: Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Trigger on semantic version tags (e.g., v1.0.0)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ecommerce
+
+jobs:
+  release-images:
+    name: Retag and Release Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - api-gateway
+          - auth-service
+          - product-service
+          - cart-service
+          - order-service
+          - payment-service
+          - notification-service
+          - frontend
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag image with semantic version
+        run: |
+          IMAGE_NAME=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          # Pull the latest image which was pushed from main branch
+          docker pull $IMAGE_NAME:latest
+          # Tag it with the github ref name (e.g. v1.0.0)
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:${{ github.ref_name }}
+          # Push the semantic version tag
+          docker push $IMAGE_NAME:${{ github.ref_name }}
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: release-images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true

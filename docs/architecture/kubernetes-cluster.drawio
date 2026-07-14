@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net" modified="2023-10-27T10:00:00.000Z" agent="Mozilla/5.0" version="22.0.8" type="device">
+  <diagram id="k8s-cluster" name="Kubernetes Cluster">
+    <mxGraphModel dx="1050" dy="530" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="node-1" value="Amazon EKS Cluster" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="1">
+          <mxGeometry x="80" y="40" width="640" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="node-2" value="Namespace: gateway" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="node-1">
+          <mxGeometry x="40" y="60" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-3" value="Namespace: ecommerce-prod" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="node-1">
+          <mxGeometry x="280" y="60" width="320" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-4" value="Namespace: monitoring" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="node-1">
+          <mxGeometry x="40" y="220" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-5" value="Namespace: argocd" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="node-1">
+          <mxGeometry x="280" y="220" width="200" height="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

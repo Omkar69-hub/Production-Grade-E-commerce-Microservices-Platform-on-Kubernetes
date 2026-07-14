@@ -1,0 +1,53 @@
+global:
+  environment: prod
+
+ingress:
+  host: ecommerce.production.com
+
+frontend:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+defaultBackendSettings:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+
+backends:
+  api-gateway:
+    replicaCount: 3
+    tag: stable
+  auth-service:
+    replicaCount: 3
+    tag: stable
+  product-service:
+    replicaCount: 3
+    tag: stable
+    hpa:
+      maxReplicas: 20
+  cart-service:
+    replicaCount: 3
+    tag: stable
+  order-service:
+    replicaCount: 3
+    tag: stable
+  payment-service:
+    replicaCount: 3
+    tag: stable
+  notification-service:
+    replicaCount: 3
+    tag: stable

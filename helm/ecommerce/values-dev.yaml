@@ -1,0 +1,42 @@
+global:
+  environment: dev
+
+ingress:
+  host: dev.ecommerce.local
+
+frontend:
+  replicaCount: 1
+
+defaultBackendSettings:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+  hpa:
+    enabled: false
+
+backends:
+  api-gateway:
+    replicaCount: 1
+    tag: dev
+  auth-service:
+    replicaCount: 1
+    tag: dev
+  product-service:
+    replicaCount: 1
+    tag: dev
+  cart-service:
+    replicaCount: 1
+    tag: dev
+  order-service:
+    replicaCount: 1
+    tag: dev
+  payment-service:
+    replicaCount: 1
+    tag: dev
+  notification-service:
+    replicaCount: 1
+    tag: dev

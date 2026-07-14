@@ -1,0 +1,44 @@
+global:
+  environment: staging
+
+ingress:
+  host: staging.ecommerce.local
+
+frontend:
+  replicaCount: 2
+
+defaultBackendSettings:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+
+backends:
+  api-gateway:
+    replicaCount: 2
+    tag: staging
+  auth-service:
+    replicaCount: 2
+    tag: staging
+  product-service:
+    replicaCount: 2
+    tag: staging
+  cart-service:
+    replicaCount: 2
+    tag: staging
+  order-service:
+    replicaCount: 2
+    tag: staging
+  payment-service:
+    replicaCount: 2
+    tag: staging
+  notification-service:
+    replicaCount: 2
+    tag: staging

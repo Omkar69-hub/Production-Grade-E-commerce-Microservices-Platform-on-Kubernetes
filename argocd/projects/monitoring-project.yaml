@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+  description: "Project for the Monitoring and Observability Stack"
+spec:
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: monitoring
+    server: https://kubernetes.default.svc
+  
+  # Allow all namespace-scoped resources
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: Namespace
+  - group: '*'
+    kind: PersistentVolume
+  # Monitoring tools often require ClusterRoles (Prometheus discovering targets, Fluent Bit reading logs)
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+  - group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+  - group: admissionregistration.k8s.io
+    kind: ValidatingWebhookConfiguration

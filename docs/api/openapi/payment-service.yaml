@@ -1,0 +1,50 @@
+openapi: 3.1.0
+info:
+  title: Payment Service API
+  version: 1.0.0
+  description: Simulates payment processing operations.
+servers:
+  - url: https://api.ecommerce.com/api/v1/payments
+tags:
+  - name: Payments
+    description: Payment processing
+security:
+  - bearerAuth: []
+paths:
+  /process:
+    post:
+      tags:
+        - Payments
+      summary: Process a payment for an order
+      description: This endpoint is strictly internal and should be protected by the Gateway, or accessed via async events rather than direct client calls in standard flows.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - amount
+                - paymentMethodId
+              properties:
+                orderId:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: double
+                paymentMethodId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Payment processed successfully
+        '402':
+          description: Payment Required (Card Declined)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

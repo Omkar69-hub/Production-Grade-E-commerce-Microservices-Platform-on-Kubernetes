@@ -1,0 +1,56 @@
+openapi: 3.1.0
+info:
+  title: API Gateway
+  version: 1.0.0
+  description: The central entry point for all external client traffic into the E-Commerce Microservices Platform. Handles routing, rate-limiting, and JWT validation.
+servers:
+  - url: https://api.ecommerce.com
+    description: Production Environment
+  - url: https://api.staging.ecommerce.com
+    description: Staging Environment
+tags:
+  - name: Auth
+    description: Proxies to Auth Service
+  - name: Products
+    description: Proxies to Product Service
+  - name: Cart
+    description: Proxies to Cart Service
+  - name: Orders
+    description: Proxies to Order Service
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: Returns the health status of the API Gateway.
+      responses:
+        '200':
+          description: Gateway is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+  /api/v1/{servicePath}:
+    options:
+      summary: CORS Preflight
+      description: Gateway handles all CORS preflight requests globally.
+      parameters:
+        - name: servicePath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CORS headers returned
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

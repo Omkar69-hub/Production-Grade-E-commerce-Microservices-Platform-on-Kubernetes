@@ -1,0 +1,27 @@
+# Trivy configuration file for container and filesystem scanning
+# Used in CI/CD pipelines to enforce container security and detect vulnerabilities
+format: table
+exit-code: 1
+severity: HIGH,CRITICAL
+
+# Ignore unfixed vulnerabilities
+ignore-unfixed: true
+
+vulnerability:
+  type:
+    - os
+    - library
+
+# Files to ignore during filesystem scanning
+skip-dirs:
+  - ".git"
+  - "node_modules"
+
+# Fail the build if vulnerabilities matching the above criteria are found
+timeout: 15m
+
+# Enable secret scanning and misconfiguration scanning
+security-checks:
+  - vuln
+  - secret
+  - config

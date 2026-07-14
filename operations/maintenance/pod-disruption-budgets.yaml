@@ -1,0 +1,46 @@
+# PodDisruptionBudgets (PDB) ensure that a minimum number of pods are available
+# during voluntary disruptions like node drains or cluster upgrades.
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-gateway-pdb
+  namespace: e-commerce
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auth-service-pdb
+  namespace: e-commerce
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: auth-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: product-service-pdb
+  namespace: e-commerce
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: product-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-service-pdb
+  namespace: e-commerce
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: order-service

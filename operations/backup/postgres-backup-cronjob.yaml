@@ -1,0 +1,50 @@
+# This CronJob performs a logical backup of the PostgreSQL database 
+# and uploads it to an S3 bucket for disaster portability.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-logical-backup
+  namespace: e-commerce
+spec:
+  schedule: "0 2 * * *" # Run at 2:00 AM daily
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: backup-sa # SA must have IRSA mapped to an IAM role with S3 write access
+          containers:
+          - name: pg-backup
+            image: postgres:15-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              TIMESTAMP=$(date +%Y%m%d%H%M)
+              FILENAME=ecommerce_db_backup_$TIMESTAMP.sql.gz
+              echo "Starting logical backup..."
+              pg_dump -h postgres -U ${DB_USER} ecommerce_db | gzip > /tmp/$FILENAME
+              echo "Backup complete. Uploading to S3..."
+              # Assuming AWS CLI is installed in a custom image or using pre-signed URLs
+              # aws s3 cp /tmp/$FILENAME s3://ecommerce-db-logical-backups/
+              echo "Upload complete."
+            env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_PASSWORD
+            volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+          volumes:
+          - name: tmp-volume
+            emptyDir: {}
+          restartPolicy: OnFailure

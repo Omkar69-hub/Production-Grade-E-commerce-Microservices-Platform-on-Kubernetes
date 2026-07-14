@@ -1,0 +1,38 @@
+[title]
+title = "Gitleaks configuration for E-Commerce Platform"
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''gitleaks\.toml''',
+    '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket|exe|pdf|png|db)$'''
+]
+
+[[rules]]
+description = "AWS Access Key"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "AWS Secret Key"
+regex = '''(?i)aws_(?:secret_access_key|secret_key).{0,50}['\"]?([A-Za-z0-9\/+=]{40})['\"]?'''
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "JWT Token"
+regex = '''\b(ey[a-zA-Z0-9]{17,}\.ey[a-zA-Z0-9\/\\_-]{17,}\.(?:[a-zA-Z0-9\/\\_-]{10,}={0,2})?)\b'''
+tags = ["key", "JWT"]
+
+[[rules]]
+description = "Stripe Secret Key"
+regex = '''(?i)(sk_live_[0-9a-zA-Z]{24})'''
+tags = ["key", "Stripe"]
+
+[[rules]]
+description = "Generic Password in Config"
+regex = '''(?i)(?:password|passwd|pwd)[\s]*[:=][\s]*['"]?([A-Za-z0-9@#$%^&+=!_]{8,})['"]?'''
+tags = ["password", "generic"]
+
+# We ignore example configurations and test mocks in allowlist
+[allowlist.commits]
+commits = []

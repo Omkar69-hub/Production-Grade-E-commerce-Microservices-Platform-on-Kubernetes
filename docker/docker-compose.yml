@@ -1,0 +1,261 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # INFRASTRUCTURE
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-ecommerce_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ecommerce_password}
+      POSTGRES_DB: ${DB_NAME:-ecommerce_db}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - infrastructure-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ecommerce_user} -d ${DB_NAME:-ecommerce_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - infrastructure-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - infrastructure-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ==========================================
+  # BACKEND SERVICES
+  # ==========================================
+  auth-service:
+    image: ecommerce/auth-service:latest
+    container_name: auth-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=auth_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  product-service:
+    image: ecommerce/product-service:latest
+    container_name: product-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=product_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  cart-service:
+    image: ecommerce/cart-service:latest
+    container_name: cart-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=cart_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  order-service:
+    image: ecommerce/order-service:latest
+    container_name: order-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=order_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    image: ecommerce/payment-service:latest
+    container_name: payment-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=payment_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    image: ecommerce/notification-service:latest
+    container_name: notification-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-ecommerce_password}
+      - DB_NAME=notification_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - backend-network
+      - infrastructure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    image: ecommerce/api-gateway:latest
+    container_name: api-gateway
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    ports:
+      - "80:8080"
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      cart-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+  frontend:
+    image: ecommerce/frontend:latest
+    container_name: frontend
+    restart: always
+    ports:
+      - "443:80"
+    networks:
+      - frontend-network
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+# ==========================================
+# NETWORKS
+# ==========================================
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  infrastructure-network:
+    driver: bridge
+
+# ==========================================
+# VOLUMES
+# ==========================================
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:

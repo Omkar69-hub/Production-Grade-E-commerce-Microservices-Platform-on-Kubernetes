@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ecommerce-platform
+  namespace: argocd
+  description: "Project for the Production-Grade E-Commerce Platform"
+spec:
+  # Allow all repositories (In a real setup, restrict to your specific github URL)
+  sourceRepos:
+  - '*'
+
+  # Allow deployment to the expected namespaces
+  destinations:
+  - namespace: argocd
+    server: https://kubernetes.default.svc
+  - namespace: ecommerce-dev
+    server: https://kubernetes.default.svc
+  - namespace: ecommerce-staging
+    server: https://kubernetes.default.svc
+  - namespace: ecommerce-prod
+    server: https://kubernetes.default.svc
+
+  # Allow all namespace-scoped resources to be created
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: Namespace
+  - group: '*'
+    kind: PersistentVolume
+
+  # Deny cluster-scoped roles and bindings to prevent privilege escalation
+  clusterResourceBlacklist:
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding

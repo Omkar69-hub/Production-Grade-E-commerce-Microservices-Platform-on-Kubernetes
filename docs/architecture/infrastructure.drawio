@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net" modified="2023-10-27T10:00:00.000Z" agent="Mozilla/5.0" version="22.0.8" type="device">
+  <diagram id="infra-diag" name="Infrastructure">
+    <mxGraphModel dx="1050" dy="530" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="node-1" value="AWS Cloud" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="1">
+          <mxGeometry x="80" y="40" width="640" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="node-2" value="VPC" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="node-1">
+          <mxGeometry x="40" y="60" width="560" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="node-3" value="Public Subnet (ALB, NAT)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="node-2">
+          <mxGeometry x="40" y="40" width="480" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="node-4" value="Private Subnet (EKS Nodes, RDS, Redis)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="node-2">
+          <mxGeometry x="40" y="140" width="480" height="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

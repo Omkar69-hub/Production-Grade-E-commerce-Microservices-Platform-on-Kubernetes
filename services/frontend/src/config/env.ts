@@ -1,0 +1,3 @@
+export const env = {
+  API_GATEWAY_URL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
+};

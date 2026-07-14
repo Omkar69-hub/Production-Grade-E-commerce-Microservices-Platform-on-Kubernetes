@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_db
+    username: postgres
+    password: postgres
+
+logging:
+  level:
+    com.ecommerce: DEBUG
+    org.hibernate.SQL: DEBUG
