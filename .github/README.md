@@ -1585,4 +1585,318 @@ kubectl apply -f argocd/app-of-apps/root-application.yaml
 Argo CD automatically deploys all applications.
 
 ---
+---
 
+# 📊 Monitoring & Observability
+
+The platform includes a complete enterprise observability stack.
+
+## Components
+
+| Component | Purpose |
+|-----------|----------|
+| Prometheus | Metrics Collection |
+| Grafana | Dashboards & Visualization |
+| Loki | Centralized Log Aggregation |
+| Fluent Bit | Log Collection |
+| Alertmanager | Alert Routing |
+| Spring Boot Actuator | Health & Metrics |
+| Micrometer | JVM/Application Metrics |
+
+---
+
+## Monitoring Architecture
+
+```
+Spring Boot Services
+        │
+        ▼
+Micrometer Metrics
+        │
+        ▼
+Prometheus
+        │
+        ▼
+Alertmanager
+        │
+        ▼
+Slack / Email
+        │
+        ▼
+Grafana Dashboards
+```
+
+---
+
+## Available Dashboards
+
+- API Gateway Dashboard
+- Authentication Dashboard
+- Product Service Dashboard
+- Cart Service Dashboard
+- Order Service Dashboard
+- Payment Dashboard
+- Notification Dashboard
+- Kubernetes Cluster Dashboard
+- JVM Metrics Dashboard
+- PostgreSQL Dashboard
+- RabbitMQ Dashboard
+- Redis Dashboard
+
+---
+
+# 🧪 Testing Strategy
+
+The project follows the **Testing Pyramid**.
+
+## Test Levels
+
+| Test Type | Framework |
+|------------|-----------|
+| Unit Tests | JUnit 5 + Mockito |
+| Integration Tests | Spring Boot Test + Testcontainers |
+| API Testing | Postman + Newman |
+| End-to-End Testing | Postman Collections |
+| Load Testing | K6 |
+| Security Testing | OWASP ZAP |
+| Code Quality | SonarQube |
+
+---
+
+## Run Backend Tests
+
+```bash
+mvn test
+```
+
+Generate Coverage Report
+
+```bash
+mvn verify
+```
+
+Run Load Tests
+
+```bash
+k6 run tests/load/k6-load-test.js
+```
+
+Run API Tests
+
+```bash
+newman run tests/api/ecommerce-postman-collection.json
+```
+
+Run Kubernetes Smoke Tests
+
+```bash
+./tests/kubernetes/smoke-test.sh
+```
+
+---
+
+# 🔒 Security
+
+Security follows a **Defense-in-Depth** approach.
+
+## Security Layers
+
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- Spring Security
+- API Gateway
+- Kubernetes Network Policies
+- Pod Security Standards
+- Trivy Image Scanning
+- Checkov IaC Scanning
+- Gitleaks Secret Detection
+- Cosign Image Signing
+- External Secrets Operator
+- OWASP Top 10 Compliance
+- CIS Benchmark Compliance
+
+---
+
+## Authentication Flow
+
+```
+User Login
+      │
+      ▼
+Auth Service
+      │
+      ▼
+JWT Token
+      │
+      ▼
+API Gateway
+      │
+      ▼
+Backend Services
+```
+
+---
+
+## Security Scans
+
+Executed automatically through GitHub Actions.
+
+- Trivy
+- Checkov
+- Gitleaks
+- SonarQube
+- OWASP ZAP
+
+---
+
+# ⚙️ Environment Variables
+
+Below are the primary environment variables used across the platform.
+
+| Variable | Description |
+|----------|-------------|
+| SPRING_PROFILES_ACTIVE | Active Spring profile |
+| POSTGRES_HOST | PostgreSQL Host |
+| POSTGRES_PORT | PostgreSQL Port |
+| POSTGRES_DB | Database Name |
+| POSTGRES_USER | Database Username |
+| POSTGRES_PASSWORD | Database Password |
+| REDIS_HOST | Redis Host |
+| REDIS_PORT | Redis Port |
+| RABBITMQ_HOST | RabbitMQ Host |
+| RABBITMQ_PORT | RabbitMQ Port |
+| JWT_SECRET | JWT Secret Key |
+| JWT_EXPIRATION | JWT Expiration Time |
+| GRAFANA_ADMIN_PASSWORD | Grafana Admin Password |
+| PROMETHEUS_RETENTION | Metrics Retention |
+| AWS_REGION | AWS Region |
+| AWS_ACCOUNT_ID | AWS Account ID |
+| EKS_CLUSTER_NAME | Kubernetes Cluster Name |
+
+> **Note:** No secrets are committed to the repository. Use `.env`, Kubernetes Secrets, or AWS Secrets Manager for sensitive configuration.
+
+---
+
+# 📡 API Reference
+
+All APIs are documented using **OpenAPI 3.1 (Swagger)**.
+
+## Core Services
+
+| Service | Base URL |
+|----------|----------|
+| API Gateway | `/api` |
+| Auth Service | `/api/v1/auth` |
+| Product Service | `/api/v1/products` |
+| Cart Service | `/api/v1/cart` |
+| Order Service | `/api/v1/orders` |
+| Payment Service | `/api/v1/payments` |
+| Notification Service | `/api/v1/notifications` |
+
+---
+
+## Main Endpoints
+
+### Authentication
+
+| Method | Endpoint |
+|----------|----------|
+| POST | `/auth/register` |
+| POST | `/auth/login` |
+| POST | `/auth/refresh` |
+| POST | `/auth/logout` |
+| GET | `/auth/me` |
+
+---
+
+### Products
+
+| Method | Endpoint |
+|----------|----------|
+| GET | `/products` |
+| GET | `/products/{id}` |
+| POST | `/products` |
+| PUT | `/products/{id}` |
+| DELETE | `/products/{id}` |
+
+---
+
+### Cart
+
+| Method | Endpoint |
+|----------|----------|
+| GET | `/cart` |
+| POST | `/cart/items` |
+| PUT | `/cart/items/{id}` |
+| DELETE | `/cart/items/{id}` |
+
+---
+
+### Orders
+
+| Method | Endpoint |
+|----------|----------|
+| POST | `/orders` |
+| GET | `/orders` |
+| GET | `/orders/{id}` |
+
+---
+
+### Payments
+
+| Method | Endpoint |
+|----------|----------|
+| POST | `/payments` |
+| GET | `/payments/{id}` |
+
+---
+
+### Notifications
+
+| Method | Endpoint |
+|----------|----------|
+| GET | `/notifications` |
+| PUT | `/notifications/{id}/read` |
+
+---
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**.
+
+```
+MIT License
+
+Copyright (c) 2026 Omkar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+<div align="center">
+
+### ⭐ If you found this project helpful, consider giving it a star on GitHub!
+
+**Built with ❤️ using Java 21 • Spring Boot 3 • React 19 • Kubernetes • Docker • AWS • Terraform • GitHub Actions • Argo CD**
+
+© 2026 **Omkar** • Licensed under the **MIT License**
+
+</div>
