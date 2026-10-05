@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Cart, AddToCartRequest } from '../../types/cart';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { Cart, AddToCartRequest } from '../../types/cart';
 import { CartService } from '../../services/CartService';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -94,3 +94,6 @@ const cartSlice = createSlice({
 
 export const { initializeCart, clearCartLocal } = cartSlice.actions;
 export default cartSlice.reducer;
+
+
+

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ProductService } from '../services/ProductService';
-import { PaginationParams } from '../types/product';
+import type { PaginationParams } from '../types/product';
 
 export const useProducts = (params: PaginationParams) => {
   return useQuery({
@@ -17,3 +17,4 @@ export const useProductDetails = (id: string) => {
     enabled: !!id,
   });
 };
+

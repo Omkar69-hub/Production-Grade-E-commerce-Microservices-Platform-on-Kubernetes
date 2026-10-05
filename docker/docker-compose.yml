@@ -1,9 +1,9 @@
-version: '3.8'
-
 services:
+
   # ==========================================
   # INFRASTRUCTURE
   # ==========================================
+
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -17,7 +17,7 @@ services:
     networks:
       - infrastructure-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ecommerce_user} -d ${DB_NAME:-ecommerce_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-ecommerce_user} -d ${DB_NAME:-ecommerce_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
     networks:
       - infrastructure-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,7 +48,7 @@ services:
     networks:
       - infrastructure-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -56,7 +56,11 @@ services:
   # ==========================================
   # BACKEND SERVICES
   # ==========================================
+
   auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
     image: ecommerce/auth-service:latest
     container_name: auth-service
     restart: always
@@ -81,6 +85,9 @@ services:
         condition: service_healthy
 
   product-service:
+    build:
+      context: ..
+      dockerfile: services/product-service/Dockerfile
     image: ecommerce/product-service:latest
     container_name: product-service
     restart: always
@@ -104,6 +111,9 @@ services:
         condition: service_healthy
 
   cart-service:
+    build:
+      context: ..
+      dockerfile: services/cart-service/Dockerfile
     image: ecommerce/cart-service:latest
     container_name: cart-service
     restart: always
@@ -127,6 +137,9 @@ services:
         condition: service_healthy
 
   order-service:
+    build:
+      context: ..
+      dockerfile: services/order-service/Dockerfile
     image: ecommerce/order-service:latest
     container_name: order-service
     restart: always
@@ -152,6 +165,9 @@ services:
         condition: service_healthy
 
   payment-service:
+    build:
+      context: ..
+      dockerfile: services/payment-service/Dockerfile
     image: ecommerce/payment-service:latest
     container_name: payment-service
     restart: always
@@ -177,6 +193,9 @@ services:
         condition: service_healthy
 
   notification-service:
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
     image: ecommerce/notification-service:latest
     container_name: notification-service
     restart: always
@@ -202,6 +221,9 @@ services:
         condition: service_healthy
 
   api-gateway:
+    build:
+      context: ..
+      dockerfile: services/api-gateway/Dockerfile
     image: ecommerce/api-gateway:latest
     container_name: api-gateway
     restart: always
@@ -229,7 +251,11 @@ services:
   # ==========================================
   # FRONTEND
   # ==========================================
+
   frontend:
+    build:
+      context: ..
+      dockerfile: services/frontend/Dockerfile
     image: ecommerce/frontend:latest
     container_name: frontend
     restart: always
@@ -244,18 +270,24 @@ services:
 # ==========================================
 # NETWORKS
 # ==========================================
+
 networks:
   frontend-network:
     driver: bridge
+
   backend-network:
     driver: bridge
+
   infrastructure-network:
     driver: bridge
 
 # ==========================================
 # VOLUMES
 # ==========================================
+
 volumes:
   postgres-data:
+
   redis-data:
+
   rabbitmq-data:

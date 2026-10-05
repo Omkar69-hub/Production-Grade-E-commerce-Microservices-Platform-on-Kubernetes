@@ -1,5 +1,5 @@
 import apiClient from '../config/axios';
-import { Cart, AddToCartRequest } from '../types/cart';
+import type { Cart, AddToCartRequest } from '../types/cart';
 
 export const CartService = {
   getCart: async (cartId: string): Promise<Cart> => {
@@ -25,3 +25,4 @@ export const CartService = {
     await apiClient.delete(`/api/v1/cart/${cartId}`);
   }
 };
+

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, CardMedia, CardContent, Typography, CardActions, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Product } from '../../types/product';
+import type { Product } from '../../types/product';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
-import { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../../store';
 
 interface ProductCardProps {
   product: Product;
@@ -58,3 +58,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 };
 
 export default ProductCard;
+

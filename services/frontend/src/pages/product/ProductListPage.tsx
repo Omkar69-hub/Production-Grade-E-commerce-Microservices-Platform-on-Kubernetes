@@ -13,7 +13,7 @@ const ProductListPage: React.FC = () => {
     search: search || undefined
   });
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -45,7 +45,7 @@ const ProductListPage: React.FC = () => {
         <>
           <Grid container spacing={4}>
             {data?.content.map((product) => (
-              <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+              <Grid key={product.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                 <ProductCard product={product} />
               </Grid>
             ))}
@@ -68,3 +68,7 @@ const ProductListPage: React.FC = () => {
 };
 
 export default ProductListPage;
+
+
+
+

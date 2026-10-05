@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
+import type { RootState } from '../../store';
 import { clearCartLocal } from '../../store/slices/cartSlice';
 import { OrderService } from '../../services/OrderService';
 import { useNavigate } from 'react-router-dom';
@@ -64,27 +64,27 @@ const CheckoutPage: React.FC = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
       <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 4 }}>
             <Typography variant="h6" gutterBottom>Shipping Address</Typography>
             <Box component="form" onSubmit={handleSubmit(onSubmit)} id="checkout-form">
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth label="Full Name" {...register('fullName')} error={!!errors.fullName} helperText={errors.fullName?.message} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth label="Street Address" {...register('street')} error={!!errors.street} helperText={errors.street?.message} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="City" {...register('city')} error={!!errors.city} helperText={errors.city?.message} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="State/Province" {...register('state')} error={!!errors.state} helperText={errors.state?.message} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="ZIP / Postal Code" {...register('zipCode')} error={!!errors.zipCode} helperText={errors.zipCode?.message} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Country" {...register('country')} error={!!errors.country} helperText={errors.country?.message} />
                 </Grid>
               </Grid>
@@ -92,7 +92,7 @@ const CheckoutPage: React.FC = () => {
           </Paper>
         </Grid>
         
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Order Summary</Typography>
             {cart.items.map(item => (
@@ -125,3 +125,5 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
+
+

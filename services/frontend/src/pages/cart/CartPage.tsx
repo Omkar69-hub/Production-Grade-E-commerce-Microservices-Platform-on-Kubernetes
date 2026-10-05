@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, Typography, Container, Button, IconButton, Grid, Paper, Divider } from '@mui/material';
 import { Add, Remove, Delete } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../../store';
 import { fetchCart, removeFromCart, addToCart } from '../../store/slices/cartSlice';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -49,7 +49,7 @@ const CartPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>Shopping Cart</Typography>
       <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           {cart.items.map((item) => (
             <Paper key={item.productId} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center' }}>
               <Box sx={{ flexGrow: 1 }}>
@@ -74,7 +74,7 @@ const CartPage: React.FC = () => {
             </Paper>
           ))}
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Order Summary</Typography>
             <Divider sx={{ my: 2 }} />
@@ -99,3 +99,5 @@ const CartPage: React.FC = () => {
 };
 
 export default CartPage;
+
+

@@ -3,7 +3,7 @@ import { Container, Typography, Grid, Paper, Box } from '@mui/material';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import { OrderService } from '../../services/OrderService';
-import { OrderResponse } from '../../types/order';
+import type { OrderResponse } from '../../types/order';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -63,7 +63,7 @@ const AdminDashboard: React.FC = () => {
       <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
       
       <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 400 }}>
             <Typography variant="h6" gutterBottom>Revenue Overview</Typography>
             <Box sx={{ flexGrow: 1 }}>
@@ -71,7 +71,7 @@ const AdminDashboard: React.FC = () => {
             </Box>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 400 }}>
             <Typography variant="h6" gutterBottom>Sales by Category</Typography>
             <Box sx={{ flexGrow: 1 }}>
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Recent Orders</Typography>
             {orders.length === 0 ? (
@@ -102,3 +102,5 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+
+

@@ -1,5 +1,5 @@
 import apiClient from '../config/axios';
-import { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import type { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
 
 export const AuthService = {
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
@@ -16,3 +16,4 @@ export const AuthService = {
     return response.data.data;
   }
 };
+

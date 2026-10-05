@@ -1,33 +1,38 @@
-# Stage 1: Build
+# ==========================================
+# Stage 1: Build React Application
+# ==========================================
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy frontend package files
+COPY services/frontend/package.json ./package.json
+COPY services/frontend/package-lock.json ./package-lock.json
 
 # Install dependencies
 RUN npm ci
 
-# Copy the rest of the application
-COPY . .
+# Copy frontend source
+COPY services/frontend/ ./
 
-# Build the React application
+# Build React application
 RUN npm run build
 
-# Stage 2: Runtime
+# ==========================================
+# Stage 2: Nginx Runtime
+# ==========================================
 FROM nginx:alpine
 
-# Copy the build output to Nginx's html directory
+# Copy React build output
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy frontend Nginx configuration
+COPY services/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Expose HTTP port
 EXPOSE 80
 
-# Healthcheck for Nginx
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD wget -qO- http://localhost/ || exit 1
 

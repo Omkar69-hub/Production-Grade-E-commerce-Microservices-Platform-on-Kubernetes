@@ -1,5 +1,5 @@
 import apiClient from '../config/axios';
-import { CreateOrderRequest, OrderResponse } from '../types/order';
+import type { CreateOrderRequest, OrderResponse } from '../types/order';
 
 export const OrderService = {
   createOrder: async (request: CreateOrderRequest): Promise<OrderResponse> => {
@@ -17,3 +17,4 @@ export const OrderService = {
     return response.data.data;
   }
 };
+

@@ -4,7 +4,7 @@ import { Container, Grid, Typography, Button, Box, CircularProgress, Breadcrumbs
 import { useProductDetails } from '../../hooks/useProducts';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
-import { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../../store';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +42,7 @@ const ProductDetailPage: React.FC = () => {
       </Breadcrumbs>
 
       <Grid container spacing={6}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box
             component="img"
             sx={{
@@ -54,7 +54,7 @@ const ProductDetailPage: React.FC = () => {
             alt={product.name}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h3" component="h1" gutterBottom>
             {product.name}
           </Typography>
@@ -70,7 +70,7 @@ const ProductDetailPage: React.FC = () => {
           
           <Divider sx={{ my: 3 }} />
           
-          <Typography variant="body1" paragraph>
+          <Typography variant="body1" sx={{ mb: 2 }}>
             {product.description}
           </Typography>
           
@@ -92,3 +92,5 @@ const ProductDetailPage: React.FC = () => {
 };
 
 export default ProductDetailPage;
+
+

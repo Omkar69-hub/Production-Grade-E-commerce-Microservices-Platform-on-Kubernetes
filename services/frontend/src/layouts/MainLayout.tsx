@@ -3,7 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Badge } from '@mui/material';
 import { ShoppingCart } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import type { RootState } from '../store';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -44,3 +44,4 @@ const MainLayout: React.FC = () => {
 };
 
 export default MainLayout;
+

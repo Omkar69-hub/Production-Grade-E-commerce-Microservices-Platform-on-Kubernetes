@@ -1,5 +1,5 @@
 import apiClient from '../config/axios';
-import { Product, PaginatedResponse, PaginationParams } from '../types/product';
+import type { Product, PaginatedResponse, PaginationParams } from '../types/product';
 
 export const ProductService = {
   getProducts: async (params: PaginationParams): Promise<PaginatedResponse<Product>> => {
@@ -12,3 +12,4 @@ export const ProductService = {
     return response.data.data;
   },
 };
+

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Typography, Box, Grid, Paper, Tabs, Tab, CircularProgress, Divider } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import type { RootState } from '../../store';
 import { OrderService } from '../../services/OrderService';
-import { OrderResponse } from '../../types/order';
+import type { OrderResponse } from '../../types/order';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,14 +50,14 @@ const ProfilePage: React.FC = () => {
       <Typography variant="h4" gutterBottom>My Account</Typography>
       
       <Paper sx={{ width: '100%' }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="profile tabs">
+        <Tabs value={tabValue} onChange={(_e, newValue) => setTabValue(newValue)} aria-label="profile tabs">
           <Tab label="Profile Info" />
           <Tab label="Order History" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">First Name</Typography>
               <Typography variant="body1" gutterBottom>{user.firstName}</Typography>
               <Divider sx={{ my: 1 }} />
@@ -104,3 +104,7 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
+
+
+
+
