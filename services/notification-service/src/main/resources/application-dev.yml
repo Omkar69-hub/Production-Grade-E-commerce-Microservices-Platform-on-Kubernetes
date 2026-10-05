@@ -1,6 +1,6 @@
 spring:
   mail:
-    host: localhost
+    host: ${SMTP_HOST:localhost}
     port: 1025 # MailHog or similar local SMTP stub
 
 logging:

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
-    Optional<Category> findByIdAndIsDeletedFalse(UUID id);
-    List<Category> findAllByIsDeletedFalse();
-    boolean existsByNameAndIsDeletedFalse(String name);
+    Optional<Category> findByIdAndDeletedFalse(UUID id);
+    List<Category> findAllByDeletedFalse();
+    boolean existsByNameAndDeletedFalse(String name);
 }

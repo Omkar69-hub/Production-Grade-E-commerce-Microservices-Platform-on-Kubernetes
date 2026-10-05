@@ -60,18 +60,18 @@ public class ProductService {
     @Cacheable(value = "products", key = "#id")
     @Transactional(readOnly = true)
     public ProductResponse getProduct(UUID id) {
-        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+        Product product = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return productMapper.toResponse(product);
     }
 
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
-        if (productRepository.existsBySkuAndIsDeletedFalse(request.getSku())) {
+        if (productRepository.existsBySkuAndDeletedFalse(request.getSku())) {
             throw new ConflictException("Product with SKU " + request.getSku() + " already exists.");
         }
 
-        Category category = categoryRepository.findByIdAndIsDeletedFalse(request.getCategoryId())
+        Category category = categoryRepository.findByIdAndDeletedFalse(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Product product = productMapper.toEntity(request);
@@ -97,14 +97,14 @@ public class ProductService {
     @CacheEvict(value = "products", key = "#id")
     @Transactional
     public ProductResponse updateProduct(UUID id, ProductRequest request) {
-        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+        Product product = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (!product.getSku().equals(request.getSku()) && productRepository.existsBySkuAndIsDeletedFalse(request.getSku())) {
+        if (!product.getSku().equals(request.getSku()) && productRepository.existsBySkuAndDeletedFalse(request.getSku())) {
             throw new ConflictException("Product with SKU " + request.getSku() + " already exists.");
         }
 
-        Category category = categoryRepository.findByIdAndIsDeletedFalse(request.getCategoryId())
+        Category category = categoryRepository.findByIdAndDeletedFalse(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         productMapper.updateEntityFromRequest(request, product);
@@ -125,7 +125,7 @@ public class ProductService {
     @CacheEvict(value = "products", key = "#id")
     @Transactional
     public void deleteProduct(UUID id) {
-        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+        Product product = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         
         product.setDeleted(true);

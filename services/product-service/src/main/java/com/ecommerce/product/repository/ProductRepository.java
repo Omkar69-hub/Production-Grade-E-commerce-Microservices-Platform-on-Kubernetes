@@ -14,11 +14,11 @@ import java.util.UUID;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     
-    Optional<Product> findByIdAndIsDeletedFalse(UUID id);
+    Optional<Product> findByIdAndDeletedFalse(UUID id);
     
-    boolean existsBySkuAndIsDeletedFalse(String sku);
+    boolean existsBySkuAndDeletedFalse(String sku);
 
-    @Query("SELECT p FROM Product p WHERE p.isDeleted = false " +
+    @Query("SELECT p FROM Product p WHERE p.deleted = false " +
            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
            "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))")
     Page<Product> searchProducts(@Param("categoryId") UUID categoryId, 

@@ -1,7 +1,7 @@
 package com.ecommerce.product.controller;
 
 import com.ecommerce.common.dto.PaginationDto;
-import com.ecommerce.common.response.PageResponse;
+import com.ecommerce.common.dto.PageResponse;
 import com.ecommerce.common.response.SuccessResponse;
 import com.ecommerce.product.dto.ProductRequest;
 import com.ecommerce.product.dto.ProductResponse;

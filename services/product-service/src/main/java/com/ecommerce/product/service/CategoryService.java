@@ -27,7 +27,7 @@ public class CategoryService {
     @Cacheable(value = "categories", key = "'all'")
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAllByIsDeletedFalse().stream()
+        return categoryRepository.findAllByDeletedFalse().stream()
                 .map(categoryMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -35,14 +35,14 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
-        if (categoryRepository.existsByNameAndIsDeletedFalse(request.getName())) {
+        if (categoryRepository.existsByNameAndDeletedFalse(request.getName())) {
             throw new ConflictException("Category with name " + request.getName() + " already exists.");
         }
 
         Category category = categoryMapper.toEntity(request);
         
         if (request.getParentCategoryId() != null) {
-            Category parent = categoryRepository.findByIdAndIsDeletedFalse(request.getParentCategoryId())
+            Category parent = categoryRepository.findByIdAndDeletedFalse(request.getParentCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException("Parent Category not found"));
             category.setParentCategory(parent);
         }
@@ -54,17 +54,17 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public CategoryResponse updateCategory(UUID id, CategoryRequest request) {
-        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
+        Category category = categoryRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        if (!category.getName().equals(request.getName()) && categoryRepository.existsByNameAndIsDeletedFalse(request.getName())) {
+        if (!category.getName().equals(request.getName()) && categoryRepository.existsByNameAndDeletedFalse(request.getName())) {
             throw new ConflictException("Category with name " + request.getName() + " already exists.");
         }
 
         categoryMapper.updateEntityFromRequest(request, category);
 
         if (request.getParentCategoryId() != null) {
-            Category parent = categoryRepository.findByIdAndIsDeletedFalse(request.getParentCategoryId())
+            Category parent = categoryRepository.findByIdAndDeletedFalse(request.getParentCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException("Parent Category not found"));
             category.setParentCategory(parent);
         } else {
@@ -77,7 +77,7 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public void deleteCategory(UUID id) {
-        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
+        Category category = categoryRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
         
         category.setDeleted(true);

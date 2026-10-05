@@ -6,6 +6,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 
 # Copy API Gateway Maven project
+COPY shared /shared
+RUN mvn -f /shared/parent-pom/pom.xml install -N
+RUN mvn -f /shared/common-library/pom.xml install -DskipTests
 COPY services/api-gateway/pom.xml ./pom.xml
 COPY services/api-gateway/src ./src
 
@@ -39,7 +42,7 @@ ENV SERVER_PORT=8080
 EXPOSE 8080
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 --start-period=180s \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Start application
