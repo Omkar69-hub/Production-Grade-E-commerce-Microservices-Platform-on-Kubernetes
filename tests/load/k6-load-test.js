@@ -20,7 +20,7 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
 export default function () {
   // 1. Load Products (Simulates browsing)
-  let productRes = http.get(`${BASE_URL}/api/products`);
+  let productRes = http.get(`${BASE_URL}/api/v1/products?page=0&size=10`);
   check(productRes, {
     'Products loaded successfully (200)': (r) => r.status === 200,
   });
@@ -30,10 +30,10 @@ export default function () {
   // Note: For endpoints requiring auth, we'd need to add a setup() function
   // to fetch a JWT token first, or simulate anonymous cart additions if supported.
   
-  // 2. Example: Simulate searching for a specific product
-  let searchRes = http.get(`${BASE_URL}/api/products/1`);
+  // 2. Example: Simulate searching for products by name
+  let searchRes = http.get(`${BASE_URL}/api/v1/products?name=Test`);
   check(searchRes, {
-    'Product details loaded (200)': (r) => r.status === 200,
+    'Product search loaded (200)': (r) => r.status === 200,
   });
 
   sleep(2);
