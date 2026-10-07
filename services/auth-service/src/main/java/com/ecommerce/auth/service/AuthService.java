@@ -65,10 +65,10 @@ public class AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        org.springframework.security.core.userdetails.User principal = 
-                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        User user = userRepository.findByEmailAndIsDeletedFalse(request.getEmail())
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
-        String accessToken = generateJwtToken(principal.getUsername(), authentication);
+        String accessToken = generateJwtToken(user.getId().toString(), authentication);
         
         return LoginResponse.builder()
                 .accessToken(accessToken)

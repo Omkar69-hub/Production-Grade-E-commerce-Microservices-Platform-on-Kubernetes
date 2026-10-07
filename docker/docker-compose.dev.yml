@@ -115,6 +115,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
     ports:
       - "8082:8080"
@@ -146,6 +147,7 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
       - PRODUCT_SERVICE_URL=http://product-service:8080
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
     ports:
       - "8083:8080"
@@ -178,6 +180,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - CART_SERVICE_URL=http://cart-service:8080
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
     ports:
       - "8084:8080"
@@ -206,6 +209,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
     ports:
       - "8085:8080"
@@ -257,6 +261,11 @@ services:
       - SERVER_PORT=8080
       - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - CART_SERVICE_URL=http://cart-service:8080
+      - ORDER_SERVICE_URL=http://order-service:8080
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
     ports:
       - "8088:8080"
     networks:

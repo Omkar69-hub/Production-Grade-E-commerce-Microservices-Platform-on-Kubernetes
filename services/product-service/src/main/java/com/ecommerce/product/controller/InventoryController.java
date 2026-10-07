@@ -29,7 +29,6 @@ public class InventoryController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponse<InventoryResponse>> updateInventory(
             @PathVariable UUID id,
             @Valid @RequestBody InventoryUpdateRequest request) {
