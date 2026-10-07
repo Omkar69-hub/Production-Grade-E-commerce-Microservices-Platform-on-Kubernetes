@@ -16,6 +16,8 @@ RUN npm ci
 COPY services/frontend/ ./
 
 # Build React application
+ARG VITE_API_GATEWAY_URL
+ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
 RUN npm run build
 
 # ==========================================
