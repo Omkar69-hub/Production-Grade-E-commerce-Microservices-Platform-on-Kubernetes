@@ -20,6 +20,7 @@ spec:
       labels:
         app: product-service
     spec:
+      serviceAccountName: ecommerce-sa
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
