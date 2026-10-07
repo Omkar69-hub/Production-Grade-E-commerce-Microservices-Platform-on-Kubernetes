@@ -34,7 +34,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: payment-service
-          image: ecommerce/payment-service:latest
+          image: ghcr.io/Omkar69-hub/ecommerce/payment-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

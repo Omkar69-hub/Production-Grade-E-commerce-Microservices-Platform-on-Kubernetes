@@ -34,7 +34,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: notification-service
-          image: ecommerce/notification-service:latest
+          image: ghcr.io/Omkar69-hub/ecommerce/notification-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

@@ -34,7 +34,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: cart-service
-          image: ecommerce/cart-service:latest
+          image: ghcr.io/Omkar69-hub/ecommerce/cart-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

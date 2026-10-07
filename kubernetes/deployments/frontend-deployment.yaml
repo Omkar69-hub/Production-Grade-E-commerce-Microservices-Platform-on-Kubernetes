@@ -34,7 +34,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: frontend
-          image: ecommerce/frontend:latest
+          image: ghcr.io/Omkar69-hub/ecommerce/frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

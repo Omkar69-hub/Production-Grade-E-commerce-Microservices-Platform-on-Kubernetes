@@ -34,7 +34,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: api-gateway
-          image: ecommerce/api-gateway:latest
+          image: ghcr.io/Omkar69-hub/ecommerce/api-gateway:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
