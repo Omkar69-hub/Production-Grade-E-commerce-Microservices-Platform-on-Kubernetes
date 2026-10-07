@@ -1,11 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgres
   namespace: ecommerce
   labels:
     app: postgres
 spec:
+  serviceName: "postgres"
   replicas: 1
   selector:
     matchLabels:
@@ -38,17 +39,21 @@ spec:
               mountPath: /var/lib/postgresql/data
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "512Mi"
+              cpu: "200m"
             limits:
               memory: "1Gi"
-              cpu: "500m"
+              cpu: "1000m"
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "ecommerce_user", "-d", "ecommerce_db"]
+              command: ["sh", "-c", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
             initialDelaySeconds: 5
             periodSeconds: 10
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 20Gi
