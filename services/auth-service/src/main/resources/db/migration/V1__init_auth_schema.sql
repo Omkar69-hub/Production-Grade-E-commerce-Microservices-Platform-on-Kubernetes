@@ -25,7 +25,7 @@ CREATE TABLE user_roles (
 -- Seed an admin user for initial testing (Password: Admin@123)
 -- In production, this would be generated differently.
 INSERT INTO users (id, email, password_hash, first_name, last_name)
-VALUES ('00000000-0000-0000-0000-000000000000', 'admin@ecommerce.com', '$2a$10$C82a46B2X1u3Y0Hk7h8z3eKz0iA9YvL5s8F9r2G4v6a8B0d2F4', 'System', 'Admin');
+VALUES ('00000000-0000-0000-0000-000000000000', 'admin@ecommerce.com', '$2a$10$TOGhCPgYwxwFWpeuxFNQxOWJ5aTDDnvFMKS6RglKgUiXUOxshSd2K', 'System', 'Admin');
 
 INSERT INTO user_roles (user_id, role)
 VALUES ('00000000-0000-0000-0000-000000000000', 'ADMIN');
