@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -68,7 +70,7 @@ public class AuthService {
         User user = userRepository.findByEmailAndIsDeletedFalse(request.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
-        String accessToken = generateJwtToken(user.getId().toString(), authentication);
+        String accessToken = generateJwtToken(user, authentication);
         
         return LoginResponse.builder()
                 .accessToken(accessToken)
@@ -87,11 +89,17 @@ public class AuthService {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private String generateJwtToken(String userId, Authentication authentication) {
+    private String generateJwtToken(User user, Authentication authentication) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
+        String roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(role -> role.replaceFirst("^ROLE_", ""))
+                .collect(Collectors.joining(","));
+
         return Jwts.builder()
-                .subject(userId)
+                .subject(user.getId().toString())
+                .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key)
