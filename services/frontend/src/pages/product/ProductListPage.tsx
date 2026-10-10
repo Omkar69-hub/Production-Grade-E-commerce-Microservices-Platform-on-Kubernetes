@@ -17,6 +17,7 @@ const ProductListPage: React.FC = () => {
   
   const search = searchParams.get('search') || undefined;
   const categoryId = searchParams.get('categoryId') || undefined;
+  const brand = searchParams.get('brand') || undefined;
   const sort = searchParams.get('sort') || 'desc'; // desc = Newest, asc = Oldest
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -32,6 +33,7 @@ const ProductListPage: React.FC = () => {
     size: 12,
     search,
     categoryId,
+    brand,
     sort
   });
 
@@ -67,12 +69,27 @@ const ProductListPage: React.FC = () => {
     setMobileFiltersOpen(false);
   };
 
+  const handleBrandSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const newParams = new URLSearchParams(searchParams);
+      const val = (event.target as HTMLInputElement).value;
+      if (val) {
+        newParams.set('brand', val);
+      } else {
+        newParams.delete('brand');
+      }
+      newParams.set('page', '1');
+      navigate(`/?${newParams.toString()}`);
+      setMobileFiltersOpen(false);
+    }
+  };
+
   const clearFilters = () => {
     navigate('/');
     setMobileFiltersOpen(false);
   };
 
-  const isFiltering = !!search || !!categoryId;
+  const isFiltering = !!search || !!categoryId || !!brand;
   const currentCategoryName = categories?.find(c => c.id === categoryId)?.name;
 
   const FilterPanel = (
@@ -113,6 +130,22 @@ const ProductListPage: React.FC = () => {
           </ListItem>
         ))}
       </List>
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Brand
+      </Typography>
+      <Box sx={{ px: 2 }}>
+        <input 
+          type="text" 
+          defaultValue={brand || ''}
+          placeholder="Filter by brand..." 
+          onKeyDown={handleBrandSearch}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #e0e0e0', outline: 'none' }}
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+          Press Enter to apply
+        </Typography>
+      </Box>
     </Box>
   );
 

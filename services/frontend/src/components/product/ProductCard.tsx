@@ -20,7 +20,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent triggering the Link wrapper if any
     if (cartId) {
-      dispatch(addToCart({ cartId, item: { productId: product.id, quantity: 1 } }));
+      dispatch(addToCart({ item: { productId: product.id, quantity: 1 } }));
     }
   };
 

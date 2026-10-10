@@ -12,8 +12,17 @@ export const OrderService = {
     return response.data.data;
   },
 
-  getUserOrders: async (): Promise<OrderResponse[]> => {
-    const response = await apiClient.get(`/api/v1/orders/user`);
+  getUserOrders: async (page = 0, size = 10): Promise<any> => {
+    const response = await apiClient.get(`/api/v1/orders`, {
+      params: { page, size }
+    });
+    return response.data.data;
+  },
+
+  getAllOrders: async (page = 0, size = 50): Promise<any> => {
+    const response = await apiClient.get(`/api/v1/orders/all`, {
+      params: { page, size }
+    });
     return response.data.data;
   }
 };

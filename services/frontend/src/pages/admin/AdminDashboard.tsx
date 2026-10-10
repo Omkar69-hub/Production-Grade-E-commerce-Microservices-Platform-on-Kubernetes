@@ -11,8 +11,8 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const data = await OrderService.getUserOrders();
-        setOrders(data);
+        const data = await OrderService.getAllOrders();
+        setOrders(data.content || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -29,18 +29,7 @@ const AdminDashboard: React.FC = () => {
       <Grid container spacing={4}>
         <Grid size={{xs: 12}}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Admin Notice</Typography>
-            <Typography variant="body1">
-              Currently, there is no global orders endpoint (`getAllOrders`) in the backend. 
-              The dashboard is displaying only your personal admin orders to respect data constraints.
-              Global statistics will be enabled once the backend supports them.
-            </Typography>
-          </Paper>
-        </Grid>
-        
-        <Grid size={{xs: 12}}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Your Recent Admin Orders</Typography>
+            <Typography variant="h6" gutterBottom>Global Recent Orders</Typography>
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                 <CircularProgress />

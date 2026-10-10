@@ -22,6 +22,7 @@ public class ProductResponse extends AuditDto {
     private String name;
     private String sku;
     private String description;
+    private String brand;
     private BigDecimal price;
     private ProductStatus status;
     private String imageUrl;

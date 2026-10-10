@@ -41,11 +41,11 @@ public class ProductService {
     private final EventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponse> searchProducts(UUID categoryId, String name, PaginationDto pagination) {
+    public PageResponse<ProductResponse> searchProducts(UUID categoryId, String name, String brand, PaginationDto pagination) {
         Sort sort = Sort.by(Sort.Direction.fromString(pagination.getSort() == null ? "desc" : "asc"), "createdAt");
         Pageable pageable = PageRequest.of(pagination.getPage(), pagination.getSize(), sort);
 
-        Page<Product> productPage = productRepository.searchProducts(categoryId, name, pageable);
+        Page<Product> productPage = productRepository.searchProducts(categoryId, name, brand, pageable);
 
         return PageResponse.<ProductResponse>builder()
                 .content(productPage.getContent().stream().map(productMapper::toResponse).collect(Collectors.toList()))

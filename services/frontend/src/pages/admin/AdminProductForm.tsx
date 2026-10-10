@@ -21,6 +21,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
     name: '',
     description: '',
     price: 0,
+    brand: '',
     categoryId: '',
     status: 'ACTIVE',
     imageUrl: '',
@@ -43,6 +44,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
         name: '',
         description: '',
         price: 0,
+        brand: '',
         categoryId: '',
         status: 'ACTIVE',
         imageUrl: '',
@@ -121,6 +123,15 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
                 fullWidth
                 required
                 value={formData.sku}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid size={{xs: 12, sm: 6}}>
+              <TextField
+                name="brand"
+                label="Brand"
+                fullWidth
+                value={formData.brand}
                 onChange={handleChange}
               />
             </Grid>

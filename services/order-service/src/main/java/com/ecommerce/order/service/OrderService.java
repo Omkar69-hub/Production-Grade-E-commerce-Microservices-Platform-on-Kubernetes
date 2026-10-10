@@ -13,6 +13,7 @@ import com.ecommerce.order.dto.OrderResponse;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderItem;
 import com.ecommerce.order.entity.OrderStatus;
+import com.ecommerce.order.entity.ShippingAddress;
 import com.ecommerce.order.event.OrderCreatedEvent;
 import com.ecommerce.order.event.OrderEventPublisher;
 import com.ecommerce.order.event.OrderStatusEvent;
@@ -59,6 +60,23 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public PageResponse<OrderResponse> getAllOrders(PaginationDto pagination) {
+        Sort sort = Sort.by(Sort.Direction.fromString(pagination.getSort() == null ? "desc" : "asc"), "createdAt");
+        Pageable pageable = PageRequest.of(pagination.getPage(), pagination.getSize(), sort);
+
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+
+        return PageResponse.<OrderResponse>builder()
+                .content(orderPage.getContent().stream().map(orderMapper::toResponse).collect(Collectors.toList()))
+                .pageNumber(orderPage.getNumber())
+                .pageSize(orderPage.getSize())
+                .totalElements(orderPage.getTotalElements())
+                .totalPages(orderPage.getTotalPages())
+                .last(orderPage.isLast())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
     public OrderResponse getOrder(UUID userId, UUID orderId) {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
@@ -82,9 +100,16 @@ public class OrderService {
                 .orderNumber(generateOrderNumber())
                 .status(OrderStatus.PENDING)
                 .totalAmount(cart.getSubtotal())
-                .shippingAddressId(request.getShippingAddressId())
-                .billingAddressId(request.getBillingAddressId())
-                .paymentMethod(request.getPaymentMethod())
+                .shippingAddress(ShippingAddress.builder()
+                        .fullName(request.getShippingAddress().getFullName())
+                        .street(request.getShippingAddress().getStreet())
+                        .city(request.getShippingAddress().getCity())
+                        .state(request.getShippingAddress().getState())
+                        .zipCode(request.getShippingAddress().getZipCode())
+                        .country(request.getShippingAddress().getCountry())
+                        .phoneNumber(request.getShippingAddress().getPhoneNumber())
+                        .build())
+                .paymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "CREDIT_CARD")
                 .notes(request.getNotes())
                 .build();
 

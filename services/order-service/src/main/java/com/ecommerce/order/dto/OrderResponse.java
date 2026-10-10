@@ -22,8 +22,7 @@ public class OrderResponse extends AuditDto {
     private String orderNumber;
     private OrderStatus status;
     private BigDecimal totalAmount;
-    private UUID shippingAddressId;
-    private UUID billingAddressId;
+    private ShippingAddressDto shippingAddress;
     private String paymentMethod;
     private String notes;
     private List<OrderItemResponse> items;

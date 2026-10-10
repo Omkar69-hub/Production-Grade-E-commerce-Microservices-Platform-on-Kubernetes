@@ -32,7 +32,7 @@ const ProfilePage: React.FC = () => {
         setLoadingOrders(true);
         try {
           const data = await OrderService.getUserOrders();
-          setOrders(data);
+          setOrders(data.content || []);
         } catch (err) {
           console.error('Failed to fetch orders', err);
         } finally {

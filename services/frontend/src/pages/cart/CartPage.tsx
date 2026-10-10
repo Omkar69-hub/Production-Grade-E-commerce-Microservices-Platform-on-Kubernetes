@@ -13,21 +13,21 @@ const CartPage: React.FC = () => {
 
   useEffect(() => {
     if (cartId) {
-      dispatch(fetchCart(cartId));
+      dispatch(fetchCart());
     }
   }, [dispatch, cartId]);
 
   const handleUpdateQuantity = (productId: string, currentQty: number, change: number) => {
     const newQty = currentQty + change;
     if (newQty <= 0) {
-      dispatch(removeFromCart({ cartId: cartId!, productId }));
+      dispatch(removeFromCart({ productId }));
     } else {
-      dispatch(addToCart({ cartId: cartId!, item: { productId, quantity: change } }));
+      dispatch(addToCart({ item: { productId, quantity: change } }));
     }
   };
 
   const handleRemove = (productId: string) => {
-    dispatch(removeFromCart({ cartId: cartId!, productId }));
+    dispatch(removeFromCart({ productId }));
   };
 
   if (loading && !cart) {

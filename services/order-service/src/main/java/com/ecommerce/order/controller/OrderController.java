@@ -47,6 +47,17 @@ public class OrderController {
                 .build());
     }
 
+    @GetMapping("/all")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse<PageResponse<OrderResponse>>> getAllOrders(@Valid PaginationDto pagination) {
+        PageResponse<OrderResponse> response = orderService.getAllOrders(pagination);
+        
+        return ResponseEntity.ok(SuccessResponse.<PageResponse<OrderResponse>>builder()
+                .data(response)
+                .message("All orders retrieved successfully")
+                .build());
+    }
+
     @PostMapping
     public ResponseEntity<SuccessResponse<OrderResponse>> createOrder(
             @Valid @RequestBody OrderRequest request,

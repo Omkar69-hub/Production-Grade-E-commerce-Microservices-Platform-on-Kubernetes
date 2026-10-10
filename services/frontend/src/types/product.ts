@@ -11,6 +11,7 @@ export interface Product {
   description: string;
   price: number;
   currency: string;
+  brand?: string;
   categoryId: string;
   categoryName?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
@@ -32,4 +33,5 @@ export interface PaginationParams {
   sort?: string;
   categoryId?: string;
   search?: string;
+  brand?: string;
 }

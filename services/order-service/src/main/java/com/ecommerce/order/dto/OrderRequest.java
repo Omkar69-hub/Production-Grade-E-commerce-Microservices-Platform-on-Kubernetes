@@ -15,10 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class OrderRequest {
     @NotNull
-    private UUID shippingAddressId;
-    
-    @NotNull
-    private UUID billingAddressId;
+    private ShippingAddressDto shippingAddress;
     
     @NotBlank
     private String paymentMethod;

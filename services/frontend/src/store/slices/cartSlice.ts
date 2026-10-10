@@ -20,9 +20,9 @@ const initialState: CartState = {
 // Thunks
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
-  async (cartId: string, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      return await CartService.getCart(cartId);
+      return await CartService.getCart();
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to fetch cart');
     }
@@ -31,9 +31,9 @@ export const fetchCart = createAsyncThunk(
 
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
-  async ({ cartId, item }: { cartId: string; item: AddToCartRequest }, { rejectWithValue }) => {
+  async ({ item }: { item: AddToCartRequest }, { rejectWithValue }) => {
     try {
-      return await CartService.addToCart(cartId, item);
+      return await CartService.addToCart(item);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to add item to cart');
     }
@@ -42,9 +42,9 @@ export const addToCart = createAsyncThunk(
 
 export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
-  async ({ cartId, productId }: { cartId: string; productId: string }, { rejectWithValue }) => {
+  async ({ productId }: { productId: string }, { rejectWithValue }) => {
     try {
-      await CartService.removeItem(cartId, productId);
+      await CartService.removeItem(productId);
       return productId;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to remove item');

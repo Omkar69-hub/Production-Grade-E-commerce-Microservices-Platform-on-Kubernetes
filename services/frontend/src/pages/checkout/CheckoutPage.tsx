@@ -16,6 +16,7 @@ const shippingSchema = z.object({
   state: z.string().min(2, 'State is required'),
   zipCode: z.string().min(4, 'ZIP code is required'),
   country: z.string().min(2, 'Country is required'),
+  phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format'),
 });
 
 type ShippingFormValues = z.infer<typeof shippingSchema>;
@@ -86,6 +87,9 @@ const CheckoutPage: React.FC = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Country" {...register('country')} error={!!errors.country} helperText={errors.country?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Phone Number" placeholder="+1234567890" {...register('phoneNumber')} error={!!errors.phoneNumber} helperText={errors.phoneNumber?.message} />
                 </Grid>
               </Grid>
             </Box>

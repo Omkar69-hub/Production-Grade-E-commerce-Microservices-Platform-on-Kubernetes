@@ -26,9 +26,10 @@ public class ProductController {
     public ResponseEntity<SuccessResponse<PageResponse<ProductResponse>>> searchProducts(
             @RequestParam(required = false) UUID categoryId,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) String brand,
             @Valid PaginationDto pagination) {
         
-        PageResponse<ProductResponse> response = productService.searchProducts(categoryId, name, pagination);
+        PageResponse<ProductResponse> response = productService.searchProducts(categoryId, name, brand, pagination);
         
         return ResponseEntity.ok(SuccessResponse.<PageResponse<ProductResponse>>builder()
                 .data(response)

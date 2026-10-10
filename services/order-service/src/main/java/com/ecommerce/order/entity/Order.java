@@ -39,11 +39,8 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal totalAmount;
 
-    @Column(name = "shipping_address_id", nullable = false)
-    private UUID shippingAddressId;
-
-    @Column(name = "billing_address_id", nullable = false)
-    private UUID billingAddressId;
+    @Embedded
+    private ShippingAddress shippingAddress;
 
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;

@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader(ApplicationConstants.AUTHORIZATION_HEADER);
-        final String rolesHeader = request.getHeader(ApplicationConstants.USER_ROLE_HEADER);
+
         
         if (authHeader == null || !authHeader.startsWith(ApplicationConstants.BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
@@ -47,14 +47,13 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     
                     String rolesFromJwt = jwtUtil.extractRoles(jwt);
-                    String actualRoles = (rolesFromJwt != null && !rolesFromJwt.isBlank()) ? rolesFromJwt : rolesHeader;
-                    
-                    List<SimpleGrantedAuthority> authorities = List.of();
-                    if (actualRoles != null && !actualRoles.isBlank()) {
-                        authorities = Arrays.stream(actualRoles.split(","))
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.trim()))
-                                .collect(Collectors.toList());
+                    if (rolesFromJwt == null || rolesFromJwt.isBlank()) {
+                        throw new RuntimeException("JWT does not contain required roles claim");
                     }
+
+                    List<SimpleGrantedAuthority> authorities = Arrays.stream(rolesFromJwt.split(","))
+                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role.trim()))
+                            .collect(Collectors.toList());
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userId,

@@ -33,7 +33,7 @@ const ProductDetailPage: React.FC = () => {
     if (cartId && product && !adding) {
       setAdding(true);
       try {
-        await dispatch(addToCart({ cartId, item: { productId: product.id, quantity } })).unwrap();
+        await dispatch(addToCart({ item: { productId: product.id, quantity } })).unwrap();
         setSnackbar({ open: true, message: 'Added to cart successfully', severity: 'success' });
       } catch (err: any) {
         setSnackbar({ open: true, message: err || 'Failed to add to cart', severity: 'error' });

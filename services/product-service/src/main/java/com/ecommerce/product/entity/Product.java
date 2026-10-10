@@ -36,6 +36,9 @@ public class Product {
 
     private String description;
 
+    @Column(name = "brand")
+    private String brand;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal price;
 
