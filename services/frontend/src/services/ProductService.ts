@@ -3,7 +3,13 @@ import type { Product, PaginatedResponse, PaginationParams, Category } from '../
 
 export const ProductService = {
   getProducts: async (params: PaginationParams): Promise<PaginatedResponse<Product>> => {
-    const response = await apiClient.get('/api/v1/products', { params });
+    // Backend expects 'name' instead of 'search'
+    const apiParams = {
+      ...params,
+      name: params.search,
+    };
+    delete apiParams.search;
+    const response = await apiClient.get('/api/v1/products', { params: apiParams });
     return response.data.data;
   },
 

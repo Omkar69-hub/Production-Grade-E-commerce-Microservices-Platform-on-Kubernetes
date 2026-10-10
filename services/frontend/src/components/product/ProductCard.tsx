@@ -15,6 +15,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { cartId } = useSelector((state: RootState) => state.cart);
 
+  const [imgError, setImgError] = React.useState(false);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent triggering the Link wrapper if any
     if (cartId) {
@@ -23,6 +25,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const isOutOfStock = product.status === 'OUT_OF_STOCK';
+  const fallbackImg = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80';
 
   return (
     <Card 
@@ -40,8 +43,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden', bgcolor: 'white' }}>
         <CardMedia
           component="img"
-          image={product.imageUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'}
+          image={imgError ? fallbackImg : (product.imageUrl || fallbackImg)}
           alt={product.name}
+          onError={() => setImgError(true)}
           sx={{
             position: 'absolute',
             top: 0,
