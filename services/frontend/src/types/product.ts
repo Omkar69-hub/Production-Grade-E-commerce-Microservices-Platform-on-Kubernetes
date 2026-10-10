@@ -12,6 +12,7 @@ export interface Product {
   price: number;
   currency: string;
   categoryId: string;
+  categoryName?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   imageUrl?: string;
 }
