@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, Typography, CardActions, Button } from '@mui/material';
+import { Card, CardMedia, CardContent, Typography, Box, Button } from '@mui/material';
+import { ShoppingCartOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import type { Product } from '../../types/product';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,45 +15,80 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { cartId } = useSelector((state: RootState) => state.cart);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent triggering the Link wrapper if any
     if (cartId) {
       dispatch(addToCart({ cartId, item: { productId: product.id, quantity: 1 } }));
     }
   };
 
+  const isOutOfStock = product.status === 'OUT_OF_STOCK';
+
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardMedia
-        component="img"
-        height="200"
-        image={product.imageUrl || 'https://via.placeholder.com/200?text=No+Image'}
-        alt={product.name}
-      />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography gutterBottom variant="h6" component="h2" noWrap>
-          {product.name}
+    <Card 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        position: 'relative',
+        textDecoration: 'none',
+        overflow: 'hidden'
+      }}
+      component={Link}
+      to={`/products/${product.id}`}
+    >
+      <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden', bgcolor: 'white' }}>
+        <CardMedia
+          component="img"
+          image={product.imageUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'}
+          alt={product.name}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'transform 0.5s ease',
+            '&:hover': {
+              transform: 'scale(1.08)'
+            }
+          }}
+        />
+        {isOutOfStock && (
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography variant="h6" sx={{ color: 'error.main', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2 }}>
+              Out of Stock
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Typography gutterBottom variant="h6" component="h2" sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0, mr: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {product.name}
+          </Typography>
+          <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800 }}>
+            ${product.price.toFixed(2)}
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {product.description || 'Premium quality product designed to exceed your expectations.'}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {product.status === 'OUT_OF_STOCK' ? 'Out of Stock' : 'In Stock'}
-        </Typography>
-        <Typography variant="h6" color="primary">
-          ${product.price.toFixed(2)}
-        </Typography>
+        <Box sx={{ mt: 'auto' }}>
+          <Button 
+            fullWidth
+            variant={isOutOfStock ? "outlined" : "contained"} 
+            color={isOutOfStock ? "inherit" : "primary"}
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            startIcon={<ShoppingCartOutlined />}
+            sx={{ py: 1.5, fontWeight: 700, borderRadius: '8px' }}
+          >
+            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+          </Button>
+        </Box>
       </CardContent>
-      <CardActions>
-        <Button size="small" component={Link} to={`/products/${product.id}`}>
-          View Details
-        </Button>
-        <Button 
-          size="small" 
-          variant="contained" 
-          color="primary" 
-          onClick={handleAddToCart}
-          disabled={product.status === 'OUT_OF_STOCK'}
-        >
-          Add to Cart
-        </Button>
-      </CardActions>
     </Card>
   );
 };

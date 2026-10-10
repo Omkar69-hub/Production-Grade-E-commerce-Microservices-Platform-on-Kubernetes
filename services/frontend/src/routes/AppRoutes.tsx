@@ -14,6 +14,8 @@ const CheckoutPage = lazy(() => import('../pages/checkout/CheckoutPage'));
 const OrderSuccessPage = lazy(() => import('../pages/checkout/OrderSuccessPage'));
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
+const AdminProductList = lazy(() => import('../pages/admin/AdminProductList'));
+const AdminLayout = lazy(() => import('../layouts/AdminLayout'));
 
 const NotFound = () => <div>404 - Not Found</div>;
 
@@ -41,12 +43,16 @@ const AppRoutes: React.FC = () => {
             <Route path="checkout" element={<CheckoutPage />} />
             <Route path="orders/success/:id" element={<OrderSuccessPage />} />
           </Route>
+        </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
-            <Route path="admin" element={<AdminDashboard />} />
+        {/* Admin Routes with AdminLayout */}
+        <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProductList />} />
           </Route>
         </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
