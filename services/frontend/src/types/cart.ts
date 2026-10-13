@@ -1,16 +1,20 @@
 export interface CartItem {
   productId: string;
   sku: string;
-  productName: string;
+  name?: string;
+  productName?: string;
   quantity: number;
   price: number;
+  imageUrl?: string;
+  totalLinePrice?: number;
 }
 
 export interface Cart {
-  cartId: string;
+  cartId?: string;
   userId?: string;
   items: CartItem[];
-  totalPrice: number;
+  subtotal: number;
+  totalPrice?: number;
 }
 
 export interface AddToCartRequest {

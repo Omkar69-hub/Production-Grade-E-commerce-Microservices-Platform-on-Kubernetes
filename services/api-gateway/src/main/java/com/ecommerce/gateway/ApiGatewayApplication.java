@@ -10,9 +10,13 @@ import org.springframework.context.annotation.ComponentScan;
         DataSourceAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class
 })
-@ComponentScan(basePackages = {"com.ecommerce.gateway", "com.ecommerce.common.security"})
+@ComponentScan(basePackages = {"com.ecommerce.gateway"})
 public class ApiGatewayApplication {
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
     }
 }
+
+
+
+

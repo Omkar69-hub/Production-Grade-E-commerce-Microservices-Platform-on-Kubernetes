@@ -52,6 +52,17 @@ export const removeFromCart = createAsyncThunk(
   }
 );
 
+export const updateCartQuantity = createAsyncThunk(
+  'cart/updateQuantity',
+  async ({ productId, quantity }: { productId: string; quantity: number }, { rejectWithValue }) => {
+    try {
+      return await CartService.updateQuantity(productId, quantity);
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to update quantity');
+    }
+  }
+);
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
@@ -83,10 +94,15 @@ const cartSlice = createSlice({
       .addCase(addToCart.fulfilled, (state, action) => {
         state.cart = action.payload;
       })
+      .addCase(updateCartQuantity.fulfilled, (state, action) => {
+        state.cart = action.payload;
+      })
       .addCase(removeFromCart.fulfilled, (state, action) => {
         if (state.cart) {
           state.cart.items = state.cart.items.filter(i => i.productId !== action.payload);
-          state.cart.totalPrice = state.cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+          const total = state.cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+          state.cart.subtotal = total;
+          state.cart.totalPrice = total;
         }
       });
   },

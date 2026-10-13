@@ -1,8 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #4F46E5;
-  --bg-color: #F8FAFC;
+  --lumiere-noir: #0A0A0A;
+  --lumiere-noir-surface: #141414;
+  --lumiere-noir-soft: #1E1E1E;
+  --lumiere-blanc: #FFFFFF;
+  --lumiere-alabaster: #FAFAFA;
+  --lumiere-creme: #F5F3EF;
+  --lumiere-border: #E8E4DC;
+  --lumiere-border-dark: #2C2C2C;
+  --lumiere-crimson: #E50914;
+  --lumiere-crimson-light: #FF3B30;
+  --lumiere-crimson-dark: #8B0000;
+  --lumiere-crimson-glow: rgba(229, 9, 20, 0.28);
+  --lumiere-text-secondary: #66625B;
+  --lumiere-gold: #B89758; /* Compatibility token */
 }
 
 html, body {
@@ -10,7 +22,9 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: var(--bg-color);
+  background-color: var(--lumiere-alabaster);
+  color: var(--lumiere-noir);
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,27 +33,206 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Custom Scrollbar */
+/* Luxury Editorial Headings */
+h1, h2, h3, .lumiere-display {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+.lumiere-serif-caps {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Red Gradient Text Accents */
+.lumiere-red-gradient-text {
+  background: linear-gradient(135deg, #FF3B30 0%, #E50914 45%, #990000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Red Gradient Accent Borders & Buttons */
+.lumiere-red-btn {
+  background: linear-gradient(135deg, #E50914 0%, #C40812 50%, #8B0000 100%) !important;
+  color: #FFFFFF !important;
+  border-radius: 40px !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 16px rgba(229, 9, 20, 0.22);
+}
+
+.lumiere-red-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(229, 9, 20, 0.38) !important;
+}
+
+/* Pill Call To Action */
+.lumiere-pill-btn {
+  border-radius: 40px !important;
+  padding: 12px 28px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #F0ECE4;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
+  background: #C4BEB4;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: var(--lumiere-crimson);
 }
 
 /* Base link styles */
 a {
   text-decoration: none;
   color: inherit;
+}
+
+/* Horizontal Continuous Brand Marquee */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+}
+
+.marquee-track {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  animation: marqueeScroll 45s linear infinite;
+  will-change: transform;
+}
+
+.marquee-container:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 28px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #FAF8F5;
+  transition: color 0.25s ease;
+}
+
+.marquee-item:hover {
+  color: var(--lumiere-crimson-light);
+}
+
+/* High-Fashion Editorial Product & Brand Card */
+.lumiere-card, .lumiere-product-card {
+  border-radius: 16px !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.lumiere-card:hover, .lumiere-product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(10, 10, 10, 0.08), 0 0 0 1px rgba(229, 9, 20, 0.25) !important;
+  border-color: rgba(229, 9, 20, 0.4) !important;
+}
+
+/* Subtle Shimmer & Light-trail (Compatibility) */
+@keyframes redShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gold-shimmer-btn, .lumiere-shimmer-btn {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    105deg,
+    #0A0A0A 0%,
+    #0A0A0A 40%,
+    rgba(229, 9, 20, 0.45) 50%,
+    #0A0A0A 60%,
+    #0A0A0A 100%
+  );
+  transition: all 0.3s ease;
+}
+
+.gold-shimmer-btn:hover, .lumiere-shimmer-btn:hover {
+  animation: redShimmer 2.5s infinite linear;
+}
+
+/* Heart Pulse */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.heart-popped {
+  animation: heartPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--lumiere-crimson) !important;
+}
+
+/* Subtle Atmospheric Red Halo for Hero */
+.hero-atmospheric-glow {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(229, 9, 20, 0.12) 0%, rgba(229, 9, 20, 0.03) 45%, transparent 70%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
+  .lumiere-card:hover, .lumiere-product-card:hover {
+    transform: none !important;
+  }
+}
+
+.no-motion *, .no-motion ::before, .no-motion ::after {
+  animation: none !important;
+  transition: none !important;
+}
+.no-motion .marquee-track {
+  animation: none !important;
+}
+.no-motion .lumiere-card:hover, .no-motion .lumiere-product-card:hover {
+  transform: none !important;
 }

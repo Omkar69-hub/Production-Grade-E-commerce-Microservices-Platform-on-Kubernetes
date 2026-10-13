@@ -37,7 +37,7 @@ spring:
 app:
   security:
     jwt:
-      secret: ${JWT_SECRET:vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      secret: ${JWT_SECRET}
 
 management:
   endpoints:

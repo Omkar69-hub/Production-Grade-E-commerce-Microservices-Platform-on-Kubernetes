@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
@@ -26,6 +27,9 @@ public class AuthController {
 
     private final AuthService authService;
     private final TokenService tokenService;
+
+    @Value("${app.security.cookie.secure:false}")
+    private boolean secureCookie;
 
     @PostMapping("/register")
     public ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
@@ -42,7 +46,7 @@ public class AuthController {
         
         ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken.getToken())
                 .httpOnly(true)
-                .secure(true) // Should be true in production
+                .secure(secureCookie)
                 .path("/api/v1/auth/refresh")
                 .maxAge(refreshToken.getExpirationTimeSeconds())
                 .sameSite("Strict")
@@ -72,7 +76,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureCookie)
                 .path("/api/v1/auth/refresh")
                 .maxAge(0)
                 .sameSite("Strict")

@@ -9,8 +9,13 @@ import com.ecommerce.product.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import com.ecommerce.product.security.SecurityConfig;
+import com.ecommerce.product.security.JwtFilter;
+import com.ecommerce.common.security.CustomAuthenticationEntryPoint;
+import com.ecommerce.common.security.JwtUtil;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -27,8 +32,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(ProductController.class)
+@ContextConfiguration(classes = {
+    ProductController.class,
+    SecurityConfig.class,
+    JwtFilter.class,
+    CustomAuthenticationEntryPoint.class,
+    JwtUtil.class
+})
 class ProductControllerTest {
 
     @Autowired
@@ -54,7 +65,7 @@ class ProductControllerTest {
                 .totalElements(1)
                 .build();
 
-        when(productService.searchProducts(any(), any(), any(PaginationDto.class))).thenReturn(page);
+        when(productService.searchProducts(any(), any(), any(), any(PaginationDto.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
@@ -84,5 +95,48 @@ class ProductControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Product created successfully"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void givenAdminRole_whenSearchWithIncludeAll_thenReturnsAllProducts() throws Exception {
+        ProductResponse response = ProductResponse.builder()
+                .name("Smartphone")
+                .sku("PHONE-001")
+                .price(BigDecimal.valueOf(999.0))
+                .status(ProductStatus.ACTIVE)
+                .build();
+
+        PageResponse<ProductResponse> page = PageResponse.<ProductResponse>builder()
+                .content(List.of(response))
+                .totalElements(1)
+                .build();
+
+        when(productService.searchAllProducts(any(), any(), any(), any(PaginationDto.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/products?includeAll=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Smartphone"));
+    }
+
+    @Test
+    void givenPublicAccess_whenSearchWithIncludeAll_thenStillUsesStorefrontSearch() throws Exception {
+        ProductResponse response = ProductResponse.builder()
+                .name("Silk Kurta")
+                .sku("KURTA-001")
+                .price(BigDecimal.valueOf(450.0))
+                .status(ProductStatus.ACTIVE)
+                .build();
+
+        PageResponse<ProductResponse> page = PageResponse.<ProductResponse>builder()
+                .content(List.of(response))
+                .totalElements(1)
+                .build();
+
+        when(productService.searchProducts(any(), any(), any(), any(PaginationDto.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/products?includeAll=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Silk Kurta"));
     }
 }

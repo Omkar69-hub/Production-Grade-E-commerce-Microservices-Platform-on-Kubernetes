@@ -8,6 +8,8 @@ import com.ecommerce.common.response.SuccessResponse;
 import com.ecommerce.common.util.SecurityUtil;
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.OrderTrackingResponse;
+import com.ecommerce.order.dto.SimulateStatusRequest;
 import com.ecommerce.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -44,6 +46,30 @@ public class OrderController {
         return ResponseEntity.ok(SuccessResponse.<OrderResponse>builder()
                 .data(response)
                 .message("Order retrieved successfully")
+                .build());
+    }
+
+    @GetMapping("/{id}/tracking")
+    public ResponseEntity<SuccessResponse<OrderTrackingResponse>> getOrderTracking(@PathVariable UUID id) {
+        UUID userId = getCurrentUserId();
+        OrderTrackingResponse response = orderService.getOrderTracking(userId, id);
+        
+        return ResponseEntity.ok(SuccessResponse.<OrderTrackingResponse>builder()
+                .data(response)
+                .message("Order tracking timeline retrieved successfully")
+                .build());
+    }
+
+    @PostMapping("/{id}/simulate-status")
+    public ResponseEntity<SuccessResponse<OrderTrackingResponse>> simulateStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody SimulateStatusRequest request) {
+        UUID userId = getCurrentUserId();
+        OrderTrackingResponse response = orderService.simulateStatusTransition(userId, id, request);
+
+        return ResponseEntity.ok(SuccessResponse.<OrderTrackingResponse>builder()
+                .data(response)
+                .message("Simulated order status transition applied successfully")
                 .build());
     }
 

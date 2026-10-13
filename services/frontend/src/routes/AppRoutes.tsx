@@ -5,6 +5,10 @@ import MainLayout from '../layouts/MainLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 // Lazy Loaded Pages
+const HomePage = lazy(() => import('../pages/home/HomePage'));
+const BrandDirectoryPage = lazy(() => import('../pages/brands/BrandDirectoryPage'));
+const BrandDetailPage = lazy(() => import('../pages/brands/BrandDetailPage'));
+const WishlistPage = lazy(() => import('../pages/wishlist/WishlistPage'));
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'));
 const ProductListPage = lazy(() => import('../pages/product/ProductListPage'));
@@ -17,11 +21,16 @@ const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
 const AdminProductList = lazy(() => import('../pages/admin/AdminProductList'));
 const AdminLayout = lazy(() => import('../layouts/AdminLayout'));
 
-const NotFound = () => <div>404 - Not Found</div>;
+const NotFound = () => (
+  <Box sx={{ py: 14, textAlign: 'center' }}>
+    <h2>404 — Atelier Page Not Found</h2>
+    <p>The requested runway page or collection dossier does not exist.</p>
+  </Box>
+);
 
 const LoadingFallback = () => (
-  <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
-    <CircularProgress />
+  <Box sx={{ display: 'flex', justifyContent: 'center', my: 12 }}>
+    <CircularProgress sx={{ color: '#E50914' }} />
   </Box>
 );
 
@@ -31,8 +40,13 @@ const AppRoutes: React.FC = () => {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           {/* Public Routes */}
-          <Route index element={<ProductListPage />} />
+          <Route index element={<HomePage />} />
+          <Route path="products" element={<ProductListPage />} />
+          <Route path="collection" element={<ProductListPage />} />
           <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="brands" element={<BrandDirectoryPage />} />
+          <Route path="brands/:brandSlug" element={<BrandDetailPage />} />
+          <Route path="wishlist" element={<WishlistPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />

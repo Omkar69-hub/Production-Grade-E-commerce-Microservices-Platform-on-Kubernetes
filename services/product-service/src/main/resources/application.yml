@@ -43,7 +43,7 @@ spring:
 app:
   security:
     jwt:
-      secret: ${JWT_SECRET:vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      secret: ${JWT_SECRET}
   cache:
     product-ttl-minutes: 60
     category-ttl-minutes: 1440

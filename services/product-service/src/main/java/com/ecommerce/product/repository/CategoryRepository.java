@@ -12,5 +12,9 @@ import java.util.UUID;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     Optional<Category> findByIdAndDeletedFalse(UUID id);
     List<Category> findAllByDeletedFalse();
+
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM Category c WHERE c.deleted = false AND LOWER(c.name) NOT LIKE '%electronic%'")
+    List<Category> findStorefrontCategories();
+
     boolean existsByNameAndDeletedFalse(String name);
 }

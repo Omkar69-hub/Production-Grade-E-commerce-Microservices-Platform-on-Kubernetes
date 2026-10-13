@@ -16,6 +16,20 @@ export interface Product {
   categoryName?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   imageUrl?: string;
+  attributes?: string;
+}
+
+export interface ProductAttributes {
+  sizes?: string;
+  colors?: string;
+  material?: string;
+  fit?: string;
+  specifications?: string;
+  compatibility?: string;
+  warranty?: string;
+  sole?: string;
+  dimensions?: string;
+  [key: string]: string | undefined;
 }
 
 export interface PaginatedResponse<T> {
@@ -34,4 +48,5 @@ export interface PaginationParams {
   categoryId?: string;
   search?: string;
   brand?: string;
+  includeAll?: boolean;
 }

@@ -12,16 +12,28 @@ spring:
   cloud:
     gateway:
       globalcors:
+        add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:443"
+              - "http://localhost"
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "http://127.0.0.1:443"
+              - "http://127.0.0.1:3000"
+              - "http://127.0.0.1:5173"
+              - "http://127.0.0.1"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
+              - PATCH
             allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
@@ -36,7 +48,7 @@ spring:
         - id: product-service
           uri: ${PRODUCT_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/v1/products/**
+            - Path=/api/v1/products/**, /api/v1/categories/**
           filters:
             - name: CircuitBreaker
               args:
@@ -58,10 +70,35 @@ spring:
           predicates:
             - Path=/api/v1/payments/**
 
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+    instances:
+      authServiceCircuitBreaker:
+        baseConfig: default
+      productServiceCircuitBreaker:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 3s
+    instances:
+      authServiceCircuitBreaker:
+        baseConfig: default
+      productServiceCircuitBreaker:
+        baseConfig: default
+
 app:
   security:
     jwt:
-      secret: ${JWT_SECRET:vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      secret: ${JWT_SECRET}
 
 management:
   endpoints:

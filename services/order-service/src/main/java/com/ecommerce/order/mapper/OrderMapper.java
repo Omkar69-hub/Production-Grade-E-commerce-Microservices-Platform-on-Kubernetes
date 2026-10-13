@@ -16,6 +16,7 @@ public class OrderMapper {
         if (order == null) return null;
 
         return OrderResponse.builder()
+                .id(order.getId())
                 .userId(order.getUserId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())

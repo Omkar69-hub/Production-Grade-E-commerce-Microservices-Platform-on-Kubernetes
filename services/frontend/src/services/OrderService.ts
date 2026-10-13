@@ -1,5 +1,5 @@
 import apiClient from '../config/axios';
-import type { CreateOrderRequest, OrderResponse } from '../types/order';
+import type { CreateOrderRequest, OrderResponse, OrderTrackingResponse } from '../types/order';
 
 export const OrderService = {
   createOrder: async (request: CreateOrderRequest): Promise<OrderResponse> => {
@@ -9,6 +9,16 @@ export const OrderService = {
 
   getOrderById: async (orderId: string): Promise<OrderResponse> => {
     const response = await apiClient.get(`/api/v1/orders/${orderId}`);
+    return response.data.data;
+  },
+
+  getOrderTracking: async (orderId: string): Promise<OrderTrackingResponse> => {
+    const response = await apiClient.get(`/api/v1/orders/${orderId}/tracking`);
+    return response.data.data;
+  },
+
+  simulateStatusTransition: async (orderId: string, status: string, comment?: string): Promise<OrderTrackingResponse> => {
+    const response = await apiClient.post(`/api/v1/orders/${orderId}/simulate-status`, { status, comment });
     return response.data.data;
   },
 

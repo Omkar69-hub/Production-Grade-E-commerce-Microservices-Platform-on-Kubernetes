@@ -22,9 +22,19 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<SuccessResponse<List<CategoryResponse>>> getAllCategories() {
+    public ResponseEntity<SuccessResponse<List<CategoryResponse>>> getAllCategories(
+            @RequestParam(required = false, defaultValue = "false") boolean includeAll,
+            org.springframework.security.core.Authentication authentication) {
+        
+        boolean allowAll = includeAll && authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<CategoryResponse> categories = allowAll 
+                ? categoryService.getAllCategories() 
+                : categoryService.getStorefrontCategories();
+
         return ResponseEntity.ok(SuccessResponse.<List<CategoryResponse>>builder()
-                .data(categoryService.getAllCategories())
+                .data(categories)
                 .message("Categories retrieved successfully")
                 .build());
     }

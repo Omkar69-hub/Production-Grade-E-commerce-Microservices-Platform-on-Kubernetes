@@ -11,6 +11,9 @@ import AppRoutes from './routes/AppRoutes';
 import { useDispatch } from 'react-redux';
 import { initializeCart } from './store/slices/cartSlice';
 import ErrorBoundary from './components/layout/ErrorBoundary';
+import { EffectsProvider } from './context/EffectsContext';
+import { ComparisonProvider } from './context/ComparisonContext';
+import { ComparisonDrawer } from './components/comparison/ComparisonDrawer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,9 +35,14 @@ const AppContent: React.FC = () => {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <EffectsProvider>
+          <ComparisonProvider>
+            <BrowserRouter>
+              <AppRoutes />
+              <ComparisonDrawer />
+            </BrowserRouter>
+          </ComparisonProvider>
+        </EffectsProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

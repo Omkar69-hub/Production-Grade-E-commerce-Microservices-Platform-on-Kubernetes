@@ -2,13 +2,19 @@ package com.ecommerce.order.controller;
 
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.ShippingAddressDto;
 import com.ecommerce.order.entity.OrderStatus;
 import com.ecommerce.order.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import com.ecommerce.order.security.SecurityConfig;
+import com.ecommerce.order.security.JwtFilter;
+import com.ecommerce.common.security.CustomAuthenticationEntryPoint;
+import com.ecommerce.common.security.JwtUtil;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -25,8 +31,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(OrderController.class)
+@ContextConfiguration(classes = {
+    OrderController.class,
+    SecurityConfig.class,
+    JwtFilter.class,
+    CustomAuthenticationEntryPoint.class,
+    JwtUtil.class
+})
 class OrderControllerTest {
 
     @Autowired
@@ -63,9 +75,18 @@ class OrderControllerTest {
     void givenAuthenticatedUser_whenCreateOrder_thenReturns201() throws Exception {
         UUID userId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
         
+        ShippingAddressDto address = ShippingAddressDto.builder()
+                .fullName("John Doe")
+                .street("123 Main St")
+                .city("Anytown")
+                .state("NY")
+                .zipCode("12345")
+                .country("USA")
+                .phoneNumber("+1234567890")
+                .build();
+                
         OrderRequest request = OrderRequest.builder()
-                .shippingAddressId(UUID.randomUUID())
-                .billingAddressId(UUID.randomUUID())
+                .shippingAddress(address)
                 .paymentMethod("CREDIT_CARD")
                 .build();
 

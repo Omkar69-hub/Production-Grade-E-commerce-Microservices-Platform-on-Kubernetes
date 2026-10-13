@@ -24,12 +24,25 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
+    @Cacheable(value = "categories", key = "'storefront'")
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getStorefrontCategories() {
+        return categoryRepository.findStorefrontCategories().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     @Cacheable(value = "categories", key = "'all'")
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAllByDeletedFalse().stream()
                 .map(categoryMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getAllCategories(boolean includeAll) {
+        return includeAll ? getAllCategories() : getStorefrontCategories();
     }
 
     @CacheEvict(value = "categories", allEntries = true)

@@ -12,13 +12,13 @@ import java.util.Map;
 @RequestMapping("/fallback")
 public class FallbackController {
 
-    @GetMapping("/auth")
+    @RequestMapping("/auth")
     public ResponseEntity<Map<String, String>> authFallback() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of("message", "Authentication service is currently unavailable. Please try again later."));
     }
 
-    @GetMapping("/products")
+    @RequestMapping("/products")
     public ResponseEntity<Map<String, String>> productFallback() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of("message", "Product catalog is currently unavailable. Please try again later."));
@@ -26,3 +26,10 @@ public class FallbackController {
     
     // Additional fallbacks can be added here
 }
+
+
+
+
+
+
+

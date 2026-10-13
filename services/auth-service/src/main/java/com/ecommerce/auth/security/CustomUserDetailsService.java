@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,9 +19,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailAndIsDeletedFalse(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        User user;
+        try {
+            UUID id = UUID.fromString(identifier);
+            user = userRepository.findById(id)
+                    .filter(u -> !u.isDeleted())
+                    .orElseGet(() -> userRepository.findByEmailAndIsDeletedFalse(identifier)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier)));
+        } catch (IllegalArgumentException e) {
+            user = userRepository.findByEmailAndIsDeletedFalse(identifier)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + identifier));
+        }
 
         if (!user.isActive()) {
             throw new UsernameNotFoundException("User account is inactive");

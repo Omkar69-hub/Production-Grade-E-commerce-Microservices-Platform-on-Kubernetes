@@ -57,6 +57,30 @@ public class ProductService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> searchAllProducts(UUID categoryId, String name, String brand, PaginationDto pagination) {
+        Sort sort = Sort.by(Sort.Direction.fromString(pagination.getSort() == null ? "desc" : "asc"), "createdAt");
+        Pageable pageable = PageRequest.of(pagination.getPage(), pagination.getSize(), sort);
+
+        Page<Product> productPage = productRepository.searchAllProducts(categoryId, name, brand, pageable);
+
+        return PageResponse.<ProductResponse>builder()
+                .content(productPage.getContent().stream().map(productMapper::toResponse).collect(Collectors.toList()))
+                .pageNumber(productPage.getNumber())
+                .pageSize(productPage.getSize())
+                .totalElements(productPage.getTotalElements())
+                .totalPages(productPage.getTotalPages())
+                .last(productPage.isLast())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> searchProducts(UUID categoryId, String name, String brand, boolean includeAll, PaginationDto pagination) {
+        return includeAll 
+                ? searchAllProducts(categoryId, name, brand, pagination) 
+                : searchProducts(categoryId, name, brand, pagination);
+    }
+
     @Cacheable(value = "products", key = "#id")
     @Transactional(readOnly = true)
     public ProductResponse getProduct(UUID id) {

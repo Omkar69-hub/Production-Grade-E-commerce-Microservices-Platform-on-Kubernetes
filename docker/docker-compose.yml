@@ -40,6 +40,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
+
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -83,7 +84,7 @@ services:
       - DB_NAME=auth_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
     networks:
       - backend-network
@@ -114,6 +115,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
     networks:
       - backend-network
@@ -144,6 +146,8 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET}
+      - PRODUCT_SERVICE_URL=http://product-service:8080
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
     networks:
       - backend-network
@@ -174,6 +178,9 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET}
+      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - CART_SERVICE_URL=http://cart-service:8080
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
     networks:
       - backend-network
@@ -202,6 +209,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
     networks:
       - backend-network
@@ -251,8 +259,13 @@ services:
     restart: always
     environment:
       - SERVER_PORT=8080
-      - JWT_SECRET=${JWT_SECRET:-vErYsEcReTkEyThAtIsAtLeAsT32ByTeSlOnGfOrHs256}
+      - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - CART_SERVICE_URL=http://cart-service:8080
+      - ORDER_SERVICE_URL=http://order-service:8080
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
     ports:
       - "80:8080"
     networks:
@@ -278,6 +291,8 @@ services:
     build:
       context: ..
       dockerfile: services/frontend/Dockerfile
+      args:
+        - VITE_API_GATEWAY_URL=${VITE_API_GATEWAY_URL:-http://localhost:80}
     image: ecommerce/frontend:latest
     container_name: frontend
     restart: always

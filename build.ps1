@@ -1,4 +1,4 @@
-mvn -f shared/parent-pom/pom.xml install -N
+ mvn -f shared/parent-pom/pom.xml install -N
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 mvn -f shared/common-library/pom.xml install -DskipTests
@@ -20,3 +20,4 @@ mvn -f services/cart-service/pom.xml clean package -DskipTests
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "All builds completed successfully!"
+

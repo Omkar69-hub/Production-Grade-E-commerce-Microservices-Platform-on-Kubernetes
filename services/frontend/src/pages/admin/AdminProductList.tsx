@@ -10,6 +10,7 @@ import { AddOutlined, EditOutlined, DeleteOutlined } from '@mui/icons-material';
 import { ProductService } from '../../services/ProductService';
 import AdminProductForm from './AdminProductForm';
 import type { Product } from '../../types/product';
+import { formatINR } from '../../utils/currency';
 
 const AdminProductList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ const AdminProductList: React.FC = () => {
   // Wait, backend pagination usually takes size and page (0-indexed). Let's use 0-indexed for state, 1-indexed for UI.
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['adminProducts', page, pageSize],
-    queryFn: () => ProductService.getProducts({ page, size: pageSize })
+    queryFn: () => ProductService.getProducts({ page, size: pageSize, includeAll: true })
   });
 
   const deleteMutation = useMutation({
@@ -129,7 +130,7 @@ const AdminProductList: React.FC = () => {
                       </TableCell>
                       <TableCell sx={{ fontWeight: 500 }}>{product.name}</TableCell>
                       <TableCell>{product.categoryId}</TableCell>
-                      <TableCell align="right">${product.price.toFixed(2)}</TableCell>
+                      <TableCell align="right">{formatINR(product.price)}</TableCell>
                       <TableCell align="right">{product.status}</TableCell>
                       <TableCell align="center">
                         <IconButton color="primary" onClick={() => handleEditClick(product)}>

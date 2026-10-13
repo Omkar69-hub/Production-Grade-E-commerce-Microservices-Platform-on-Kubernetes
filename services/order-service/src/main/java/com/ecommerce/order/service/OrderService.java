@@ -10,15 +10,20 @@ import com.ecommerce.order.client.CartServiceClient;
 import com.ecommerce.order.client.ProductServiceClient;
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.OrderStatusHistoryDto;
+import com.ecommerce.order.dto.OrderTrackingResponse;
+import com.ecommerce.order.dto.SimulateStatusRequest;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderItem;
 import com.ecommerce.order.entity.OrderStatus;
+import com.ecommerce.order.entity.OrderStatusHistory;
 import com.ecommerce.order.entity.ShippingAddress;
 import com.ecommerce.order.event.OrderCreatedEvent;
 import com.ecommerce.order.event.OrderEventPublisher;
 import com.ecommerce.order.event.OrderStatusEvent;
 import com.ecommerce.order.mapper.OrderMapper;
 import com.ecommerce.order.repository.OrderRepository;
+import com.ecommerce.order.repository.OrderStatusHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +33,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +44,7 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderStatusHistoryRepository statusHistoryRepository;
     private final CartServiceClient cartServiceClient;
     private final ProductServiceClient productServiceClient;
     private final OrderMapper orderMapper;
@@ -127,6 +135,15 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(savedOrder)
+                .status(OrderStatus.PENDING)
+                .comment("Order placed and secured in LUMIÈRE vault")
+                .isSimulated(false)
+                .createdAt(savedOrder.getCreatedAt() != null ? savedOrder.getCreatedAt() : Instant.now())
+                .build();
+        statusHistoryRepository.save(history);
+
         // 4. Clear Cart
         clearCart(token);
 
@@ -154,6 +171,15 @@ public class OrderService {
         order.setStatus(OrderStatus.CONFIRMED);
         orderRepository.save(order);
 
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .status(OrderStatus.CONFIRMED)
+                .comment("Payment verified. Order confirmed and dispatched to atelier.")
+                .isSimulated(false)
+                .createdAt(Instant.now())
+                .build();
+        statusHistoryRepository.save(history);
+
         eventPublisher.publishOrderConfirmed(OrderStatusEvent.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
@@ -169,6 +195,15 @@ public class OrderService {
         order.setStatus(OrderStatus.PAYMENT_FAILED);
         orderRepository.save(order);
         
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .status(OrderStatus.PAYMENT_FAILED)
+                .comment("Payment authentication failed. Acquisition cancelled.")
+                .isSimulated(false)
+                .createdAt(Instant.now())
+                .build();
+        statusHistoryRepository.save(history);
+
         eventPublisher.publishOrderCancelled(OrderStatusEvent.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
@@ -176,6 +211,97 @@ public class OrderService {
                 .build());
                 
         // In a full saga, we would emit an event here to trigger an inventory rollback.
+    }
+
+    @Transactional(readOnly = true)
+    public OrderTrackingResponse getOrderTracking(UUID userId, UUID orderId) {
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found or unauthorized: " + orderId));
+
+        List<OrderStatusHistory> histories = statusHistoryRepository.findAllByOrderIdOrderByCreatedAtAsc(orderId);
+        
+        List<OrderStatusHistoryDto> dtos;
+        if (histories.isEmpty()) {
+            dtos = List.of(OrderStatusHistoryDto.builder()
+                    .id(UUID.randomUUID())
+                    .status(order.getStatus())
+                    .comment("Initial order registered in LUMIÈRE vault")
+                    .isSimulated(false)
+                    .createdAt(order.getCreatedAt() != null ? order.getCreatedAt() : Instant.now())
+                    .build());
+        } else {
+            dtos = histories.stream().map(h -> OrderStatusHistoryDto.builder()
+                    .id(h.getId())
+                    .status(h.getStatus())
+                    .comment(h.getComment())
+                    .isSimulated(h.isSimulated())
+                    .createdAt(h.getCreatedAt())
+                    .build()).collect(Collectors.toList());
+        }
+
+        return OrderTrackingResponse.builder()
+                .orderId(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .currentStatus(order.getStatus())
+                .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
+                .timeline(dtos)
+                .build();
+    }
+
+    @Transactional
+    public OrderTrackingResponse simulateStatusTransition(UUID userId, UUID orderId, SimulateStatusRequest request) {
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found or unauthorized: " + orderId));
+
+        OrderStatus newStatus = request.getStatus();
+        if (order.getStatus() == newStatus) {
+            log.info("Order {} is already in status {}", orderId, newStatus);
+            return getOrderTracking(userId, orderId);
+        }
+
+        order.setStatus(newStatus);
+        order.setUpdatedAt(Instant.now());
+        orderRepository.save(order);
+
+        String comment = request.getComment();
+        if (comment == null || comment.isBlank()) {
+            comment = switch (newStatus) {
+                case CONFIRMED -> "Payment verified. Atelier notified for bespoke preparation.";
+                case PROCESSING -> "Atelier craftsmanship in progress. Quality inspection initiated.";
+                case SHIPPED -> "Dispatched with secured white-glove courier service.";
+                case DELIVERED -> "Successfully presented to client.";
+                case CANCELLED -> "Order allocation cancelled by client request.";
+                case REFUNDED -> "Settlement reversed to original payment method.";
+                default -> "Order status transitioned to " + newStatus;
+            };
+        }
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .status(newStatus)
+                .comment(comment)
+                .isSimulated(true) // Development demo simulator visibly flagged
+                .createdAt(Instant.now())
+                .build();
+        statusHistoryRepository.save(history);
+        log.info("Order {} status updated to {} (Simulated demo mode)", orderId, newStatus);
+
+        OrderStatusEvent event = OrderStatusEvent.builder()
+                .orderId(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .status(newStatus.name())
+                .build();
+
+        if (newStatus == OrderStatus.CONFIRMED) {
+            eventPublisher.publishOrderConfirmed(event);
+        } else if (newStatus == OrderStatus.CANCELLED) {
+            eventPublisher.publishOrderCancelled(event);
+        } else if (newStatus == OrderStatus.DELIVERED) {
+            eventPublisher.publishOrderCompleted(event);
+        }
+
+        return getOrderTracking(userId, orderId);
     }
 
     private CartServiceClient.CartDto fetchCart(String token) {

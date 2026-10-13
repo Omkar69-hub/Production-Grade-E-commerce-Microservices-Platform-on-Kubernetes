@@ -30,6 +30,8 @@ public class ProductRequest {
 
     private String brand;
 
+    private String attributes;
+
     @NotNull
     @DecimalMin(value = "0.0")
     private BigDecimal price;

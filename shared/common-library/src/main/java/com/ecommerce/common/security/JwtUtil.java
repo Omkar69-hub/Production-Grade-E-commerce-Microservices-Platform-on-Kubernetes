@@ -14,7 +14,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${app.security.jwt.secret:defaultSecretKeyThatIsAtLeast32BytesLongForHS256Algorithm}")
+    @Value("${app.security.jwt.secret}")
     private String secret;
 
     private SecretKey getSigningKey() {
