@@ -27,14 +27,24 @@ export const WishlistPage: React.FC = () => {
     staleTime: 60 * 1000,
   });
 
-  // Resolve wishlisted items from both curated catalog and backend API
+  // Resolve wishlisted items from both curated catalog and backend API (Identity bridge: id, slug, uuid)
   const wishlistedCuratedPieces = CLOTHING_CATALOG.filter((item) =>
-    wishlistIds.includes(item.id) || wishlistIds.includes(item.slug)
+    wishlistIds.includes(item.id) || 
+    wishlistIds.includes(item.slug) || 
+    (item.uuid && wishlistIds.includes(item.uuid))
   );
 
-  const wishlistedApiProducts = (allProductsData?.content || []).filter((p) =>
-    wishlistIds.includes(p.id) && !wishlistedCuratedPieces.some((c) => c.id === p.id)
-  );
+  const wishlistedApiProducts = (allProductsData?.content || []).filter((p) => {
+    if (!wishlistIds.includes(p.id)) return false;
+    let apiAttr: any = {};
+    try { if (p.attributes) apiAttr = JSON.parse(p.attributes); } catch {}
+    return !wishlistedCuratedPieces.some((c) => 
+      c.id === p.id || 
+      (c.uuid && (c.uuid === p.id || c.uuid === apiAttr.uuid)) ||
+      c.slug.toUpperCase() === (p.sku || '').toUpperCase() ||
+      c.id === apiAttr.frontendId
+    );
+  });
 
   const totalWishlistedCount = wishlistedCuratedPieces.length + wishlistedApiProducts.length;
 

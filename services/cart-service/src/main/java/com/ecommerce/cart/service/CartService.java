@@ -12,11 +12,14 @@ import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.BusinessException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.response.SuccessResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +33,7 @@ public class CartService {
     private final ProductServiceClient productServiceClient;
     private final CartMapper cartMapper;
     private final CartEventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.cart.ttl-days:30}")
     private Long cartTtlDays;
@@ -57,14 +61,16 @@ public class CartService {
             requestedTotalQuantity += existingItem.get().getQuantity();
         }
 
-        // Validate product exists, is active, and has enough inventory
-        validateProductAvailability(request.getProductId(), requestedTotalQuantity);
-        
-        // Fetch product details for cart snapshot
+        // Fetch product details and validate cart eligibility (active, positive price, non-referral)
         ProductServiceClient.ProductDto product = fetchProductDetails(request.getProductId());
+        validateProductEligibilityForCart(product);
+
+        // Validate product availability and inventory for requested quantity
+        validateProductAvailability(request.getProductId(), requestedTotalQuantity);
 
         if (existingItem.isPresent()) {
             existingItem.get().setQuantity(requestedTotalQuantity);
+            existingItem.get().setPrice(product.getPrice());
         } else {
             CartItem newItem = CartItem.builder()
                     .productId(request.getProductId())
@@ -84,6 +90,10 @@ public class CartService {
     }
 
     public CartResponse updateItemQuantity(UUID userId, UUID productId, CartItemRequest request) {
+        if (request.getProductId() != null && !productId.equals(request.getProductId())) {
+            throw new BusinessException("Product ID in path must match request body");
+        }
+
         Cart cart = getCartOrThrow(userId);
 
         CartItem item = cart.getItems().stream()
@@ -91,9 +101,15 @@ public class CartService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found in cart"));
 
+        // Fetch product details and validate cart eligibility (active, positive price, non-referral)
+        ProductServiceClient.ProductDto product = fetchProductDetails(productId);
+        validateProductEligibilityForCart(product);
+
+        // Validate inventory for requested quantity
         validateProductAvailability(productId, request.getQuantity());
 
         item.setQuantity(request.getQuantity());
+        item.setPrice(product.getPrice());
         saveCart(cart);
 
         eventPublisher.publishCartUpdated(userId, calculateTotalItems(cart));
@@ -147,6 +163,9 @@ public class CartService {
     private void validateProductAvailability(UUID productId, int requestedQuantity) {
         try {
             SuccessResponse<ProductServiceClient.InventoryDto> response = productServiceClient.getInventory(productId);
+            if (response == null || response.getData() == null) {
+                throw new BusinessException("Unable to verify product inventory at this time");
+            }
             int available = response.getData().getQuantityAvailable();
             
             if (available < requestedQuantity) {
@@ -163,17 +182,86 @@ public class CartService {
     private ProductServiceClient.ProductDto fetchProductDetails(UUID productId) {
         try {
             SuccessResponse<ProductServiceClient.ProductDto> response = productServiceClient.getProduct(productId);
-            
-            if (!"ACTIVE".equals(response.getData().getStatus())) {
-                throw new BusinessException("Product is not available for purchase");
+            if (response == null || response.getData() == null) {
+                throw new BusinessException("Unable to fetch product details at this time");
             }
-            
             return response.getData();
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             log.error("Error communicating with Product Service", e);
             throw new BusinessException("Unable to fetch product details at this time");
+        }
+    }
+
+    private void validateProductEligibilityForCart(ProductServiceClient.ProductDto product) {
+        if (product == null) {
+            throw new BusinessException("Product details could not be retrieved");
+        }
+
+        if (!"ACTIVE".equals(product.getStatus())) {
+            throw new BusinessException("Product is not available for purchase");
+        }
+
+        // Authoritative numeric price: reject unpriced, zero, or negative prices
+        if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Items with zero, negative, or unverified pricing cannot be added to the bag");
+        }
+
+        // Validate parsed attributes for referral markers
+        String attributes = product.getAttributes();
+        if (attributes != null && !attributes.isBlank()) {
+            try {
+                JsonNode root = objectMapper.readTree(attributes);
+                if (!root.isObject()) {
+                    throw new BusinessException("Product metadata is invalid");
+                }
+
+                // 1. Destination URL indicates external referral item
+                if (root.has("destinationUrl") && !root.get("destinationUrl").isNull()) {
+                    String destinationUrl = root.get("destinationUrl").asText().trim();
+                    if (!destinationUrl.isBlank()) {
+                        throw new BusinessException("External atelier referral creations must be acquired via the brand's official portal");
+                    }
+                }
+
+                // 2. Price upon inquiry requires external atelier contact
+                if (root.has("priceVerificationStatus") && !root.get("priceVerificationStatus").isNull()) {
+                    String pvs = root.get("priceVerificationStatus").asText().trim();
+                    if ("PRICE_UPON_INQUIRY".equalsIgnoreCase(pvs)) {
+                        throw new BusinessException("Creations priced upon atelier inquiry cannot be added to the internal bag");
+                    }
+                }
+
+                // 3. Destination type indicates external brand portal navigation
+                if (root.has("destinationType") && !root.get("destinationType").isNull()) {
+                    String dt = root.get("destinationType").asText().trim();
+                    if (!dt.isBlank()) {
+                        throw new BusinessException("External atelier referral creations must be acquired via the brand's official portal");
+                    }
+                }
+
+                // 4. Fulfillment type indicator: must be INTERNAL for bag addition. Unknown or REFERRAL_LINK types are rejected.
+                if (root.has("fulfillmentType") && !root.get("fulfillmentType").isNull()) {
+                    String ft = root.get("fulfillmentType").asText().trim();
+                    if (!"INTERNAL".equalsIgnoreCase(ft)) {
+                        if ("REFERRAL_LINK".equalsIgnoreCase(ft)) {
+                            throw new BusinessException("External atelier referral creations cannot be added to the internal bag");
+                        }
+                        throw new BusinessException("Unknown or unsupported fulfillment type: " + ft);
+                    }
+                }
+
+                // 5. Explicit isReferral marker
+                if (root.has("isReferral") && !root.get("isReferral").isNull() && root.get("isReferral").asBoolean()) {
+                    throw new BusinessException("External atelier referral creations cannot be added to the internal bag");
+                }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Malformed attributes on product SKU {}: {}", product.getSku(), e.getMessage());
+                throw new BusinessException("Product metadata is invalid or corrupted");
+            }
         }
     }
 }

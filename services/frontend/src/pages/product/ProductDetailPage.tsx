@@ -24,6 +24,49 @@ import { verifyBrandDomain, getSafeExternalLinkAttributes } from '../../utils/do
 import { useWishlist } from '../../utils/wishlistStorage';
 import SizingMatrixModal from '../../components/sizing/SizingMatrixModal';
 
+export type ProductActionState = 'VALID_REFERRAL' | 'UNTRUSTED_REFERRAL' | 'INTERNAL_PURCHASE';
+
+export interface ProductSecurityContext {
+  isCuratedCatalog: boolean;
+  destinationUrl?: string;
+  brandSlug?: string;
+  destinationType?: string;
+  priceVerificationStatus?: string;
+  hasReferralMetadata: boolean;
+  verifiedDestinationCheck?: {
+    isValid: boolean;
+    isVerifiedOfficial: boolean;
+    reason?: string;
+    securityStatus?: string;
+  };
+}
+
+/**
+ * Resolves mutually exclusive product action states:
+ * 1. VALID_REFERRAL: Valid HTTPS destination on approved brand domain
+ * 2. UNTRUSTED_REFERRAL: Referral intent present but destination is invalid, unapproved, deceptive, or missing
+ * 3. INTERNAL_PURCHASE: Strictly ordinary internal product with zero referral intent
+ */
+export const resolveProductActionState = (ctx: ProductSecurityContext): ProductActionState => {
+  const isReferralIntent = ctx.isCuratedCatalog || ctx.hasReferralMetadata;
+
+  if (isReferralIntent) {
+    if (
+      ctx.destinationUrl &&
+      ctx.destinationUrl.startsWith('https://') &&
+      ctx.verifiedDestinationCheck?.isValid &&
+      ctx.verifiedDestinationCheck?.isVerifiedOfficial
+    ) {
+      return 'VALID_REFERRAL';
+    }
+    // Fail-closed: do not infer internal purchase when referral intent exists
+    return 'UNTRUSTED_REFERRAL';
+  }
+
+  // Pure ordinary internal product
+  return 'INTERNAL_PURCHASE';
+};
+
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
@@ -97,7 +140,10 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const handleAddToCart = async () => {
-    if (cartId && product && !adding) {
+    if (!product || product.price <= 0) {
+      return;
+    }
+    if (cartId && !adding) {
       setAdding(true);
       try {
         await dispatch(addToCart({ item: { productId: product.id, quantity } })).unwrap();
@@ -144,8 +190,60 @@ const ProductDetailPage: React.FC = () => {
 
   if (!product) return null;
 
-  const brandEntity = catalogItem ? getBrandBySlug(catalogItem.brandSlug) : undefined;
-  const verifiedDestinationCheck = catalogItem ? verifyBrandDomain(catalogItem.destinationUrl, catalogItem.brandSlug) : undefined;
+  const productAttributes = (() => {
+    if (!product?.attributes) return null;
+    try {
+      return JSON.parse(product.attributes);
+    } catch {
+      return null;
+    }
+  })();
+
+  const destinationUrl = catalogItem?.destinationUrl || productAttributes?.destinationUrl;
+  const brandSlug = catalogItem?.brandSlug || productAttributes?.brandSlug || (product?.brand ? product.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined);
+  const brandName = catalogItem?.brandName || product?.brand || 'HAUTE MAISON';
+  const destinationType = catalogItem?.destinationType || productAttributes?.destinationType;
+  const priceVerificationStatus = catalogItem?.priceVerificationStatus || productAttributes?.priceVerificationStatus;
+  const priceSource = catalogItem?.priceSource || productAttributes?.priceSource;
+
+  const brandEntity = brandSlug ? getBrandBySlug(brandSlug) : undefined;
+  const verifiedDestinationCheck = destinationUrl && brandSlug ? verifyBrandDomain(destinationUrl, brandSlug) : undefined;
+
+  const isCuratedCatalog = Boolean(catalogItem);
+  const hasReferralMetadata = Boolean(
+    catalogItem ||
+    destinationUrl ||
+    destinationType ||
+    priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
+    priceVerificationStatus ||
+    productAttributes?.isReferral ||
+    productAttributes?.brandSlug ||
+    productAttributes?.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
+    productAttributes?.fulfillmentType === 'EXTERNAL_REFERRAL' ||
+    productAttributes?.isEditorialConcept ||
+    (product?.price !== undefined && product.price <= 0) ||
+    (product?.id && product.id.startsWith('prod-'))
+  );
+
+  const isReferralIntent = isCuratedCatalog || hasReferralMetadata;
+
+  const productActionState: ProductActionState = resolveProductActionState({
+    isCuratedCatalog,
+    destinationUrl,
+    brandSlug,
+    destinationType,
+    priceVerificationStatus,
+    hasReferralMetadata,
+    verifiedDestinationCheck
+  });
+
+  const isPriceUponInquiry = priceVerificationStatus === 'PRICE_UPON_INQUIRY' || product.price === 0;
+
+  const displaySizes = catalogItem?.availableSizes || (productAttributes?.sizes ? String(productAttributes.sizes).split(',').map((s: string) => s.trim()) : undefined);
+  const displayColors = catalogItem?.colors || (productAttributes?.colors ? String(productAttributes.colors).split(',').map((c: string) => c.trim()) : undefined);
+  const displayFabric = catalogItem?.fabric || productAttributes?.fabric;
+  const displayFit = catalogItem?.fit || productAttributes?.fit;
+
   const isOutOfStock = product.status === 'OUT_OF_STOCK';
   const fallbackImg = 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900';
 
@@ -165,10 +263,10 @@ const ProductDetailPage: React.FC = () => {
                 Collections
               </Typography>
             </Link>
-            {catalogItem ? (
-              <Link to={`/brands/${catalogItem.brandSlug}`} style={{ textDecoration: 'none', color: '#B89758' }}>
+            {brandSlug && brandName ? (
+              <Link to={`/brands/${brandSlug}`} style={{ textDecoration: 'none', color: '#B89758' }}>
                 <Typography variant="caption" sx={{ letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700 }}>
-                  {catalogItem.brandName}
+                  {brandName}
                 </Typography>
               </Link>
             ) : product.categoryName ? (
@@ -236,13 +334,42 @@ const ProductDetailPage: React.FC = () => {
                     border: '1px solid rgba(184, 151, 88, 0.4)'
                   }}
                 />
-                {isCuratedAtelier && (
+                {(isCuratedAtelier || productActionState === 'VALID_REFERRAL') && (
                   <Chip
                     icon={<VerifiedUserOutlined sx={{ fontSize: '14px !important', color: '#FAF8F5 !important' }} />}
-                    label="Official Verified Destination"
+                    label={destinationType === 'OFFICIAL_CATEGORY_DESTINATION' ? 'Official Category Destination' : 'Official Verified Destination'}
                     size="small"
                     sx={{
                       bgcolor: 'rgba(229, 9, 20, 0.92)',
+                      color: '#FFFFFF',
+                      backdropFilter: 'blur(8px)',
+                      fontWeight: 700,
+                      fontSize: '0.68rem',
+                      letterSpacing: '0.08em',
+                    }}
+                  />
+                )}
+                {(catalogItem?.isEditorialConcept || productAttributes?.isEditorialConcept) && (
+                  <Chip
+                    label="Editorial Concept"
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(184, 151, 88, 0.92)',
+                      color: '#181816',
+                      backdropFilter: 'blur(8px)',
+                      fontWeight: 700,
+                      fontSize: '0.68rem',
+                      letterSpacing: '0.08em',
+                    }}
+                  />
+                )}
+                {productActionState === 'UNTRUSTED_REFERRAL' && (
+                  <Chip
+                    icon={<SecurityOutlined sx={{ fontSize: '14px !important', color: '#FAF8F5 !important' }} />}
+                    label="Untrusted Destination"
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(180, 83, 9, 0.92)',
                       color: '#FFFFFF',
                       backdropFilter: 'blur(8px)',
                       fontWeight: 700,
@@ -275,7 +402,7 @@ const ProductDetailPage: React.FC = () => {
                 </IconButton>
               </Tooltip>
 
-              {isOutOfStock && !isCuratedAtelier && (
+              {isOutOfStock && productActionState === 'INTERNAL_PURCHASE' && (
                 <Box 
                   sx={{ 
                     position: 'absolute', 
@@ -298,9 +425,9 @@ const ProductDetailPage: React.FC = () => {
             </Box>
 
             {/* Image Attribution */}
-            {catalogItem && (
+            {(catalogItem?.imageAttribution || productAttributes?.imageAttribution) && (
               <Typography variant="caption" sx={{ color: '#8C827A', display: 'block', mt: 1.5, px: 0.5 }}>
-                Imagery: {catalogItem.imageAttribution}
+                Imagery: {catalogItem?.imageAttribution || productAttributes?.imageAttribution}
               </Typography>
             )}
           </Grid>
@@ -310,8 +437,8 @@ const ProductDetailPage: React.FC = () => {
             <Box sx={{ position: 'sticky', top: 120 }}>
               {/* Maison Provenance Header */}
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                {catalogItem ? (
-                  <Link to={`/brands/${catalogItem.brandSlug}`} style={{ textDecoration: 'none' }}>
+                {brandSlug && brandName ? (
+                  <Link to={`/brands/${brandSlug}`} style={{ textDecoration: 'none' }}>
                     <Typography 
                       variant="overline" 
                       sx={{ 
@@ -323,7 +450,7 @@ const ProductDetailPage: React.FC = () => {
                         '&:hover': { color: '#E50914', textDecoration: 'underline' }
                       }}
                     >
-                      {catalogItem.brandName} • {brandEntity?.city || 'HAUTE ATELIER'}, {brandEntity?.country || 'FRANCE'}
+                      {brandName} • {brandEntity?.city || 'HAUTE ATELIER'}, {brandEntity?.country || 'FRANCE'}
                     </Typography>
                   </Link>
                 ) : (
@@ -358,7 +485,7 @@ const ProductDetailPage: React.FC = () => {
               
               {/* Pricing Dossier */}
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-                {catalogItem && catalogItem.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ? (
+                {isPriceUponInquiry ? (
                   <Box>
                     <Typography 
                       variant="h4" 
@@ -372,7 +499,7 @@ const ProductDetailPage: React.FC = () => {
                       Price Upon Inquiry
                     </Typography>
                     <Chip
-                      label="Bespoke Salon Consultation"
+                      label="Bespoke Atelier Consultation"
                       size="small"
                       sx={{ mt: 0.5, bgcolor: '#F4EFE6', color: '#181816', fontWeight: 600, fontSize: '0.72rem' }}
                     />
@@ -388,13 +515,20 @@ const ProductDetailPage: React.FC = () => {
                         letterSpacing: '-0.02em' 
                       }}
                     >
-                      {catalogItem ? catalogItem.priceFormatted : formatINR(product.price)}
+                      {productAttributes?.priceFormatted || (catalogItem ? catalogItem.priceFormatted : formatINR(product.price))}
                     </Typography>
-                    {catalogItem ? (
+                    {productActionState === 'VALID_REFERRAL' && priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' && product.price > 0 ? (
                       <Chip
                         label="Verified Atelier Price"
                         size="small"
                         sx={{ bgcolor: '#EBF5EB', color: '#1E7E34', fontWeight: 700, fontSize: '0.72rem' }}
+                      />
+                    ) : productActionState === 'UNTRUSTED_REFERRAL' ? (
+                      <Chip
+                        label="Unverified Referral"
+                        size="small"
+                        variant="outlined"
+                        sx={{ color: '#D4A373', borderColor: '#D4A373', fontSize: '0.7rem', fontWeight: 600 }}
                       />
                     ) : isDemoPrice(product.sku) ? (
                       <Chip
@@ -423,13 +557,13 @@ const ProductDetailPage: React.FC = () => {
               <Divider sx={{ mb: 4, borderColor: '#EAE5DC' }} />
 
               {/* Supported Sizes & Colors (Only when supported by catalog) */}
-              {catalogItem && (
+              {(displaySizes || displayColors) && (
                 <Box sx={{ mb: 4 }}>
-                  {catalogItem.availableSizes && catalogItem.availableSizes.length > 0 && (
+                  {displaySizes && displaySizes.length > 0 && (
                     <Box sx={{ mb: 2.5 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                         <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#181816' }}>
-                          Available Sizing Benchmark
+                          Representative Sizing Benchmark
                         </Typography>
                         <Button 
                           size="small" 
@@ -441,7 +575,7 @@ const ProductDetailPage: React.FC = () => {
                         </Button>
                       </Box>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {catalogItem.availableSizes.map(sz => (
+                        {displaySizes.map(sz => (
                           <Chip 
                             key={sz} 
                             label={sz} 
@@ -453,13 +587,13 @@ const ProductDetailPage: React.FC = () => {
                     </Box>
                   )}
 
-                  {catalogItem.colors && catalogItem.colors.length > 0 && (
+                  {displayColors && displayColors.length > 0 && (
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#181816', display: 'block', mb: 1 }}>
                         Atelier Colorways
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {catalogItem.colors.map(col => (
+                        {displayColors.map(col => (
                           <Chip 
                             key={col} 
                             label={col} 
@@ -474,13 +608,13 @@ const ProductDetailPage: React.FC = () => {
               )}
 
               {/* ACTION SECTION */}
-              {catalogItem ? (
+              {productActionState === 'VALID_REFERRAL' ? (
                 /* OFFICIAL BRAND DIRECT REFERRAL FLOW */
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 4 }} data-testid="referral-action-section">
                   <Button 
                     fullWidth
                     component="a"
-                    href={catalogItem.destinationUrl}
+                    href={destinationUrl}
                     {...getSafeExternalLinkAttributes()}
                     variant="contained" 
                     size="large"
@@ -496,7 +630,7 @@ const ProductDetailPage: React.FC = () => {
                       fontWeight: 700
                     }}
                   >
-                    Acquire via Official {catalogItem.brandName} Portal
+                    Acquire via Official {brandName} Portal
                   </Button>
 
                   {/* LUMIÈRE Direct-Referral Protocol Disclosure Box */}
@@ -505,7 +639,7 @@ const ProductDetailPage: React.FC = () => {
                     bgcolor: '#FFFFFF', 
                     borderRadius: '8px', 
                     border: '1px solid #EAE5DC', 
-                    mb: 3,
+                    mb: 2,
                     boxShadow: '0 2px 10px rgba(24, 24, 22, 0.02)'
                   }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -515,13 +649,85 @@ const ProductDetailPage: React.FC = () => {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: '#6B665E', fontSize: '0.82rem', lineHeight: 1.6 }}>
-                      Purchases, custom tailoring, payment, shipping, and returns happen directly on {catalogItem.brandName}'s official website. LUMIÈRE applies 0% markup and guarantees verified destination safety ({verifiedDestinationCheck?.approvedDomain || catalogItem.brandSlug}).
+                      This creation directs to {brandName}'s official {destinationType === 'OFFICIAL_CATEGORY_DESTINATION' ? 'category & collection destination' : 'website'}. Purchases, bespoke tailoring, inquiries, and returns happen directly on {brandName}'s official website. LUMIÈRE applies 0% markup and guarantees verified destination domain safety ({verifiedDestinationCheck?.approvedDomain || brandSlug}).
+                    </Typography>
+                  </Box>
+
+                  {/* Editorial Fashion Concept Notice */}
+                  {(catalogItem?.isEditorialConcept || productAttributes?.isEditorialConcept) && (
+                    <Box sx={{ 
+                      p: 2, 
+                      bgcolor: '#FBF9F5', 
+                      borderRadius: '8px', 
+                      border: '1px dashed #D5C9B3', 
+                      mb: 3 
+                    }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#8A5800', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                        Curated Editorial Fashion Concept
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#6B665E', display: 'block', lineHeight: 1.5 }}>
+                        This piece represents an illustrative fashion concept highlighting {brandName}'s signature craftsmanship. Specifications are illustrative design archetypes and do not represent confirmed available inventory, pricing, or an official commercial endorsement by {brandName}.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              ) : productActionState === 'UNTRUSTED_REFERRAL' ? (
+                /* UNTRUSTED / INVALID REFERRAL DESTINATION WARNING (FAIL-CLOSED) */
+                <Box sx={{ mb: 4 }} data-testid="untrusted-referral-section">
+                  <Alert 
+                    severity="warning" 
+                    icon={<SecurityOutlined />}
+                    sx={{ 
+                      mb: 2.5, 
+                      border: '1px solid #D4A373', 
+                      bgcolor: '#FFFDF9', 
+                      borderRadius: '8px',
+                      '& .MuiAlert-message': { width: '100%' }
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Cinzel", serif', color: '#8A5800', letterSpacing: '0.05em' }}>
+                      UNTRUSTED DESTINATION WARNING
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6B665E', fontSize: '0.82rem', mt: 0.5, lineHeight: 1.6 }}>
+                      {verifiedDestinationCheck?.reason || 'This creation is designated for brand-direct referral, but its destination link failed LUMIÈRE security verification. External navigation is blocked to protect against deceptive or malicious domains.'}
+                    </Typography>
+                  </Alert>
+
+                  <Button 
+                    fullWidth
+                    disabled
+                    variant="contained" 
+                    size="large"
+                    sx={{ 
+                      py: 2, 
+                      borderRadius: '30px', 
+                      mb: 2,
+                      fontSize: '0.88rem',
+                      letterSpacing: '0.08em',
+                      fontFamily: '"Cinzel", serif',
+                      fontWeight: 700,
+                      bgcolor: '#EAE5DC !important',
+                      color: '#8C827A !important'
+                    }}
+                  >
+                    Direct Acquisition Blocked (Security Precaution)
+                  </Button>
+
+                  <Box sx={{ 
+                    p: 2, 
+                    bgcolor: '#FFFFFF', 
+                    borderRadius: '8px', 
+                    border: '1px solid #EAE5DC', 
+                    mb: 3
+                  }}>
+                    <Typography variant="caption" sx={{ color: '#8C827A', display: 'block', lineHeight: 1.5 }}>
+                      <strong>LUMIÈRE Fail-Closed Security Policy:</strong> Referral catalog creations are fulfilled exclusively by their respective fashion houses and cannot be purchased through LUMIÈRE internal bags. If destination authenticity cannot be established, acquisition is halted.
                     </Typography>
                   </Box>
                 </Box>
               ) : (
-                /* INTERNAL SHOPPING BAG FLOW FOR DATABASE PRODUCTS */
-                <Box sx={{ mb: 4 }}>
+                /* INTERNAL SHOPPING BAG FLOW FOR ORDINARY DATABASE PRODUCTS ONLY */
+                <Box sx={{ mb: 4 }} data-testid="internal-purchase-section">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                       Quantity:
@@ -591,52 +797,55 @@ const ProductDetailPage: React.FC = () => {
               </Box>
 
               {/* Detailed Atelier Specifications Accordions */}
-              {catalogItem && (
+              {(displayFabric || displayFit || isReferralIntent) && (
                 <Box sx={{ mb: 4 }}>
-                  {catalogItem.fabric && (
+                  {displayFabric && (
                     <Accordion defaultExpanded elevation={0} sx={{ border: '1px solid #EAE5DC', borderRadius: '4px !important', mb: 1, '&::before': { display: 'none' } }}>
                       <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Cinzel", serif' }}>
-                          Fabric & Material Architecture
+                          Fabric & Material Architecture {(catalogItem?.isEditorialConcept || productAttributes?.isEditorialConcept) ? '(Editorial Concept)' : ''}
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails sx={{ pt: 0 }}>
                         <Typography variant="body2" sx={{ color: '#6B665E', lineHeight: 1.7 }}>
-                          {catalogItem.fabric}
+                          {displayFabric}
                         </Typography>
                       </AccordionDetails>
                     </Accordion>
                   )}
 
-                  {catalogItem.fit && (
+                  {displayFit && (
                     <Accordion elevation={0} sx={{ border: '1px solid #EAE5DC', borderRadius: '4px !important', mb: 1, '&::before': { display: 'none' } }}>
                       <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Cinzel", serif' }}>
-                          Silhouette & Tailoring Fit
+                          Silhouette & Tailoring Fit {(catalogItem?.isEditorialConcept || productAttributes?.isEditorialConcept) ? '(Editorial Concept)' : ''}
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails sx={{ pt: 0 }}>
                         <Typography variant="body2" sx={{ color: '#6B665E', lineHeight: 1.7 }}>
-                          {catalogItem.fit}
+                          {displayFit}
                         </Typography>
                       </AccordionDetails>
                     </Accordion>
                   )}
 
-                  <Accordion elevation={0} sx={{ border: '1px solid #EAE5DC', borderRadius: '4px !important', '&::before': { display: 'none' } }}>
-                    <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Cinzel", serif' }}>
-                        Provenance & Verification Source
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ pt: 0 }}>
-                      <Typography variant="body2" sx={{ color: '#6B665E', lineHeight: 1.7 }}>
-                        <strong>Price Source:</strong> {catalogItem.priceSource}<br />
-                        <strong>Destination Type:</strong> {catalogItem.destinationType === 'OFFICIAL_CATEGORY_DESTINATION' ? 'Official Brand Category / Collection Portal' : 'Exact Product Listing'}<br />
-                        <strong>Verified Root Domain:</strong> {catalogItem.destinationUrl}
-                      </Typography>
-                    </AccordionDetails>
-                  </Accordion>
+                  {isReferralIntent && (
+                    <Accordion elevation={0} sx={{ border: '1px solid #EAE5DC', borderRadius: '4px !important', '&::before': { display: 'none' } }}>
+                      <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Cinzel", serif' }}>
+                          Provenance & Verification Source
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ pt: 0 }}>
+                        <Typography variant="body2" sx={{ color: '#6B665E', lineHeight: 1.7 }}>
+                          {priceSource && <><strong>Price Source:</strong> {priceSource}<br /></>}
+                          <strong>Destination Type:</strong> {destinationType === 'OFFICIAL_CATEGORY_DESTINATION' ? 'Official Brand Category / Collection Portal (Category browse; not an exact product listing)' : destinationType === 'EXACT_PRODUCT_PAGE' ? 'Exact Product Listing' : 'Unspecified'}<br />
+                          <strong>Destination URL:</strong> {destinationUrl || 'None provided'}<br />
+                          <strong>Security Status:</strong> {verifiedDestinationCheck ? `${verifiedDestinationCheck.badgeLabel} (${verifiedDestinationCheck.securityStatus})` : 'Unverified Destination'}
+                        </Typography>
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
                 </Box>
               )}
 

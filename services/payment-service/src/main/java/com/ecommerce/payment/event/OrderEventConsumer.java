@@ -16,12 +16,19 @@ public class OrderEventConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.PAYMENT_ORDER_QUEUE)
     public void handleOrderCreatedEvent(OrderEvent event) {
+        if (event == null) {
+            log.error("Received null OrderCreatedEvent, discarding message");
+            return;
+        }
+
         log.info("Received OrderCreatedEvent for Order ID: {}", event.getOrderId());
         try {
             // Note: In this scenario, we create a pending payment record that 
             // the user will need to fulfill, or we automatically attempt to charge a stored card.
             // For this design, we will just prepare the Payment record.
             paymentService.initializePayment(event.getOrderId(), event.getUserId(), event.getTotalAmount());
+        } catch (com.ecommerce.common.exception.ValidationException e) {
+            log.warn("Validation failed for OrderCreatedEvent for Order ID {}: {}", event.getOrderId(), e.getMessage());
         } catch (Exception e) {
             log.error("Error processing OrderCreatedEvent for Order ID: {}", event.getOrderId(), e);
         }

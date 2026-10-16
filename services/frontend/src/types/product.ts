@@ -49,4 +49,6 @@ export interface PaginationParams {
   search?: string;
   brand?: string;
   includeAll?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
 }

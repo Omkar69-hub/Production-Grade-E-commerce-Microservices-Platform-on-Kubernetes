@@ -6,7 +6,7 @@ import { Box, Button, TextField, Typography, Container, Alert, Link as MuiLink, 
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AuthService } from '../../services/AuthService';
-import { setCredentials } from '../../store/slices/authSlice';
+import { setCredentials, logout } from '../../store/slices/authSlice';
 import { LockOutlined } from '@mui/icons-material';
 
 const loginSchema = z.object({
@@ -36,18 +36,30 @@ const LoginPage: React.FC = () => {
       dispatch(setCredentials({ user: response.user, token: response.token }));
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
+      // Security: Strictly fail closed. Wipe any residual credentials or stale tokens.
+      dispatch(logout());
+      localStorage.removeItem('token');
+
+      if (err.response?.status === 503) {
+        setError('Authentication service is currently unavailable. Please contact the atelier concierge or try again later.');
+      } else if (!err.response) {
+        setError('Unable to reach authentication services. Please verify your connection.');
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Invalid credentials. Please verify your email and password.');
+      } else {
+        setError(err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
+      }
     }
   };
 
   const fillCustomerDemo = () => {
-    setValue('email', 'customer@ecommerce.com');
-    setValue('password', 'customer123');
+    setValue('email', 'customer@ecommerce.com', { shouldValidate: true });
+    setValue('password', 'customer123', { shouldValidate: true });
   };
 
   const fillAdminDemo = () => {
-    setValue('email', 'admin@ecommerce.com');
-    setValue('password', 'admin123');
+    setValue('email', 'admin@ecommerce.com', { shouldValidate: true });
+    setValue('password', 'admin123', { shouldValidate: true });
   };
 
   return (

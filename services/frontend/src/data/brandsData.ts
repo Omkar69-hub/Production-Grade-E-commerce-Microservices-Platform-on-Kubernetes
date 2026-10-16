@@ -1,3 +1,14 @@
+/**
+ * LUMIÈRE Brand Directory & Domain Boundary Registry
+ * 
+ * IMPORTANT ARCHITECTURAL DISCLAIMER (STAGE 8D.2 / 8D.3):
+ * The `isVerified: true` property and `verifiedDomain` fields in this registry indicate
+ * internal editorial curation and strict domain-boundary matching against approved hostnames.
+ * They do NOT represent certified cryptographic brand-domain ownership (such as DNS TXT
+ * tokens, WHOIS legal registration verification, or TLS certificate bindings), nor formal
+ * commercial affiliate contracts with the respective maisons.
+ */
+
 export type BrandVerificationStatus = 
   | 'VERIFIED_OFFICIAL' 
   | 'UNVERIFIED_CANDIDATE' 

@@ -19,6 +19,7 @@ const OrderSuccessPage = lazy(() => import('../pages/checkout/OrderSuccessPage')
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
 const AdminProductList = lazy(() => import('../pages/admin/AdminProductList'));
+const AdminOrderList = lazy(() => import('../pages/admin/AdminOrderList'));
 const AdminLayout = lazy(() => import('../layouts/AdminLayout'));
 
 const NotFound = () => (
@@ -63,7 +64,9 @@ const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProductList />} />
+            <Route path="orders" element={<AdminOrderList />} />
           </Route>
         </Route>
 

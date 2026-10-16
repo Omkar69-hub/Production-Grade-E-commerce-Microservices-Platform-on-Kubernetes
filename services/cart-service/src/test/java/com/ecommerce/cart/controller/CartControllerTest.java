@@ -17,10 +17,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ecommerce.common.exception.BusinessException;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,6 +79,49 @@ class CartControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.subtotal").value(200.0));
+    }
+
+    @Test
+    @WithMockUser(username = "123e4567-e89b-12d3-a456-426614174000")
+    void givenBusinessExceptionOnAddItem_whenPostCartItems_thenReturns422UnprocessableEntity() throws Exception {
+        UUID userId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        CartItemRequest request = CartItemRequest.builder()
+                .productId(UUID.randomUUID())
+                .quantity(1)
+                .build();
+
+        when(cartService.addItemToCart(eq(userId), any(CartItemRequest.class)))
+                .thenThrow(new BusinessException("External atelier referral creations must be acquired via the brand's official portal"));
+
+        mockMvc.perform(post("/api/v1/cart/items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.title").value("Unprocessable Entity"))
+                .andExpect(jsonPath("$.detail").value("External atelier referral creations must be acquired via the brand's official portal"));
+    }
+
+    @Test
+    @WithMockUser(username = "123e4567-e89b-12d3-a456-426614174000")
+    void givenBusinessExceptionOnUpdateItem_whenPutCartItems_thenReturns422UnprocessableEntity() throws Exception {
+        UUID userId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        UUID itemId = UUID.randomUUID();
+        CartItemRequest request = CartItemRequest.builder()
+                .productId(itemId)
+                .quantity(3)
+                .build();
+
+        when(cartService.updateItemQuantity(eq(userId), eq(itemId), any(CartItemRequest.class)))
+                .thenThrow(new BusinessException("Items with zero, negative, or unverified pricing cannot be added to the bag"));
+
+        mockMvc.perform(put("/api/v1/cart/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.title").value("Unprocessable Entity"))
+                .andExpect(jsonPath("$.detail").value("Items with zero, negative, or unverified pricing cannot be added to the bag"));
     }
 
     @Test

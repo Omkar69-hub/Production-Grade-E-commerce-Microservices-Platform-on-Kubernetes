@@ -40,6 +40,7 @@ export const BrandDetailPage: React.FC = () => {
         if (!isElectronic && !list.some(existing => existing.id === p.id || existing.name === p.name)) {
           list.push({
             id: p.id,
+            uuid: p.id,
             slug: p.sku || p.id,
             name: p.name,
             brandId: brand?.id || '',
@@ -53,13 +54,14 @@ export const BrandDetailPage: React.FC = () => {
             imageUrl: p.imageUrl || brand?.heroImage || '',
             imageAttribution: 'LUMIÈRE Catalog Database',
             priceINR: p.price,
-            priceFormatted: `₹${p.price.toLocaleString('en-IN')}`,
-            priceVerificationStatus: 'VERIFIED_ATELIER_PRICE',
-            priceSource: 'Atelier Published Catalog',
+            priceFormatted: p.price === 0 ? 'Price upon atelier inquiry' : `₹${p.price.toLocaleString('en-IN')}`,
+            priceVerificationStatus: p.price === 0 ? 'PRICE_UPON_INQUIRY' : 'ILLUSTRATIVE_ESTIMATE',
+            priceSource: p.price === 0 ? 'Direct Atelier Inquiry — Seasonal Collection Category Listing' : 'Atelier Catalog Listing',
             description: p.description,
-            fabric: 'Artisanal Textile',
-            fit: 'Standard Atelier Fit',
+            fabric: 'Artisanal Textile (Illustrative concept)',
+            fit: 'Standard Atelier Fit (Illustrative concept)',
             availableSizes: ['Custom Fit'],
+            isEditorialConcept: true,
           });
         }
       }
@@ -444,11 +446,11 @@ export const BrandDetailPage: React.FC = () => {
                       {/* Price row */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 2.5 }}>
                         <Typography variant="h5" sx={{ fontWeight: 700, color: '#E50914', fontFamily: '"Outfit", sans-serif' }}>
-                          {product.priceFormatted}
+                          {product.priceVerificationStatus === 'PRICE_UPON_INQUIRY' || product.priceINR === 0 ? 'Price upon inquiry' : product.priceFormatted}
                         </Typography>
                         <Tooltip title={`Source: ${product.priceSource}`}>
                           <Typography variant="caption" sx={{ color: '#888', textDecoration: 'underline', cursor: 'help' }}>
-                            {product.priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' ? 'Verified Price' : 'Price on Inquiry'}
+                            {product.priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' && product.priceINR > 0 ? 'Verified Price' : 'Price on Inquiry'}
                           </Typography>
                         </Tooltip>
                       </Box>

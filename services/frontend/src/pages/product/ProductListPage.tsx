@@ -16,6 +16,12 @@ import { useProducts } from '../../hooks/useProducts';
 import ProductCard from '../../components/product/ProductCard';
 import { CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
 import SizingMatrixModal from '../../components/sizing/SizingMatrixModal';
+import { 
+  isCategoryMatch, 
+  serializeCategoryParamToBackendUuid, 
+  getProductSubcategory, 
+  getCapsuleDefinition 
+} from '../../utils/categoryMapping';
 
 export const ProductListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -23,6 +29,7 @@ export const ProductListPage: React.FC = () => {
   
   // URL Params
   const searchParam = searchParams.get('search') || '';
+  const categoryIdParam = searchParams.get('categoryId') || searchParams.get('category') || '';
   const genderParam = searchParams.get('gender') || 'all';
   const brandParam = searchParams.get('brand') || '';
   const subcategoryParam = searchParams.get('subcategory') || '';
@@ -51,6 +58,7 @@ export const ProductListPage: React.FC = () => {
     size: 20,
     search: searchParam || undefined,
     brand: brandParam || undefined,
+    categoryId: categoryIdParam ? serializeCategoryParamToBackendUuid(categoryIdParam) : undefined,
   });
 
   // Clothing-only API items (excluding electronics)
@@ -93,10 +101,21 @@ export const ProductListPage: React.FC = () => {
 
   // Combined and filtered catalog
   const filteredProducts = useMemo(() => {
-    // 1. Combine verified products and non-duplicate API products
+    // 1. Combine verified products and non-duplicate API products (Identity bridge: UUID, legacy ID, SKU, frontendId)
     const combined = [...verifiedProducts];
     for (const apiProd of apiClothingProducts) {
-      if (!combined.some((p) => p.id === apiProd.id)) {
+      const isDuplicate = combined.some((p) => {
+        if (p.id === apiProd.id) return true;
+        if (p.sku && apiProd.sku && p.sku.toUpperCase() === apiProd.sku.toUpperCase()) return true;
+        let pAttr: any = {};
+        try { if (p.attributes) pAttr = JSON.parse(p.attributes); } catch {}
+        let apiAttr: any = {};
+        try { if (apiProd.attributes) apiAttr = JSON.parse(apiProd.attributes); } catch {}
+        if (pAttr.uuid && (apiProd.id === pAttr.uuid || apiAttr.uuid === pAttr.uuid)) return true;
+        if (apiAttr.frontendId && p.id === apiAttr.frontendId) return true;
+        return false;
+      });
+      if (!isDuplicate) {
         combined.push(apiProd);
       }
     }
@@ -148,16 +167,59 @@ export const ProductListPage: React.FC = () => {
       });
     }
 
-    // 4. Filter by Brand
+    // 4. Filter by Category or Editorial Capsule
+    if (categoryIdParam) {
+      const cleanCat = categoryIdParam.trim().toLowerCase();
+      const capsule = getCapsuleDefinition(cleanCat);
+
+      if (capsule) {
+        // Handle editorial capsule subcategory & keyword grouping
+        result = result.filter((p) => {
+          const itemSub = getProductSubcategory(p).toLowerCase();
+          const matchesSub = capsule.subcategories.some(
+            (sub) => itemSub === sub.toLowerCase() || itemSub.includes(sub.toLowerCase())
+          );
+          if (matchesSub) return true;
+
+          if (capsule.keywords && capsule.keywords.length > 0) {
+            const text = `${p.name} ${p.description || ''} ${p.categoryName || ''} ${itemSub}`.toLowerCase();
+            return capsule.keywords.some((kw) => text.includes(kw));
+          }
+          return false;
+        });
+      } else {
+        // Standard category entity match or category name match
+        result = result.filter((p) =>
+          isCategoryMatch(p.categoryId, categoryIdParam) ||
+          (p.categoryName || '').toLowerCase() === cleanCat ||
+          (p.categoryName || '').toLowerCase().includes(cleanCat)
+        );
+      }
+    }
+
+    // 5. Filter by Brand
     if (brandParam) {
       const bQuery = brandParam.toLowerCase();
       result = result.filter((p) => (p.brand || '').toLowerCase() === bQuery);
     }
 
-    // 5. Filter by Subcategory
+    // 6. Filter by Subcategory (handles both curated and backend attributes safely)
     if (subcategoryParam) {
-      const subQuery = subcategoryParam.toLowerCase();
-      result = result.filter((p) => (p.categoryName || '').toLowerCase() === subQuery);
+      const subQuery = subcategoryParam.toLowerCase().trim();
+      const normQuery = subQuery.replace(/[^a-z0-9]/g, '');
+
+      result = result.filter((p) => {
+        const itemSub = getProductSubcategory(p).toLowerCase().trim();
+        if (!itemSub) return false;
+        const normSub = itemSub.replace(/[^a-z0-9]/g, '');
+
+        return (
+          itemSub === subQuery ||
+          normSub === normQuery ||
+          itemSub.includes(subQuery) ||
+          subQuery.includes(itemSub)
+        );
+      });
     }
 
     // 6. Filter by Size
@@ -237,6 +299,7 @@ export const ProductListPage: React.FC = () => {
     verifiedProducts,
     apiClothingProducts,
     genderParam,
+    categoryIdParam,
     searchParam,
     brandParam,
     subcategoryParam,
@@ -279,10 +342,13 @@ export const ProductListPage: React.FC = () => {
 
   const isFiltering = Boolean(
     searchParam || (genderParam && genderParam !== 'all') || brandParam || 
-    subcategoryParam || sizeParam || colorParam || priceRangeParam
+    subcategoryParam || sizeParam || colorParam || priceRangeParam || categoryIdParam
   );
 
+  const activeCapsule = getCapsuleDefinition(categoryIdParam);
   const activeGenderLabel = 
+    activeCapsule ? activeCapsule.name :
+    subcategoryParam ? `${subcategoryParam} Silhouettes` :
     genderParam === 'women' ? "Women's Haute Couture & Pret" :
     genderParam === 'men' ? "Men's Sartorial & Festive" :
     genderParam === 'kids' ? "Kids' Heritage & Festive" : "All Signature Collections";
@@ -655,6 +721,19 @@ export const ProductListPage: React.FC = () => {
             <Typography variant="caption" sx={{ fontWeight: 700, color: '#8C827A' }}>
               ACTIVE FILTERS:
             </Typography>
+            {categoryIdParam && (
+              <Chip 
+                label={activeCapsule ? `Capsule: ${activeCapsule.name}` : `Category: ${categoryIdParam}`} 
+                size="small" 
+                onDelete={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete('category');
+                  newParams.delete('categoryId');
+                  newParams.set('page', '1');
+                  navigate(`/products?${newParams.toString()}`);
+                }} 
+              />
+            )}
             {genderParam !== 'all' && (
               <Chip label={`Audience: ${genderParam}`} size="small" onDelete={() => updateFilter('gender', 'all')} />
             )}

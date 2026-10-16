@@ -121,7 +121,7 @@ const OrderSuccessPage: React.FC = () => {
           <Button 
             variant="outlined" 
             component={Link} 
-            to="/" 
+            to="/products" 
             startIcon={<ShoppingBagOutlined />}
             sx={{ 
               py: 1.5, 

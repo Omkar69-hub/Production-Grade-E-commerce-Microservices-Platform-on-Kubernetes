@@ -1,7 +1,10 @@
 package com.ecommerce.order.client;
 
 import com.ecommerce.common.response.SuccessResponse;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +24,9 @@ public interface CartServiceClient {
     SuccessResponse<Void> clearCart(@RequestHeader("Authorization") String token);
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     class CartDto {
         private UUID userId;
         private List<CartItemDto> items;
@@ -28,6 +34,9 @@ public interface CartServiceClient {
     }
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     class CartItemDto {
         private UUID productId;
         private String sku;

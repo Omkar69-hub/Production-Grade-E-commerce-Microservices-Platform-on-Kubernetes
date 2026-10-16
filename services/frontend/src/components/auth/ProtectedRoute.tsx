@@ -15,8 +15,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && !user.roles.includes(requiredRole)) {
-    return <Navigate to="/" replace />; // Or to a 403 Forbidden page
+  if (requiredRole) {
+    const hasRole =
+      Array.isArray(user.roles) &&
+      user.roles.some((r) => {
+        if (typeof r !== 'string') return false;
+        const normalized = r.trim().toUpperCase();
+        const target = requiredRole.trim().toUpperCase();
+        return normalized === target || normalized === `ROLE_${target}`;
+      });
+
+    if (!hasRole) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <Outlet />;

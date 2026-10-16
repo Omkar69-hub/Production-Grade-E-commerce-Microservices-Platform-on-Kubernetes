@@ -139,4 +139,25 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].name").value("Silk Kurta"));
     }
+
+    @Test
+    void givenPriceRange_whenSearchProducts_thenCallsPriceFilteredSearch() throws Exception {
+        ProductResponse response = ProductResponse.builder()
+                .name("Embroidered Sherwani")
+                .sku("SHER-001")
+                .price(BigDecimal.valueOf(75000.0))
+                .status(ProductStatus.ACTIVE)
+                .build();
+
+        PageResponse<ProductResponse> page = PageResponse.<ProductResponse>builder()
+                .content(List.of(response))
+                .totalElements(1)
+                .build();
+
+        when(productService.searchProducts(any(), any(), any(), any(BigDecimal.class), any(BigDecimal.class), any(PaginationDto.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/products?minPrice=50000&maxPrice=100000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Embroidered Sherwani"));
+    }
 }

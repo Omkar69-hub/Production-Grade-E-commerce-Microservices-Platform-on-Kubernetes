@@ -10,6 +10,72 @@ import { formatINR, isDemoPrice } from '../../utils/currency';
 import { useComparison } from '../../context/ComparisonContext';
 
 import { useWishlist } from '../../utils/wishlistStorage';
+import { verifyBrandDomain } from '../../utils/domainVerifier';
+
+export interface ProductCardEvaluation {
+  isInquiryOrReferral: boolean;
+  isPriceOnInquiry: boolean;
+  isTrustedDestination: boolean;
+  isUntrustedDestination: boolean;
+  subLabelText: string | null;
+  ctaText: 'View Dossier' | 'Acquire' | 'Reserved';
+}
+
+export const evaluateProductCardState = (product: Product): ProductCardEvaluation => {
+  let attrData: any = {};
+  try {
+    if (product.attributes) {
+      attrData = typeof product.attributes === 'string' ? JSON.parse(product.attributes) : product.attributes;
+    }
+  } catch {
+    attrData = {};
+  }
+
+  const isPriceOnInquiry = attrData.priceVerificationStatus === 'PRICE_UPON_INQUIRY' || !product.price || product.price <= 0;
+  
+  const destinationUrl = attrData.destinationUrl;
+  const brandQuery = attrData.brandSlug || (product.brand ? product.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined);
+  const domainCheck = destinationUrl ? verifyBrandDomain(destinationUrl, brandQuery) : undefined;
+  const isTrustedDestination = Boolean(domainCheck?.isValid && domainCheck?.isVerifiedOfficial);
+  const isUntrustedDestination = Boolean(destinationUrl && !isTrustedDestination);
+
+  const isInquiryOrReferral = Boolean(
+    isPriceOnInquiry ||
+    attrData.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
+    !product.price ||
+    product.price <= 0 ||
+    attrData.isReferral === true ||
+    Boolean(attrData.destinationUrl) ||
+    Boolean(attrData.destinationType) ||
+    attrData.fulfillmentType === 'EXTERNAL_REFERRAL' ||
+    attrData.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
+    attrData.isEditorialConcept === true ||
+    (product.id && product.id.startsWith('prod-'))
+  );
+
+  let subLabelText: string | null = null;
+  if (isUntrustedDestination) {
+    subLabelText = 'Unverified Referral';
+  } else if (isInquiryOrReferral) {
+    subLabelText = isPriceOnInquiry 
+      ? 'Atelier Consultation' 
+      : (attrData.priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' && product.price > 0 ? 'Verified Atelier Price' : 'Price on Inquiry');
+  } else if (isDemoPrice(product.sku)) {
+    subLabelText = 'Unverified Demo Feed';
+  }
+
+  const isOutOfStock = product.status === 'OUT_OF_STOCK';
+  const ctaText = isInquiryOrReferral ? 'View Dossier' : (isOutOfStock ? 'Reserved' : 'Acquire');
+
+  return {
+    isInquiryOrReferral,
+    isPriceOnInquiry,
+    isTrustedDestination,
+    isUntrustedDestination,
+    subLabelText,
+    ctaText,
+  };
+};
 
 interface ProductCardProps {
   product: Product;
@@ -28,6 +94,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const { addToComparison, removeFromComparison, isInComparison } = useComparison();
   const comparing = isInComparison(product.id);
+
+  const cardEvaluation = evaluateProductCardState(product);
 
   const toggleComparison = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,6 +118,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // Fail-closed: Never perform internal add-to-cart on inquiry or referral items
+    if (cardEvaluation.isInquiryOrReferral) {
+      return;
+    }
     if (cartId && !addingToCart) {
       setAddingToCart(true);
       try {
@@ -59,6 +131,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       }
     }
   };
+
+  const attrData = (() => {
+    try {
+      return product.attributes ? JSON.parse(product.attributes) : {};
+    } catch {
+      return {};
+    }
+  })();
 
   const isOutOfStock = product.status === 'OUT_OF_STOCK';
   // High-fidelity luxury editorial imagery for couture atelier garments
@@ -139,28 +219,45 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </IconButton>
         </Box>
 
-        {/* Category Pill Tag */}
-        {product.categoryName && (
-          <Chip
-            label={product.categoryName}
-            size="small"
-            sx={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              bgcolor: 'rgba(24, 24, 22, 0.82)',
-              backdropFilter: 'blur(6px)',
-              color: '#FAF8F5',
-              fontFamily: '"Cinzel", serif',
-              fontSize: '0.65rem',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-              borderRadius: '4px',
-              height: 24,
-            }}
-          />
-        )}
+        {/* Category & Editorial Concept Pill Tags */}
+        <Box sx={{ position: 'absolute', bottom: 12, left: 12, display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+          {product.categoryName && (
+            <Chip
+              label={product.categoryName}
+              size="small"
+              sx={{
+                bgcolor: 'rgba(24, 24, 22, 0.82)',
+                backdropFilter: 'blur(6px)',
+                color: '#FAF8F5',
+                fontFamily: '"Cinzel", serif',
+                fontSize: '0.65rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                borderRadius: '4px',
+                height: 24,
+              }}
+            />
+          )}
+          {attrData.isEditorialConcept && (
+            <Chip
+              label="Editorial Concept"
+              size="small"
+              sx={{
+                bgcolor: 'rgba(184, 151, 88, 0.92)',
+                backdropFilter: 'blur(6px)',
+                color: '#181816',
+                fontFamily: '"Cinzel", serif',
+                fontSize: '0.62rem',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                borderRadius: '4px',
+                height: 24,
+              }}
+            />
+          )}
+        </Box>
 
         {isOutOfStock && (
           <Box sx={{ 
@@ -231,80 +328,70 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </Typography>
 
         {/* Price and Action */}
-        {(() => {
-          let attrData: any = {};
-          try {
-            if (product.attributes) {
-              attrData = JSON.parse(product.attributes);
-            }
-          } catch {
-            // Ignore parse error
-          }
-          const isVerifiedAtelier = Boolean(attrData.destinationUrl || product.id.startsWith('prod-'));
-          const isPriceOnInquiry = attrData.priceVerificationStatus === 'PRICE_UPON_INQUIRY' || (isVerifiedAtelier && product.price === 0);
+        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid #F0ECE4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: '#8C827A', textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+              PRICE (INR)
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#181816', fontSize: cardEvaluation.isPriceOnInquiry ? '0.92rem' : '1.1rem' }}>
+              {cardEvaluation.isPriceOnInquiry ? 'Price on Inquiry' : formatINR(product.price)}
+            </Typography>
+            {cardEvaluation.subLabelText && (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: cardEvaluation.isUntrustedDestination ? '#D32F2F' : '#B89758', 
+                  fontSize: '0.65rem', 
+                  display: 'block', 
+                  fontWeight: 600,
+                  letterSpacing: cardEvaluation.subLabelText === 'Unverified Demo Feed' ? '0.02em' : 'inherit'
+                }}
+              >
+                {cardEvaluation.subLabelText}
+              </Typography>
+            )}
+          </Box>
 
-          return (
-            <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid #F0ECE4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#8C827A', textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em' }}>
-                  PRICE (INR)
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#181816', fontSize: isPriceOnInquiry ? '0.92rem' : '1.1rem' }}>
-                  {isPriceOnInquiry ? 'Price on Inquiry' : formatINR(product.price)}
-                </Typography>
-                {isVerifiedAtelier ? (
-                  <Typography variant="caption" sx={{ color: '#B89758', fontSize: '0.65rem', display: 'block', fontWeight: 600 }}>
-                    {isPriceOnInquiry ? 'Atelier Consultation' : 'Verified Atelier Price'}
-                  </Typography>
-                ) : isDemoPrice(product.sku) ? (
-                  <Typography variant="caption" sx={{ color: '#A08040', fontSize: '0.62rem', display: 'block', letterSpacing: '0.02em', fontWeight: 600 }}>
-                    Unverified Demo Feed
-                  </Typography>
-                ) : null}
-              </Box>
-
-              {isVerifiedAtelier ? (
-                <Button 
-                  variant="outlined" 
-                  className="lumiere-pill-btn"
-                  sx={{ 
-                    py: 0.8, 
-                    px: 2, 
-                    fontWeight: 600, 
-                    fontSize: '0.78rem',
-                    borderRadius: '30px',
-                    borderColor: '#181816',
-                    color: '#181816',
-                    '&:hover': { bgcolor: '#181816', color: '#FAF8F5' }
-                  }}
-                >
-                  Maison Dossier
-                </Button>
-              ) : (
-                <Button 
-                  variant="contained" 
-                  className={!isOutOfStock ? "lumiere-shimmer-btn lumiere-pill-btn" : ""}
-                  onClick={handleAddToCart}
-                  disabled={isOutOfStock || addingToCart}
-                  startIcon={<ShoppingBagOutlined sx={{ fontSize: 16 }} />}
-                  sx={{ 
-                    py: 0.9, 
-                    px: 2.4, 
-                    fontWeight: 600, 
-                    fontSize: '0.82rem',
-                    borderRadius: '30px',
-                    bgcolor: '#0A0A0A',
-                    color: '#FFFFFF',
-                    border: '1px solid transparent',
-                    '&:hover': { bgcolor: '#1E1E1E', borderColor: '#E50914', boxShadow: '0 4px 14px rgba(229, 9, 20, 0.28)' }
-                  }}
-                >
-                  {isOutOfStock ? 'Reserved' : addingToCart ? 'Added' : 'Acquire'}
-                </Button>
-              )}
-            </Box>
-          );
-        })()}
+          {cardEvaluation.isInquiryOrReferral ? (
+            <Button 
+              variant="outlined" 
+              className="lumiere-pill-btn"
+              sx={{ 
+                py: 0.8, 
+                px: 2, 
+                fontWeight: 600, 
+                fontSize: '0.78rem',
+                borderRadius: '30px',
+                borderColor: '#181816',
+                color: '#181816',
+                '&:hover': { bgcolor: '#181816', color: '#FAF8F5' }
+              }}
+            >
+              View Dossier
+            </Button>
+          ) : (
+            <Button 
+              variant="contained" 
+              className={!isOutOfStock ? "lumiere-shimmer-btn lumiere-pill-btn" : ""}
+              onClick={handleAddToCart}
+              disabled={isOutOfStock || addingToCart}
+              startIcon={<ShoppingBagOutlined sx={{ fontSize: 16 }} />}
+              sx={{ 
+                py: 0.9, 
+                px: 2.4, 
+                fontWeight: 600, 
+                fontSize: '0.82rem',
+                borderRadius: '30px',
+                bgcolor: '#0A0A0A',
+                color: '#FFFFFF',
+                border: '1px solid transparent',
+                '&:hover': { bgcolor: '#1E1E1E', borderColor: '#E50914', boxShadow: '0 4px 14px rgba(229, 9, 20, 0.28)' }
+              }}
+            >
+              {isOutOfStock ? 'Reserved' : addingToCart ? 'Added' : 'Acquire'}
+            </Button>
+          )}
+        </Box>
       </CardContent>
     </Card>
   );

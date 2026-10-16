@@ -29,7 +29,7 @@ export const OrderService = {
     return response.data.data;
   },
 
-  getAllOrders: async (page = 0, size = 50): Promise<any> => {
+  getAllOrders: async (page = 0, size = 50): Promise<import('../types/product').PaginatedResponse<OrderResponse>> => {
     const response = await apiClient.get(`/api/v1/orders/all`, {
       params: { page, size }
     });

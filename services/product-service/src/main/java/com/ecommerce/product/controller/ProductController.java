@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +28,8 @@ public class ProductController {
             @RequestParam(required = false) UUID categoryId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false, defaultValue = "false") boolean includeAll,
             @Valid PaginationDto pagination,
             org.springframework.security.core.Authentication authentication) {
@@ -34,9 +37,16 @@ public class ProductController {
         boolean allowAll = includeAll && authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        PageResponse<ProductResponse> response = allowAll
-                ? productService.searchAllProducts(categoryId, name, brand, pagination)
-                : productService.searchProducts(categoryId, name, brand, pagination);
+        PageResponse<ProductResponse> response;
+        if (minPrice == null && maxPrice == null) {
+            response = allowAll
+                    ? productService.searchAllProducts(categoryId, name, brand, pagination)
+                    : productService.searchProducts(categoryId, name, brand, pagination);
+        } else {
+            response = allowAll
+                    ? productService.searchAllProducts(categoryId, name, brand, minPrice, maxPrice, pagination)
+                    : productService.searchProducts(categoryId, name, brand, minPrice, maxPrice, pagination);
+        }
         
         return ResponseEntity.ok(SuccessResponse.<PageResponse<ProductResponse>>builder()
                 .data(response)

@@ -1,7 +1,10 @@
 package com.ecommerce.cart.client;
 
 import com.ecommerce.common.response.SuccessResponse;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,15 +22,22 @@ public interface ProductServiceClient {
     SuccessResponse<InventoryDto> getInventory(@PathVariable("id") UUID id);
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     class ProductDto {
         private String name;
         private String sku;
         private BigDecimal price;
         private String imageUrl;
         private String status;
+        private String attributes;
     }
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     class InventoryDto {
         private int quantityAvailable;
     }

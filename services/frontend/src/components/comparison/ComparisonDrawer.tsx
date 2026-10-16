@@ -4,13 +4,14 @@ import {
   TableCell, TableContainer, TableHead, TableRow, Paper, Chip 
 } from '@mui/material';
 import { CloseOutlined, DeleteOutlined, ShoppingBagOutlined, CompareArrowsOutlined } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import { useComparison } from '../../context/ComparisonContext';
 import { formatINR, isDemoPrice } from '../../utils/currency';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
 import type { AppDispatch } from '../../store';
 
-const parseAttributes = (raw?: string): Record<string, string> => {
+const parseAttributes = (raw?: string): Record<string, any> => {
   if (!raw) return {};
   try {
     return JSON.parse(raw);
@@ -30,6 +31,24 @@ export const ComparisonDrawer: React.FC = () => {
   const attributeKeys = Array.from(new Set(allParsed.flatMap(p => Object.keys(p))));
 
   const handleAcquire = (productId: string) => {
+    const item = comparisonItems.find(p => p.id === productId);
+    if (item) {
+      const attrs = parseAttributes(item.attributes);
+      const isReferralOrInquiry =
+        Boolean(item.id && item.id.startsWith('prod-')) ||
+        Boolean(attrs.destinationUrl) ||
+        Boolean(attrs.isReferral) ||
+        Boolean(attrs.destinationType) ||
+        attrs.fulfillmentType === 'EXTERNAL_REFERRAL' ||
+        attrs.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
+        attrs.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
+        Boolean(attrs.isEditorialConcept) ||
+        !item.price ||
+        item.price <= 0;
+      if (isReferralOrInquiry) {
+        return; // Fail-closed: Never acquire inquiry or referral items
+      }
+    }
     dispatch(addToCart({ item: { productId, quantity: 1 } }));
   };
 
@@ -156,18 +175,26 @@ export const ComparisonDrawer: React.FC = () => {
               {/* Price (in ₹ INR) */}
               <TableRow>
                 <TableCell sx={{ fontWeight: 600, color: '#6B665E' }}>Price (INR ₹)</TableCell>
-                {comparisonItems.map(item => (
-                  <TableCell key={item.id} align="center">
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#B89758' }}>
-                      {formatINR(item.price)}
-                    </Typography>
-                    {isDemoPrice(item.sku) && (
-                      <Typography variant="caption" sx={{ color: '#A08040', display: 'block', fontSize: '0.65rem' }}>
-                        Unverified Demo Feed
+                {comparisonItems.map((item, idx) => {
+                  const attrs = allParsed[idx] || {};
+                  const isPriceOnInquiry = attrs.priceVerificationStatus === 'PRICE_UPON_INQUIRY' || item.price === 0;
+                  return (
+                    <TableCell key={item.id} align="center">
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#B89758' }}>
+                        {isPriceOnInquiry ? 'Price upon inquiry' : formatINR(item.price)}
                       </Typography>
-                    )}
-                  </TableCell>
-                ))}
+                      {isPriceOnInquiry ? (
+                        <Typography variant="caption" sx={{ color: '#B89758', display: 'block', fontSize: '0.65rem', fontWeight: 600 }}>
+                          Atelier Consultation
+                        </Typography>
+                      ) : isDemoPrice(item.sku) ? (
+                        <Typography variant="caption" sx={{ color: '#A08040', display: 'block', fontSize: '0.65rem' }}>
+                          Unverified Demo Feed
+                        </Typography>
+                      ) : null}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
 
               {/* Brand & SKU */}
@@ -218,26 +245,61 @@ export const ComparisonDrawer: React.FC = () => {
               {/* Actions */}
               <TableRow>
                 <TableCell sx={{ fontWeight: 600, color: '#6B665E' }}>Acquisition</TableCell>
-                {comparisonItems.map(item => (
-                  <TableCell key={item.id} align="center">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<ShoppingBagOutlined />}
-                      onClick={() => handleAcquire(item.id)}
-                      sx={{
-                        bgcolor: '#181816',
-                        color: '#FAF8F5',
-                        border: '1px solid #B89758',
-                        fontFamily: '"Cinzel", serif',
-                        fontSize: '0.75rem',
-                        '&:hover': { bgcolor: '#2A2A26' }
-                      }}
-                    >
-                      Acquire Piece
-                    </Button>
-                  </TableCell>
-                ))}
+                {comparisonItems.map((item, idx) => {
+                  const attrs = allParsed[idx] || {};
+                  const isReferralOrInquiry =
+                    Boolean(item.id && item.id.startsWith('prod-')) ||
+                    Boolean(attrs.destinationUrl) ||
+                    Boolean(attrs.isReferral) ||
+                    Boolean(attrs.destinationType) ||
+                    attrs.fulfillmentType === 'EXTERNAL_REFERRAL' ||
+                    attrs.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
+                    attrs.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
+                    Boolean(attrs.isEditorialConcept) ||
+                    !item.price ||
+                    item.price <= 0;
+
+                  return (
+                    <TableCell key={item.id} align="center">
+                      {isReferralOrInquiry ? (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          component={Link}
+                          to={`/products/${item.id}`}
+                          sx={{
+                            borderColor: '#181816',
+                            color: '#181816',
+                            fontFamily: '"Cinzel", serif',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            borderRadius: '20px',
+                            '&:hover': { bgcolor: '#181816', color: '#FAF8F5' }
+                          }}
+                        >
+                          View Dossier
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<ShoppingBagOutlined />}
+                          onClick={() => handleAcquire(item.id)}
+                          sx={{
+                            bgcolor: '#181816',
+                            color: '#FAF8F5',
+                            border: '1px solid #B89758',
+                            fontFamily: '"Cinzel", serif',
+                            fontSize: '0.75rem',
+                            '&:hover': { bgcolor: '#2A2A26' }
+                          }}
+                        >
+                          Acquire Piece
+                        </Button>
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             </TableBody>
           </Table>

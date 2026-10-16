@@ -45,7 +45,7 @@ const CartPage: React.FC = () => {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <Container maxWidth="md" sx={{ py: 12, textAlign: 'center' }}>
         <Box 
@@ -76,7 +76,7 @@ const CartPage: React.FC = () => {
         <Button 
           variant="contained" 
           component={Link} 
-          to="/" 
+          to="/products" 
           className="btn-shimmer"
           sx={{ py: 1.8, px: 4, fontSize: '0.85rem', letterSpacing: '0.12em' }}
         >

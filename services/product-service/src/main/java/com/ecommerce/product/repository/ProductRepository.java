@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,18 +23,34 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
            "AND LOWER(p.category.name) NOT LIKE '%electronic%' " +
            "AND (:categoryId IS NULL OR (p.category.id = :categoryId AND LOWER(p.category.name) NOT LIKE '%electronic%')) " +
            "AND (cast(:name as string) IS NULL OR (LOWER(p.name) LIKE LOWER(CONCAT('%', cast(:name as string), '%')) AND LOWER(p.name) NOT LIKE '%phone%' AND LOWER(p.name) NOT LIKE '%electronic%')) " +
-           "AND (cast(:brand as string) IS NULL OR LOWER(p.brand) = LOWER(cast(:brand as string)))")
+           "AND (cast(:brand as string) IS NULL OR LOWER(p.brand) = LOWER(cast(:brand as string))) " +
+           "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
     Page<Product> searchProducts(@Param("categoryId") UUID categoryId, 
                                  @Param("name") String name, 
                                  @Param("brand") String brand,
+                                 @Param("minPrice") BigDecimal minPrice,
+                                 @Param("maxPrice") BigDecimal maxPrice,
                                  Pageable pageable);
+
+    default Page<Product> searchProducts(UUID categoryId, String name, String brand, Pageable pageable) {
+        return searchProducts(categoryId, name, brand, null, null, pageable);
+    }
 
     @Query("SELECT p FROM Product p WHERE p.deleted = false " +
            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
            "AND (cast(:name as string) IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', cast(:name as string), '%'))) " +
-           "AND (cast(:brand as string) IS NULL OR LOWER(p.brand) = LOWER(cast(:brand as string)))")
+           "AND (cast(:brand as string) IS NULL OR LOWER(p.brand) = LOWER(cast(:brand as string))) " +
+           "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
     Page<Product> searchAllProducts(@Param("categoryId") UUID categoryId, 
                                     @Param("name") String name, 
                                     @Param("brand") String brand,
+                                    @Param("minPrice") BigDecimal minPrice,
+                                    @Param("maxPrice") BigDecimal maxPrice,
                                     Pageable pageable);
+
+    default Page<Product> searchAllProducts(UUID categoryId, String name, String brand, Pageable pageable) {
+        return searchAllProducts(categoryId, name, brand, null, null, pageable);
+    }
 }

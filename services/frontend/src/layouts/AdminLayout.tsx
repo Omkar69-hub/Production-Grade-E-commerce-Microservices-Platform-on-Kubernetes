@@ -18,7 +18,8 @@ import {
   DashboardOutlined,
   Inventory2Outlined,
   StorefrontOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  ShoppingBagOutlined
 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
@@ -39,6 +40,7 @@ const AdminLayout: React.FC = () => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardOutlined />, path: '/admin' },
     { text: 'Products', icon: <Inventory2Outlined />, path: '/admin/products' },
+    { text: 'Orders', icon: <ShoppingBagOutlined />, path: '/admin/orders' },
   ];
 
   return (

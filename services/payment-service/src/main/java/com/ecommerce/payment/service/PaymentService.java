@@ -2,6 +2,7 @@ package com.ecommerce.payment.service;
 
 import com.ecommerce.common.exception.BusinessException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
+import com.ecommerce.common.exception.ValidationException;
 import com.ecommerce.payment.dto.PaymentRequest;
 import com.ecommerce.payment.dto.PaymentResponse;
 import com.ecommerce.payment.entity.Payment;
@@ -27,11 +28,41 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final PaymentEventPublisher eventPublisher;
 
-    @Transactional
+    @Transactional(noRollbackFor = {ValidationException.class})
     public void initializePayment(UUID orderId, UUID userId, BigDecimal amount) {
+        if (orderId == null) {
+            throw new ValidationException("Order ID cannot be null");
+        }
+
         if (paymentRepository.findByOrderId(orderId).isPresent()) {
             log.warn("Payment record already exists for Order ID: {}", orderId);
             return;
+        }
+
+        if (userId == null) {
+            throw new ValidationException("User ID cannot be null");
+        }
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.error("Rejecting payment initialization for Order ID: {}: invalid amount {}", orderId, amount);
+            Payment payment = Payment.builder()
+                    .orderId(orderId)
+                    .userId(userId)
+                    .amount(amount != null ? amount : BigDecimal.ZERO)
+                    .status(PaymentStatus.FAILED)
+                    .paymentMethod("REJECTED")
+                    .transactionId("REJECTED-INVALID-AMOUNT")
+                    .build();
+            Payment savedPayment = paymentRepository.save(payment);
+
+            eventPublisher.publishPaymentFailed(PaymentEvent.builder()
+                    .paymentId(savedPayment.getId())
+                    .orderId(savedPayment.getOrderId())
+                    .status("FAILED")
+                    .transactionId(savedPayment.getTransactionId())
+                    .build());
+
+            throw new ValidationException("Payment amount must be strictly greater than zero");
         }
 
         Payment payment = Payment.builder()
@@ -58,7 +89,7 @@ public class PaymentService {
         return paymentMapper.toResponse(payment);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {BusinessException.class, ValidationException.class})
     public PaymentResponse processPayment(PaymentRequest request, UUID userId) {
         Payment payment = paymentRepository.findByOrderId(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order"));
@@ -67,8 +98,24 @@ public class PaymentService {
             throw new ResourceNotFoundException("Payment not found for user");
         }
 
-        if (payment.getStatus() == PaymentStatus.COMPLETED) {
-            throw new BusinessException("Payment is already completed");
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException("Payment cannot be processed in status: " + payment.getStatus());
+        }
+
+        if (payment.getAmount() == null || payment.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            log.error("Rejecting payment processing for Order ID: {}: invalid amount {}", payment.getOrderId(), payment.getAmount());
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setTransactionId("REJECTED-INVALID-AMOUNT");
+            Payment savedPayment = paymentRepository.save(payment);
+
+            eventPublisher.publishPaymentFailed(PaymentEvent.builder()
+                    .paymentId(savedPayment.getId())
+                    .orderId(savedPayment.getOrderId())
+                    .status("FAILED")
+                    .transactionId(savedPayment.getTransactionId())
+                    .build());
+
+            throw new ValidationException("Payment amount must be strictly greater than zero");
         }
 
         payment.setPaymentMethod(request.getPaymentMethod());
@@ -115,6 +162,10 @@ public class PaymentService {
 
         if (payment.getStatus() != PaymentStatus.COMPLETED) {
             throw new BusinessException("Cannot refund a payment that is not completed");
+        }
+
+        if (payment.getAmount() == null || payment.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ValidationException("Payment amount must be strictly greater than zero to process refund");
         }
 
         // MOCK REFUND CALL

@@ -63,7 +63,7 @@ const CheckoutPage: React.FC = () => {
           setValue('country', defaultAddr.country);
           setValue('phoneNumber', defaultAddr.phoneNumber);
         }
-      } catch (err) {
+      } catch {
         // Guest or not authenticated
       }
     };
@@ -123,7 +123,7 @@ const CheckoutPage: React.FC = () => {
         <Typography color="text.secondary" sx={{ mb: 4 }}>
           Please select pieces from our catalog before proceeding to checkout.
         </Typography>
-        <Button variant="contained" component={Link} to="/" className="btn-shimmer">
+        <Button variant="contained" component={Link} to="/products" className="btn-shimmer">
           Return to Collections
         </Button>
       </Container>
