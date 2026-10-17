@@ -2,22 +2,26 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Box, Button, TextField, Typography, Container, Alert, Link as MuiLink, Paper, Divider, Stack } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, Alert, Link as MuiLink, Paper, Divider, InputAdornment, IconButton } from '@mui/material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AuthService } from '../../services/AuthService';
 import { setCredentials, logout } from '../../store/slices/authSlice';
-import { LockOutlined } from '@mui/icons-material';
+import { LockOutlined, VisibilityOutlined, VisibilityOffOutlined } from '@mui/icons-material';
 
 const loginSchema = z.object({
   email: z.string().email('Please provide a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(50, 'Password must not exceed 50 characters'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,11 +54,6 @@ const LoginPage: React.FC = () => {
         setError(err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
       }
     }
-  };
-
-  const fillCustomerDemo = () => {
-    setValue('email', 'customer@ecommerce.com', { shouldValidate: true });
-    setValue('password', 'customer123', { shouldValidate: true });
   };
 
   const fillAdminDemo = () => {
@@ -149,11 +148,28 @@ const LoginPage: React.FC = () => {
             margin="normal"
             fullWidth
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             {...register('password')}
             error={!!errors.password}
             helperText={errors.password?.message}
+            disabled={isSubmitting}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                      size="small"
+                    >
+                      {showPassword ? <VisibilityOffOutlined fontSize="small" /> : <VisibilityOutlined fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
             sx={{ mb: 3 }}
           />
           <Button
@@ -174,28 +190,22 @@ const LoginPage: React.FC = () => {
             </Typography>
           </Divider>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
-            <Button 
-              type="button" 
-              variant="outlined" 
-              size="small" 
-              fullWidth
-              onClick={fillCustomerDemo}
-              sx={{ borderColor: '#D5C9B3', color: 'text.primary', fontSize: '0.75rem' }}
-            >
-              Fill Customer Demo
-            </Button>
+          <Box sx={{ mb: 3 }}>
             <Button 
               type="button" 
               variant="outlined" 
               size="small" 
               fullWidth
               onClick={fillAdminDemo}
-              sx={{ borderColor: '#D5C9B3', color: 'text.primary', fontSize: '0.75rem' }}
+              disabled={isSubmitting}
+              sx={{ borderColor: '#D5C9B3', color: 'text.primary', fontSize: '0.75rem', py: 1 }}
             >
               Fill Admin Atelier
             </Button>
-          </Stack>
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary', textAlign: 'center' }}>
+              Standard clients should register a personal dossier via the link below.
+            </Typography>
+          </Box>
 
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2" color="text.secondary">

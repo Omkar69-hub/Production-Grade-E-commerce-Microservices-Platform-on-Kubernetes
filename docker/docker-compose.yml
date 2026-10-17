@@ -86,6 +86,7 @@ services:
       - REDIS_PORT=6379
       - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -117,6 +118,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
       - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -149,6 +151,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -182,6 +185,7 @@ services:
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - CART_SERVICE_URL=http://cart-service:8080
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -211,6 +215,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
       - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -241,6 +246,7 @@ services:
       - SPRING_MAIL_HOST=mailhog
       - SPRING_MAIL_PORT=1025
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
     networks:
       - backend-network
       - infrastructure-network
@@ -266,8 +272,13 @@ services:
       - CART_SERVICE_URL=http://cart-service:8080
       - ORDER_SERVICE_URL=http://order-service:8080
       - PAYMENT_SERVICE_URL=http://payment-service:8080
-    ports:
-      - "80:8080"
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     networks:
       - frontend-network
       - backend-network
@@ -292,12 +303,12 @@ services:
       context: ..
       dockerfile: services/frontend/Dockerfile
       args:
-        - VITE_API_GATEWAY_URL=${VITE_API_GATEWAY_URL:-http://localhost:80}
+        - VITE_API_GATEWAY_URL=${VITE_API_GATEWAY_URL:-}
     image: ecommerce/frontend:latest
     container_name: frontend
     restart: always
     ports:
-      - "443:80"
+      - "80:80"
     networks:
       - frontend-network
     depends_on:

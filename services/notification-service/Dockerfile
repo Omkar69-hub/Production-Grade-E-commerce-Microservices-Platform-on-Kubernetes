@@ -45,5 +45,8 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 --start-period=180s \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Start application
-ENTRYPOINT ["java", "-XX:+UseZGC", "-Xms256m", "-Xmx512m", "-jar", "app.jar"]
+# Configurable JVM options (defaults to ZGC, can be overridden with SerialGC for low-memory staging)
+ENV JAVA_OPTS="-XX:+UseZGC -Xms256m -Xmx512m"
+
+# Start application with signal-forwarding exec
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

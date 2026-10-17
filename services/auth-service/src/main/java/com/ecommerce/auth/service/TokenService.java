@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,7 +34,22 @@ public class TokenService {
         return token;
     }
 
+    public Optional<RefreshToken> findByToken(String token) {
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
+        }
+        return refreshTokenRepository.findById(token);
+    }
+
+    public void deleteByToken(String token) {
+        if (token != null && !token.isBlank()) {
+            refreshTokenRepository.deleteById(token);
+        }
+    }
+
     public void deleteByUserId(UUID userId) {
-        refreshTokenRepository.deleteByUserId(userId);
+        if (userId != null) {
+            refreshTokenRepository.deleteByUserId(userId);
+        }
     }
 }

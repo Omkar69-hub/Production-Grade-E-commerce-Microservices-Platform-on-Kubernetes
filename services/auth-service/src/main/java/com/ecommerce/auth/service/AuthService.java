@@ -3,6 +3,7 @@ package com.ecommerce.auth.service;
 import com.ecommerce.auth.dto.LoginRequest;
 import com.ecommerce.auth.dto.LoginResponse;
 import com.ecommerce.auth.dto.RegisterRequest;
+import com.ecommerce.auth.dto.TokenRefreshResponse;
 import com.ecommerce.auth.entity.RefreshToken;
 import com.ecommerce.auth.entity.User;
 import com.ecommerce.auth.repository.UserRepository;
@@ -84,9 +85,52 @@ public class AuthService {
         return tokenService.createRefreshToken(user.getId());
     }
 
-    public LoginResponse refreshToken(String requestRefreshToken) {
-        // To be implemented via TokenService interaction
-        throw new UnsupportedOperationException("Not implemented yet");
+    @Transactional
+    public TokenRefreshResponse refreshToken(String requestRefreshToken) {
+        if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        RefreshToken currentToken = tokenService.findByToken(requestRefreshToken)
+                .orElseThrow(() -> new UnauthorizedException("Invalid or expired refresh token"));
+
+        User user = userRepository.findByIdAndIsDeletedFalse(currentToken.getUserId())
+                .orElseThrow(() -> new UnauthorizedException("User account not found"));
+
+        if (!user.isActive()) {
+            throw new UnauthorizedException("User account is inactive");
+        }
+
+        // Token rotation: delete old refresh token
+        tokenService.deleteByToken(requestRefreshToken);
+
+        // Issue new refresh token
+        RefreshToken newRefreshToken = tokenService.createRefreshToken(user.getId());
+
+        // Issue new access token
+        String newAccessToken = generateJwtToken(user);
+
+        log.info("Successfully refreshed session and rotated refresh token for user: {}", user.getId());
+
+        return TokenRefreshResponse.builder()
+                .accessToken(newAccessToken)
+                .expiresIn(jwtExpirationMs)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
+
+    private String generateJwtToken(User user) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+
+        String roles = user.getRoles() != null ? String.join(",", user.getRoles()) : "";
+
+        return Jwts.builder()
+                .subject(user.getId().toString())
+                .claim("roles", roles)
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key)
+                .compact();
     }
 
     private String generateJwtToken(User user, Authentication authentication) {

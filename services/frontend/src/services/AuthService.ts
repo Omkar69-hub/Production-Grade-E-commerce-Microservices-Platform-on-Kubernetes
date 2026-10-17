@@ -28,6 +28,13 @@ export const AuthService = {
     return response.data.data;
   },
 
+  refreshToken: async (): Promise<string> => {
+    const response = await apiClient.post<{ data: { accessToken: string; expiresIn: number } }>('/api/v1/auth/refresh');
+    const newAccessToken = response.data.data.accessToken;
+    localStorage.setItem('token', newAccessToken);
+    return newAccessToken;
+  },
+
   logout: async (): Promise<void> => {
     try {
       await apiClient.post('/api/v1/auth/logout');

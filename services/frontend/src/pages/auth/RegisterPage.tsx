@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Box, Button, TextField, Typography, Container, Alert, Link as MuiLink, Paper, Grid } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, Alert, Link as MuiLink, Paper, Grid, InputAdornment, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/AuthService';
-import { PersonAddOutlined } from '@mui/icons-material';
+import { PersonAddOutlined, VisibilityOutlined, VisibilityOffOutlined } from '@mui/icons-material';
 
 const registerSchema = z.object({
-  firstName: z.string().min(2, 'First name is required (at least 2 characters)'),
-  lastName: z.string().min(2, 'Last name is required (at least 2 characters)'),
+  firstName: z.string().min(2, 'First name is required (at least 2 characters)').max(100, 'First name must not exceed 100 characters'),
+  lastName: z.string().min(2, 'Last name is required (at least 2 characters)').max(100, 'Last name must not exceed 100 characters'),
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(50, 'Password must not exceed 50 characters'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -19,6 +22,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const RegisterPage: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormValues>({
@@ -162,11 +166,28 @@ const RegisterPage: React.FC = () => {
             margin="normal"
             fullWidth
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
             {...register('password')}
             error={!!errors.password}
             helperText={errors.password?.message}
+            disabled={isSubmitting || success}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                      size="small"
+                    >
+                      {showPassword ? <VisibilityOffOutlined fontSize="small" /> : <VisibilityOutlined fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
             sx={{ mt: 2, mb: 3 }}
           />
 

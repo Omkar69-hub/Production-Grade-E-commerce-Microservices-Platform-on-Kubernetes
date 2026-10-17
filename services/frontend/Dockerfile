@@ -15,8 +15,8 @@ RUN npm install
 # Copy frontend source
 COPY services/frontend/ ./
 
-# Build React application
-ARG VITE_API_GATEWAY_URL
+# Build React application (defaults to relative /api base path)
+ARG VITE_API_GATEWAY_URL=""
 ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
 RUN npm run build
 

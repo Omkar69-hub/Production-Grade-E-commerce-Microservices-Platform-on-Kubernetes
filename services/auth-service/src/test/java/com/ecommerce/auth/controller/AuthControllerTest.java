@@ -20,7 +20,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.context.annotation.Import;
 
-@WebMvcTest({AuthController.class, com.ecommerce.common.handler.GlobalExceptionHandler.class})
+@WebMvcTest(controllers = AuthController.class)
+@Import(com.ecommerce.common.handler.GlobalExceptionHandler.class)
 class AuthControllerTest {
 
     @Autowired
@@ -43,6 +44,9 @@ class AuthControllerTest {
     
     @MockBean
     private com.ecommerce.common.security.JwtUtil jwtUtil;
+
+    @MockBean
+    private com.ecommerce.auth.service.AddressService addressService;
 
     @Test
     void givenValidRegistration_whenRegisteringUser_thenReturns201() throws Exception {
@@ -115,5 +119,56 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.detail").value("Invalid credentials"));
+    }
+
+    @Test
+    void givenValidRefreshTokenInCookie_whenRefreshing_thenRotatesTokenAndReturns200() throws Exception {
+        com.ecommerce.auth.entity.RefreshToken newRefreshToken = new com.ecommerce.auth.entity.RefreshToken();
+        newRefreshToken.setToken("rotated-refresh-token-xyz");
+        newRefreshToken.setExpirationTimeSeconds(604800L);
+
+        com.ecommerce.auth.dto.TokenRefreshResponse refreshResponse = com.ecommerce.auth.dto.TokenRefreshResponse.builder()
+                .accessToken("new.rotated.jwt.token")
+                .expiresIn(900000L)
+                .refreshToken(newRefreshToken)
+                .build();
+
+        when(authService.refreshToken("old-valid-refresh-token")).thenReturn(refreshResponse);
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                .cookie(new jakarta.servlet.http.Cookie("refresh_token", "old-valid-refresh-token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Token refreshed successfully"))
+                .andExpect(jsonPath("$.data.accessToken").value("new.rotated.jwt.token"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().value("refresh_token", "rotated-refresh-token-xyz"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().httpOnly("refresh_token", true))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().path("refresh_token", "/api/v1/auth/refresh"));
+    }
+
+    @Test
+    void givenMissingRefreshToken_whenRefreshing_thenReturns401() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void givenInvalidOrExpiredRefreshToken_whenRefreshing_thenReturns401() throws Exception {
+        when(authService.refreshToken("expired-token"))
+                .thenThrow(new com.ecommerce.common.exception.UnauthorizedException("Invalid or expired refresh token"));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                .cookie(new jakarta.servlet.http.Cookie("refresh_token", "expired-token")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void givenRefreshToken_whenLoggingOut_thenClearsCookieAndInvalidatesToken() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout")
+                .cookie(new jakarta.servlet.http.Cookie("refresh_token", "token-to-invalidate")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Logged out successfully"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().maxAge("refresh_token", 0));
     }
 }

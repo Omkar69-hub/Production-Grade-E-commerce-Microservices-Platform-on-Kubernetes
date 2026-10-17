@@ -2,10 +2,13 @@ package com.ecommerce.auth.controller;
 
 import com.ecommerce.auth.dto.LoginRequest;
 import com.ecommerce.auth.dto.LoginResponse;
+import com.ecommerce.auth.dto.RefreshTokenRequest;
 import com.ecommerce.auth.dto.RegisterRequest;
+import com.ecommerce.auth.dto.TokenRefreshResponse;
 import com.ecommerce.auth.entity.RefreshToken;
 import com.ecommerce.auth.service.AuthService;
 import com.ecommerce.auth.service.TokenService;
+import com.ecommerce.common.exception.UnauthorizedException;
 import com.ecommerce.common.response.SuccessResponse;
 import com.ecommerce.common.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -61,9 +64,37 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<SuccessResponse<LoginResponse>> refresh(@CookieValue(name = "refresh_token", required = true) String refreshToken) {
-        // Implementation delegates to AuthService which verifies the token in Redis
-        LoginResponse loginResponse = authService.refreshToken(refreshToken);
+    public ResponseEntity<SuccessResponse<LoginResponse>> refresh(
+            @CookieValue(name = "refresh_token", required = false) String cookieToken,
+            @RequestBody(required = false) RefreshTokenRequest bodyRequest,
+            HttpServletResponse response) {
+        
+        String token = (cookieToken != null && !cookieToken.isBlank())
+                ? cookieToken
+                : (bodyRequest != null ? bodyRequest.getRefreshToken() : null);
+
+        if (token == null || token.isBlank()) {
+            throw new UnauthorizedException("Refresh token is missing");
+        }
+
+        TokenRefreshResponse refreshResult = authService.refreshToken(token);
+        RefreshToken newRefreshToken = refreshResult.getRefreshToken();
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", newRefreshToken.getToken())
+                .httpOnly(true)
+                .secure(secureCookie)
+                .path("/api/v1/auth/refresh")
+                .maxAge(newRefreshToken.getExpirationTimeSeconds())
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .accessToken(refreshResult.getAccessToken())
+                .expiresIn(refreshResult.getExpiresIn())
+                .build();
+
         return ResponseEntity.ok(SuccessResponse.<LoginResponse>builder()
                 .data(loginResponse)
                 .message("Token refreshed successfully")
@@ -71,8 +102,20 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<SuccessResponse<Void>> logout(HttpServletResponse response) {
-        SecurityUtil.getCurrentUserId().ifPresent(userId -> tokenService.deleteByUserId(UUID.fromString(userId)));
+    public ResponseEntity<SuccessResponse<Void>> logout(
+            @CookieValue(name = "refresh_token", required = false) String cookieToken,
+            HttpServletResponse response) {
+        
+        if (cookieToken != null && !cookieToken.isBlank()) {
+            tokenService.deleteByToken(cookieToken);
+        }
+
+        SecurityUtil.getCurrentUserId().ifPresent(userId -> {
+            try {
+                tokenService.deleteByUserId(UUID.fromString(userId));
+            } catch (Exception ignored) {
+            }
+        });
 
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
