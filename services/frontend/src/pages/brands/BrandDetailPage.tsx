@@ -62,6 +62,8 @@ export const BrandDetailPage: React.FC = () => {
             fit: 'Standard Atelier Fit (Illustrative concept)',
             availableSizes: ['Custom Fit'],
             isEditorialConcept: true,
+            isReferral: true,
+            fulfillmentType: 'REFERRAL_LINK',
           });
         }
       }

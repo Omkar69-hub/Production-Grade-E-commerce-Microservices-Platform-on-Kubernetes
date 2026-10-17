@@ -39,6 +39,7 @@ export const ComparisonDrawer: React.FC = () => {
         Boolean(attrs.destinationUrl) ||
         Boolean(attrs.isReferral) ||
         Boolean(attrs.destinationType) ||
+        attrs.fulfillmentType === 'REFERRAL_LINK' ||
         attrs.fulfillmentType === 'EXTERNAL_REFERRAL' ||
         attrs.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
         attrs.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
@@ -252,6 +253,7 @@ export const ComparisonDrawer: React.FC = () => {
                     Boolean(attrs.destinationUrl) ||
                     Boolean(attrs.isReferral) ||
                     Boolean(attrs.destinationType) ||
+                    attrs.fulfillmentType === 'REFERRAL_LINK' ||
                     attrs.fulfillmentType === 'EXTERNAL_REFERRAL' ||
                     attrs.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
                     attrs.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||

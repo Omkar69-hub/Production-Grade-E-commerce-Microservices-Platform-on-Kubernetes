@@ -350,6 +350,15 @@ class ProductServiceValidationTest {
         }
 
         @Test
+        @DisplayName("Should reject positive-priced products when carrying isEditorialConcept as true")
+        void givenPositivePriceWithEditorialConcept_whenValidatePricing_thenThrowsValidationException() {
+            String editorialJson = "{\"isEditorialConcept\":true}";
+            ValidationException ex = assertThrows(ValidationException.class,
+                    () -> productService.validateProductPricing(new java.math.BigDecimal("45000.00"), editorialJson));
+            assertTrue(ex.getMessage().contains("cannot declare isEditorialConcept as true"));
+        }
+
+        @Test
         @DisplayName("Should pass positive-priced product with INTERNAL fulfillmentType")
         void givenPositivePriceWithInternalFulfillment_whenValidate_thenPasses() {
             String internalJson = "{\"fulfillmentType\":\"INTERNAL\",\"fabric\":\"Silk\"}";

@@ -47,6 +47,7 @@ export const evaluateProductCardState = (product: Product): ProductCardEvaluatio
     attrData.isReferral === true ||
     Boolean(attrData.destinationUrl) ||
     Boolean(attrData.destinationType) ||
+    attrData.fulfillmentType === 'REFERRAL_LINK' ||
     attrData.fulfillmentType === 'EXTERNAL_REFERRAL' ||
     attrData.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
     attrData.isEditorialConcept === true ||

@@ -78,7 +78,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
   const [colors, setColors] = useState('');
 
   // Atelier & Referral attributes
-  const [fulfillmentMode, setFulfillmentMode] = useState<'EXTERNAL_ATELIER_REFERRAL' | 'INTERNAL_PURCHASE'>('INTERNAL_PURCHASE');
+  const [fulfillmentMode, setFulfillmentMode] = useState<'REFERRAL_LINK' | 'INTERNAL_PURCHASE'>('INTERNAL_PURCHASE');
   const [isEditorialConcept, setIsEditorialConcept] = useState(false);
   const [editorialDisclaimer, setEditorialDisclaimer] = useState('');
   const [priceVerificationStatus, setPriceVerificationStatus] = useState<string>('VERIFIED_ATELIER_PRICE');
@@ -130,6 +130,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
         // Determine if existing product is referral/inquiry
         const isReferralInitial = Boolean(
           parsedAttrs.isReferral === true ||
+          parsedAttrs.fulfillmentType === 'REFERRAL_LINK' ||
           parsedAttrs.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
           parsedAttrs.fulfillmentType === 'EXTERNAL_REFERRAL' ||
           parsedAttrs.destinationUrl ||
@@ -138,7 +139,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
           (product.price !== undefined && product.price <= 0)
         );
 
-        setFulfillmentMode(isReferralInitial ? 'EXTERNAL_ATELIER_REFERRAL' : 'INTERNAL_PURCHASE');
+        setFulfillmentMode(isReferralInitial ? 'REFERRAL_LINK' : 'INTERNAL_PURCHASE');
 
         // Extract known clothing fields
         setAudience(parsedAttrs.audience || 'Women');
@@ -242,7 +243,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
     const val = e.target.value;
     setDestinationUrl(val);
     if (val.trim()) {
-      setFulfillmentMode('EXTERNAL_ATELIER_REFERRAL');
+      setFulfillmentMode('REFERRAL_LINK');
     }
   };
 
@@ -280,9 +281,44 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
     e.preventDefault();
     setFormError(null);
 
-    // Validate destination URL if provided
-    if (destinationUrl.trim()) {
-      const result = verifyBrandDomain(destinationUrl.trim(), brandSlug || formData.brand);
+    // Basic required field validations
+    if (!formData.name?.trim()) {
+      setFormError('Creation Title is required.');
+      setActiveTab(0);
+      return;
+    }
+    if (!formData.sku?.trim()) {
+      setFormError('SKU / Reference Code is required.');
+      setActiveTab(0);
+      return;
+    }
+    if (!formData.categoryId) {
+      setFormError('Primary Category is required.');
+      setActiveTab(0);
+      return;
+    }
+
+    const priceNum = Number.isNaN(Number(formData.price)) ? 0 : Number(formData.price);
+
+    // Strict validation based on fulfillment mode
+    if (fulfillmentMode === 'REFERRAL_LINK') {
+      // 1. Destination URL is strictly required
+      const trimmedUrl = destinationUrl.trim();
+      if (!trimmedUrl) {
+        setFormError('Destination URL is required for external maison referral & inquiry products.');
+        setActiveTab(2);
+        return;
+      }
+
+      // 2. Protocol must be HTTPS
+      if (!trimmedUrl.toLowerCase().startsWith('https://')) {
+        setFormError('Destination URL must use secure HTTPS protocol for production brand referrals.');
+        setActiveTab(2);
+        return;
+      }
+
+      // 3. Domain verification & cross-brand match
+      const result = verifyBrandDomain(trimmedUrl, brandSlug || formData.brand);
       if (result.securityStatus === 'INSECURE_PROTOCOL') {
         setFormError('Destination URL must use secure HTTPS protocol for production brand referrals.');
         setActiveTab(2);
@@ -297,39 +333,83 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
       }
       if (!result.isValid) {
         setFormError(`Destination URL Security Error: ${result.reason || result.badgeLabel}`);
-        setActiveTab(2); // Jump to referral tab
+        setActiveTab(2);
         return;
       }
-    }
 
-    // Deliberate fulfillment conversion checks
-    if (fulfillmentMode === 'INTERNAL_PURCHASE') {
+      // 4. Destination Link Type is required
+      if (!destinationType || !destinationType.trim()) {
+        setFormError('Destination Link Type must be specified for external maison referrals.');
+        setActiveTab(2);
+        return;
+      }
+
+      // 5. Price conflicts for referral mode
+      if (priceNum < 0) {
+        setFormError('Price cannot be negative.');
+        setActiveTab(0);
+        return;
+      }
+      if (priceNum > 0) {
+        setFormError(
+          'Referral & inquiry products cannot have a positive purchase price. Set price to ₹0 (Price Upon Inquiry / Illustrative Estimate) or switch fulfillment mode to Internal Purchase.'
+        );
+        setActiveTab(0);
+        return;
+      }
+
+      // 6. Inquiry status conflict
+      if (priceVerificationStatus === 'VERIFIED_ATELIER_PRICE') {
+        setFormError(
+          "Referral & inquiry products cannot have Price Verification Status set to 'Verified Atelier Price'. Select 'Price Upon Atelier Inquiry' or 'Illustrative Estimate'."
+        );
+        setActiveTab(2);
+        return;
+      }
+      if (
+        priceVerificationStatus !== 'PRICE_UPON_INQUIRY' &&
+        priceVerificationStatus !== 'ILLUSTRATIVE_ESTIMATE'
+      ) {
+        setFormError(
+          "Referral products require Price Verification Status to be 'Price Upon Atelier Inquiry' or 'Illustrative Estimate'."
+        );
+        setActiveTab(2);
+        return;
+      }
+    } else if (fulfillmentMode === 'INTERNAL_PURCHASE') {
+      // 1. Destination URL must not be present
       if (destinationUrl.trim()) {
         setFormError('Deliberate Handling Required: Remove referral destination URL before switching product to Internal Purchase mode.');
         setActiveTab(2);
         return;
       }
-      if ((Number(formData.price) || 0) <= 0) {
+
+      // 2. Price must be strictly positive
+      if (priceNum <= 0) {
         setFormError('Internal purchase creations require an authoritative transaction price greater than ₹0.');
         setActiveTab(0);
         return;
       }
-      if (priceVerificationStatus === 'PRICE_UPON_INQUIRY') {
-        setFormError('Internal purchase creations cannot have Price Verification Status set to Price Upon Inquiry.');
+
+      // 3. Price verification status cannot be inquiry or estimate
+      if (priceVerificationStatus === 'PRICE_UPON_INQUIRY' || priceVerificationStatus === 'ILLUSTRATIVE_ESTIMATE') {
+        setFormError('Internal purchase creations cannot have Price Verification Status set to Price Upon Inquiry or Illustrative Estimate. Set status to Verified Atelier Price.');
         setActiveTab(2);
         return;
       }
+
+      // 4. Editorial concept must not be flagged
+      if (isEditorialConcept) {
+        setFormError('Deliberate Handling Required: Remove Editorial Concept flag before switching product to Internal Purchase mode.');
+        setActiveTab(2);
+        return;
+      }
+    } else {
+      setFormError('Invalid fulfillment mode selected.');
+      return;
     }
 
-    // Determine referral / inquiry status:
-    // Any active referral fulfillmentMode, destination URL, or inquiry pricing keeps the product in referral mode
-    const isReferralOrInquiry =
-      fulfillmentMode === 'EXTERNAL_ATELIER_REFERRAL' ||
-      Boolean(destinationUrl.trim()) ||
-      priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
-      priceVerificationStatus === 'ILLUSTRATIVE_ESTIMATE';
-
-    // Merge attributes, preserving all unknown existing attributes
+    // Prepare attributes
     const mergedAttributes: Record<string, any> = {
       ...preservedUnknownAttributes,
       audience,
@@ -338,21 +418,27 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
       fit: fit.trim() || undefined,
       sizes: sizes.trim() || undefined,
       colors: colors.trim() || undefined,
-      isEditorialConcept: Boolean(isEditorialConcept),
-      editorialDisclaimer: editorialDisclaimer.trim() || undefined,
-      priceVerificationStatus,
-      destinationUrl: destinationUrl.trim() || undefined,
-      destinationType: destinationUrl.trim() ? destinationType : undefined,
-      brandSlug: brandSlug.trim() || undefined,
     };
 
-    // Keep referral & inquiry products safely out of internal order flows
-    if (isReferralOrInquiry) {
+    if (fulfillmentMode === 'REFERRAL_LINK') {
       mergedAttributes.isReferral = true;
-      mergedAttributes.fulfillmentType = 'EXTERNAL_ATELIER_REFERRAL';
+      mergedAttributes.fulfillmentType = 'REFERRAL_LINK';
+      mergedAttributes.destinationUrl = destinationUrl.trim();
+      mergedAttributes.destinationType = destinationType;
+      mergedAttributes.priceVerificationStatus = priceVerificationStatus;
+      mergedAttributes.isEditorialConcept = Boolean(isEditorialConcept);
+      mergedAttributes.editorialDisclaimer = editorialDisclaimer.trim() || undefined;
+      mergedAttributes.brandSlug = brandSlug.trim() || undefined;
     } else {
+      // Internal purchase - ensure zero referral leakage
       delete mergedAttributes.isReferral;
       delete mergedAttributes.fulfillmentType;
+      delete mergedAttributes.destinationUrl;
+      delete mergedAttributes.destinationType;
+      delete mergedAttributes.isEditorialConcept;
+      delete mergedAttributes.editorialDisclaimer;
+      delete mergedAttributes.brandSlug;
+      mergedAttributes.priceVerificationStatus = 'VERIFIED_ATELIER_PRICE';
     }
 
     // Clean undefined fields from JSON
@@ -364,7 +450,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
 
     const payload: Partial<Product> = {
       ...formData,
-      price: Number(formData.price) || 0,
+      price: priceNum,
       attributes: JSON.stringify(mergedAttributes),
     };
 
@@ -660,7 +746,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
                   fullWidth
                   value={fulfillmentMode}
                   onChange={(e) => {
-                    const newMode = e.target.value as 'EXTERNAL_ATELIER_REFERRAL' | 'INTERNAL_PURCHASE';
+                    const newMode = e.target.value as 'REFERRAL_LINK' | 'INTERNAL_PURCHASE';
                     if (newMode === 'INTERNAL_PURCHASE') {
                       if (destinationUrl.trim()) {
                         setFormError(
@@ -677,7 +763,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
                   }}
                   helperText="Controls checkout routing: external maison referral / inquiry vs standard internal bag & checkout"
                 >
-                  <MenuItem value="EXTERNAL_ATELIER_REFERRAL">
+                  <MenuItem value="REFERRAL_LINK">
                     External Maison Referral & Inquiry (Directs to Brand Portal or Atelier Consultation)
                   </MenuItem>
                   <MenuItem value="INTERNAL_PURCHASE">
@@ -799,7 +885,12 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({ open, onClose, prod
                     control={
                       <Checkbox
                         checked={isEditorialConcept}
-                        onChange={(e) => setIsEditorialConcept(e.target.checked)}
+                        onChange={(e) => {
+                          setIsEditorialConcept(e.target.checked);
+                          if (!e.target.checked) {
+                            setEditorialDisclaimer('');
+                          }
+                        }}
                         sx={{ color: lumierePalette.crimson, '&.Mui-checked': { color: lumierePalette.crimson } }}
                       />
                     }

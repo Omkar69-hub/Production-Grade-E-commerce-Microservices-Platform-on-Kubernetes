@@ -514,12 +514,20 @@ describe('LUMIÈRE Stage 7B.2: Admin Management Suite Polish', () => {
 
     it('automatically applies isReferral and fulfillmentType for referral and inquiry products', async () => {
       const handleClose = vi.fn();
+      const sampleInquiryProduct: Product = {
+        ...sampleProducts[0],
+        price: 0,
+        attributes: JSON.stringify({
+          ...JSON.parse(sampleProducts[0].attributes!),
+          priceVerificationStatus: 'PRICE_UPON_INQUIRY',
+        }),
+      };
 
       renderComponent(
         <AdminProductForm
           open={true}
           onClose={handleClose}
-          product={sampleProducts[0]}
+          product={sampleInquiryProduct}
         />
       );
 
@@ -547,7 +555,7 @@ describe('LUMIÈRE Stage 7B.2: Admin Management Suite Polish', () => {
       const payload = vi.mocked(ProductService.updateProduct).mock.calls[0][1];
       const parsedAttrs = JSON.parse(payload.attributes!);
       expect(parsedAttrs.isReferral).toBe(true);
-      expect(parsedAttrs.fulfillmentType).toBe('EXTERNAL_ATELIER_REFERRAL');
+      expect(parsedAttrs.fulfillmentType).toBe('REFERRAL_LINK');
     });
   });
 

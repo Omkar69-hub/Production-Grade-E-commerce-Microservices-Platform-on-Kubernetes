@@ -338,6 +338,23 @@ class OrderServiceSecurityTest {
         }
 
         @Test
+        @DisplayName("Product with isEditorialConcept=true is rejected")
+        void givenIsEditorialConceptTrue_whenCreateOrder_thenRejected() {
+            CartServiceClient.CartDto cart = buildCartWithItem(productId, 1, BigDecimal.valueOf(800.00));
+            when(cartServiceClient.getCart(any())).thenReturn(SuccessResponse.<CartServiceClient.CartDto>builder().data(cart).build());
+
+            ProductServiceClient.ProductDto product = buildValidProductDto();
+            product.setAttributes("{\"isEditorialConcept\":true}");
+            when(productServiceClient.getProduct(productId)).thenReturn(SuccessResponse.<ProductServiceClient.ProductDto>builder().data(product).build());
+
+            assertThatThrownBy(() -> orderService.createOrder(userId, token, validRequest))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("Editorial concepts cannot be ordered internally");
+
+            verify(orderRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("Product with unknown fulfillmentType is rejected fail-closed")
         void givenUnknownFulfillmentType_whenCreateOrder_thenRejected() {
             CartServiceClient.CartDto cart = buildCartWithItem(productId, 1, BigDecimal.valueOf(800.00));

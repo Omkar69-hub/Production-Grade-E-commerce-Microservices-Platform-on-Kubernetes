@@ -218,6 +218,7 @@ const ProductDetailPage: React.FC = () => {
     priceVerificationStatus ||
     productAttributes?.isReferral ||
     productAttributes?.brandSlug ||
+    productAttributes?.fulfillmentType === 'REFERRAL_LINK' ||
     productAttributes?.fulfillmentType === 'EXTERNAL_ATELIER_REFERRAL' ||
     productAttributes?.fulfillmentType === 'EXTERNAL_REFERRAL' ||
     productAttributes?.isEditorialConcept ||

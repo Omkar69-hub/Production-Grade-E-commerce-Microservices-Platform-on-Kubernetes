@@ -285,6 +285,30 @@ class CartServiceSecurityTest {
         }
 
         @Test
+        @DisplayName("Product with isEditorialConcept true is rejected from internal bag")
+        void givenProductWithIsEditorialConceptTrue_whenAddItem_thenRejected() {
+            CartItemRequest request = CartItemRequest.builder()
+                    .productId(productId)
+                    .quantity(1)
+                    .build();
+
+            ProductServiceClient.ProductDto editorialProduct = buildValidProductDto();
+            editorialProduct.setAttributes("{\"isEditorialConcept\":true}");
+
+            when(cartRepository.findById(userId)).thenReturn(Optional.of(Cart.builder().userId(userId).items(new ArrayList<>()).build()));
+            when(productServiceClient.getProduct(productId))
+                    .thenReturn(SuccessResponse.<ProductServiceClient.ProductDto>builder()
+                            .data(editorialProduct)
+                            .build());
+
+            assertThatThrownBy(() -> cartService.addItemToCart(userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("Editorial concepts cannot be added to the internal bag");
+
+            verify(cartRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("Product with INTERNAL fulfillmentType and positive price succeeds")
         void givenProductWithInternalFulfillment_whenAddItem_thenSucceeds() {
             CartItemRequest request = CartItemRequest.builder()

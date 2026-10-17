@@ -464,6 +464,11 @@ public class OrderService {
                 if (root.has("isReferral") && !root.get("isReferral").isNull() && root.get("isReferral").asBoolean()) {
                     throw new BusinessException("External atelier referral creations cannot be ordered internally: " + (product.getSku() != null ? product.getSku() : product.getId()));
                 }
+
+                // 6. Explicit isEditorialConcept marker
+                if (root.has("isEditorialConcept") && !root.get("isEditorialConcept").isNull() && root.get("isEditorialConcept").asBoolean()) {
+                    throw new BusinessException("Editorial concepts cannot be ordered internally: " + (product.getSku() != null ? product.getSku() : product.getId()));
+                }
             } catch (BusinessException e) {
                 throw e;
             } catch (Exception e) {

@@ -256,7 +256,9 @@ describe('Stage 7B.3: Admin Data Integrity, Referral Safeguards & Route Privacy'
         imageUrl: 'https://images.unsplash.com/lehenga.jpg',
         attributes: JSON.stringify({
           isReferral: true,
-          fulfillmentType: 'EXTERNAL_ATELIER_REFERRAL',
+          fulfillmentType: 'REFERRAL_LINK',
+          destinationUrl: 'https://www.sabyasachi.com/collection/heritage-bridal/',
+          destinationType: 'OFFICIAL_CATEGORY_DESTINATION',
           priceVerificationStatus: 'PRICE_UPON_INQUIRY',
           brandSlug: 'sabyasachi',
           customAtelierCode: 'ATELIER-SPECIAL-2026',
@@ -287,7 +289,7 @@ describe('Stage 7B.3: Admin Data Integrity, Referral Safeguards & Route Privacy'
 
       // Referral markers MUST remain strictly preserved!
       expect(parsedAttrs.isReferral).toBe(true);
-      expect(parsedAttrs.fulfillmentType).toBe('EXTERNAL_ATELIER_REFERRAL');
+      expect(parsedAttrs.fulfillmentType).toBe('REFERRAL_LINK');
       expect(parsedAttrs.customAtelierCode).toBe('ATELIER-SPECIAL-2026');
       expect(payload.name).toBe('Updated Heritage Velvet Couture Lehenga');
     });
@@ -304,7 +306,7 @@ describe('Stage 7B.3: Admin Data Integrity, Referral Safeguards & Route Privacy'
         status: 'ACTIVE',
         attributes: JSON.stringify({
           isReferral: true,
-          fulfillmentType: 'EXTERNAL_ATELIER_REFERRAL',
+          fulfillmentType: 'REFERRAL_LINK',
           destinationUrl: 'https://www.sabyasachi.com/collection/saree',
           brandSlug: 'sabyasachi',
         }),
@@ -348,7 +350,7 @@ describe('Stage 7B.3: Admin Data Integrity, Referral Safeguards & Route Privacy'
         status: 'ACTIVE',
         attributes: JSON.stringify({
           isReferral: true,
-          fulfillmentType: 'EXTERNAL_ATELIER_REFERRAL',
+          fulfillmentType: 'REFERRAL_LINK',
           priceVerificationStatus: 'PRICE_UPON_INQUIRY',
         }),
       };
@@ -390,7 +392,7 @@ describe('Stage 7B.3: Admin Data Integrity, Referral Safeguards & Route Privacy'
         status: 'ACTIVE',
         attributes: JSON.stringify({
           isReferral: true,
-          fulfillmentType: 'EXTERNAL_ATELIER_REFERRAL',
+          fulfillmentType: 'REFERRAL_LINK',
           preservedToken: 'SECURE-TOKEN-123',
         }),
       };

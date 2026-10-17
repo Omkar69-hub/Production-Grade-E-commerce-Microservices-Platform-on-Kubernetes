@@ -80,5 +80,60 @@ describe('LUMIÈRE Stage 8D.3: Referral Contract & Schema Alignment', () => {
         expect(v5Sql.includes(uuid), `V5 SQL must include UUID for ${id} (${uuid})`).toBe(true);
       }
     });
+
+    it('should confirm exact field-by-field equality across all 14 items between frontend catalog and V5 SQL seeds', () => {
+      const v5Path = path.resolve(__dirname, '../../product-service/proposed-migrations/V5__seed_lumiere_clothing_catalog.sql');
+      const v5Sql = fs.readFileSync(v5Path, 'utf8');
+      const seedsMatch = v5Sql.match(/\$SEEDS\$([\s\S]*?)\$SEEDS\$/);
+      expect(seedsMatch, 'V5 SQL must contain $SEEDS$ JSON block').not.toBeNull();
+
+      const seeds: Array<{
+        uuid: string;
+        sku: string;
+        name: string;
+        brand: string;
+        description: string;
+        image_url: string;
+        attributes: Record<string, any>;
+      }> = JSON.parse(seedsMatch![1]);
+
+      expect(seeds.length).toBe(14);
+      expect(CLOTHING_CATALOG.length).toBe(14);
+
+      for (let i = 0; i < 14; i++) {
+        const item = CLOTHING_CATALOG[i];
+        const seed = seeds[i];
+
+        // Core fields
+        expect(seed.uuid, `Item ${item.id} UUID mismatch`).toBe(CANONICAL_CATALOG_UUIDS[item.id]);
+        expect(seed.sku, `Item ${item.id} SKU mismatch`).toBe(item.slug.toUpperCase());
+        expect(seed.name, `Item ${item.id} name mismatch`).toBe(item.name);
+        expect(seed.brand, `Item ${item.id} brand mismatch`).toBe(item.brandName);
+        expect(seed.description, `Item ${item.id} description mismatch`).toBe(item.description);
+        expect(seed.image_url, `Item ${item.id} imageUrl mismatch`).toBe(item.imageUrl);
+
+        // Canonical referral attributes
+        const attrs = seed.attributes;
+        expect(attrs.uuid, `Item ${item.id} attributes.uuid mismatch`).toBe(CANONICAL_CATALOG_UUIDS[item.id]);
+        expect(attrs.frontendId, `Item ${item.id} attributes.frontendId mismatch`).toBe(item.id);
+        expect(attrs.isEditorialConcept, `Item ${item.id} attributes.isEditorialConcept mismatch`).toBe(true);
+        expect(attrs.isReferral, `Item ${item.id} attributes.isReferral mismatch`).toBe(true);
+        expect(attrs.fulfillmentType, `Item ${item.id} attributes.fulfillmentType mismatch`).toBe('REFERRAL_LINK');
+        expect(attrs.destinationType, `Item ${item.id} attributes.destinationType mismatch`).toBe('OFFICIAL_CATEGORY_DESTINATION');
+        expect(attrs.destinationUrl, `Item ${item.id} attributes.destinationUrl mismatch`).toBe(item.destinationUrl);
+        expect(attrs.priceVerificationStatus, `Item ${item.id} attributes.priceVerificationStatus mismatch`).toBe('PRICE_UPON_INQUIRY');
+        expect(attrs.priceFormatted, `Item ${item.id} attributes.priceFormatted mismatch`).toBe(item.priceFormatted);
+        expect(attrs.priceSource, `Item ${item.id} attributes.priceSource mismatch`).toBe(item.priceSource);
+        expect(attrs.category, `Item ${item.id} attributes.category mismatch`).toBe('Clothing');
+        expect(attrs.subcategory, `Item ${item.id} attributes.subcategory mismatch`).toBe(item.subcategory);
+        expect(attrs.audience, `Item ${item.id} attributes.audience mismatch`).toBe(item.audience);
+        expect(attrs.brandId, `Item ${item.id} attributes.brandId mismatch`).toBe(item.brandId);
+        expect(attrs.brandSlug, `Item ${item.id} attributes.brandSlug mismatch`).toBe(item.brandSlug);
+        expect(attrs.fabric, `Item ${item.id} attributes.fabric mismatch`).toBe(item.fabric);
+        expect(attrs.fit, `Item ${item.id} attributes.fit mismatch`).toBe(item.fit);
+        expect(attrs.sizes, `Item ${item.id} attributes.sizes mismatch`).toBe(item.availableSizes.join(', '));
+        expect(attrs.colors, `Item ${item.id} attributes.colors mismatch`).toBe(item.colors.join(', '));
+      }
+    });
   });
 });

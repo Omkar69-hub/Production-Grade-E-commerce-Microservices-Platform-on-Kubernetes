@@ -256,6 +256,11 @@ public class CartService {
                 if (root.has("isReferral") && !root.get("isReferral").isNull() && root.get("isReferral").asBoolean()) {
                     throw new BusinessException("External atelier referral creations cannot be added to the internal bag");
                 }
+
+                // 6. Explicit isEditorialConcept marker
+                if (root.has("isEditorialConcept") && !root.get("isEditorialConcept").isNull() && root.get("isEditorialConcept").asBoolean()) {
+                    throw new BusinessException("Editorial concepts cannot be added to the internal bag");
+                }
             } catch (BusinessException e) {
                 throw e;
             } catch (Exception e) {

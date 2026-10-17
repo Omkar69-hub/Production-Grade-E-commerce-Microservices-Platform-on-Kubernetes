@@ -333,6 +333,9 @@ public class ProductService {
                     if (root.has("priceVerificationStatus") && "PRICE_UPON_INQUIRY".equalsIgnoreCase(root.get("priceVerificationStatus").asText().trim())) {
                         throw new ValidationException("Internally purchasable products with positive prices cannot specify PRICE_UPON_INQUIRY");
                     }
+                    if (root.has("isEditorialConcept") && root.get("isEditorialConcept").asBoolean()) {
+                        throw new ValidationException("Internally purchasable products with positive prices cannot declare isEditorialConcept as true");
+                    }
                 } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
                     throw new ValidationException("Attributes must be valid JSON: " + e.getMessage());
                 }
