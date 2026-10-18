@@ -10,6 +10,8 @@ import { theme } from './styles/theme';
 import AppRoutes from './routes/AppRoutes';
 import { useDispatch } from 'react-redux';
 import { initializeCart } from './store/slices/cartSlice';
+import { AuthService } from './services/AuthService';
+import { setCredentials, logout } from './store/slices/authSlice';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import { EffectsProvider } from './context/EffectsContext';
 import { ComparisonProvider } from './context/ComparisonContext';
@@ -29,6 +31,19 @@ const AppContent: React.FC = () => {
   
   React.useEffect(() => {
     dispatch(initializeCart() as any);
+
+    // Stage 9F: Fix 4 — Restore session on reload via HTTP-only refresh cookie
+    AuthService.restoreSession()
+      .then((session) => {
+        if (session) {
+          dispatch(setCredentials({ user: session.user, token: session.token }));
+        } else {
+          dispatch(logout());
+        }
+      })
+      .catch(() => {
+        dispatch(logout());
+      });
   }, [dispatch]);
 
   return (

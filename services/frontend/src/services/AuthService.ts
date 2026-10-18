@@ -1,11 +1,12 @@
 import apiClient from '../config/axios';
+import { tokenStorage } from './tokenStorage';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
 
 export const AuthService = {
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<{ data: { accessToken: string; expiresIn: number } }>('/api/v1/auth/login', credentials);
     const accessToken = response.data.data.accessToken;
-    localStorage.setItem('token', accessToken);
+    tokenStorage.setAccessToken(accessToken);
 
     // Retrieve user profile using the authenticated token
     const profileResponse = await apiClient.get<{ data: User }>('/api/v1/auth/me', {
@@ -31,7 +32,7 @@ export const AuthService = {
   refreshToken: async (): Promise<string> => {
     const response = await apiClient.post<{ data: { accessToken: string; expiresIn: number } }>('/api/v1/auth/refresh');
     const newAccessToken = response.data.data.accessToken;
-    localStorage.setItem('token', newAccessToken);
+    tokenStorage.setAccessToken(newAccessToken);
     return newAccessToken;
   },
 
@@ -39,9 +40,32 @@ export const AuthService = {
     try {
       await apiClient.post('/api/v1/auth/logout');
     } catch {
-      // Ignore network errors on logout
+      // Ignore network errors on logout to allow client cleanup
     } finally {
-      localStorage.removeItem('token');
+      tokenStorage.clearToken();
+    }
+  },
+
+  restoreSession: async (): Promise<AuthResponse | null> => {
+    try {
+      const response = await apiClient.post<{ data: { accessToken: string; expiresIn: number } }>('/api/v1/auth/refresh');
+      const accessToken = response.data?.data?.accessToken;
+      if (!accessToken) {
+        return null;
+      }
+      tokenStorage.setAccessToken(accessToken);
+
+      const profileResponse = await apiClient.get<{ data: User }>('/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      return {
+        token: accessToken,
+        user: profileResponse.data.data
+      };
+    } catch {
+      tokenStorage.clearToken();
+      return null;
     }
   }
 };

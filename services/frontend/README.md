@@ -47,10 +47,18 @@ npm run dev
 The app will be available at `http://localhost:5173`.
 
 ### Environment Variables
-Create a `.env` file in the root directory:
-```
-VITE_API_GATEWAY_URL=http://localhost:8080
-```
+Configure the frontend API target using `VITE_API_GATEWAY_URL`:
+
+- **Development Default:** Defaults to `http://localhost:8080` or the Vite dev proxy target.
+- **Production Requirement:** During `npm run build`, `VITE_API_GATEWAY_URL` is strictly validated:
+  - **Option 1 (Relative Proxy — Recommended):** Set `VITE_API_GATEWAY_URL=/api`. Frontend Axios requests use same-origin paths, and Nginx reverse-proxies `/api/` directly to `http://api-gateway:8080/api/`. This avoids cross-origin requests, cookie third-party restrictions, and CORS overhead.
+  - **Option 2 (Direct HTTPS):** Set to an absolute HTTPS URL (e.g., `https://api.lumiere.com`).
+  - **Security Rule:** Missing, empty, or localhost/loopback addresses (`http://localhost:*`, `http://127.0.0.1:*`) are rejected fail-closed during production builds.
+
+Feature flag `VITE_ENABLE_INTERNAL_CHECKOUT`:
+- **Default:** `false` (disabled by default).
+- **Behavior:** When `false`, customer access to `/cart`, `/checkout`, and `/orders/success` is redirected to `/collection`; header shopping bag icon and checkout actions are disabled. Public catalog exploration, brand pages, product details, wishlist, and admin portals remain fully functional.
+- **Security Rule:** Must remain `false` for LUMIÈRE production deployments. Only explicit string `'true'` enables internal checkout.
 
 ## Architecture Notes
 - **Authentication:** Uses JWT tokens. The token is stored in `localStorage` via Redux Persist and automatically attached to outgoing requests by the Axios interceptor.

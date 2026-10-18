@@ -265,7 +265,9 @@ describe('Stage 7B.5: Fail-Closed Authentication & Protected Route Security', ()
     expect(state.isAuthenticated).toBe(true);
     expect(state.token).toBe('real-backend-jwt-token-xyz');
     expect(state.user?.roles).toEqual(['ADMIN']);
-    expect(localStorage.getItem('token')).toBe('real-backend-jwt-token-xyz');
+    // Stage 9F: Fix 4 — Tokens must strictly remain in memory and NEVER be written to localStorage or sessionStorage
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(sessionStorage.getItem('token')).toBeNull();
   });
 
   it('9. Malformed, untrusted, or non-array roles strictly fail closed', () => {

@@ -1,21 +1,43 @@
 import axios from 'axios';
 import { env } from './env';
+import { tokenStorage } from '../services/tokenStorage';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined' || !document.cookie) {
+    return null;
+  }
+  const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+  return match ? decodeURIComponent(match[3]) : null;
+}
 
 const apiClient = axios.create({
   baseURL: env.API_GATEWAY_URL ?? '',
   withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to attach JWT token
+// Request interceptor: attach in-memory JWT token and CSRF proof for refresh/logout
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = tokenStorage.getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Attach CSRF proof header for cookie-authenticated refresh and logout requests
+    const url = config.url || '';
+    if (url.includes('/api/v1/auth/refresh') || url.includes('/api/v1/auth/logout')) {
+      const csrfToken = getCookie('XSRF-TOKEN');
+      if (csrfToken && config.headers) {
+        config.headers['X-XSRF-TOKEN'] = csrfToken;
+        config.headers['X-CSRF-TOKEN'] = csrfToken;
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -38,33 +60,33 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Response interceptor with refresh token rotation and race-condition prevention
+// Response interceptor: handles 401 with atomic refresh coordination, single retry, and loop prevention
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Fails immediately if not 401 or no config
+    // Fails immediately if not 401 or no request config
     if (!error.response || error.response.status !== 401 || !originalRequest) {
       return Promise.reject(error);
     }
 
-    // Do not attempt refresh on auth endpoints (login, register, refresh) or if already retried
     const url = originalRequest.url || '';
     const isAuthEndpoint =
       url.includes('/api/v1/auth/login') ||
       url.includes('/api/v1/auth/register') ||
       url.includes('/api/v1/auth/refresh');
 
+    // Prevent infinite retry loops on auth endpoints or already-retried requests
     if (isAuthEndpoint || originalRequest._retry) {
       if (url.includes('/api/v1/auth/refresh') || originalRequest._retry) {
-        localStorage.removeItem('token');
+        tokenStorage.clearToken();
       }
       return Promise.reject(error);
     }
 
     if (isRefreshing) {
-      // Refresh in flight: queue request until new token is available
+      // Concurrently queued: wait for active refresh to resolve and retry once
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       })
@@ -80,7 +102,6 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // Cookie is passed automatically because withCredentials: true
       const refreshResponse = await apiClient.post<{
         data: { accessToken: string; expiresIn: number };
       }>('/api/v1/auth/refresh');
@@ -90,7 +111,7 @@ apiClient.interceptors.response.use(
         throw new Error('Refresh failed: access token missing');
       }
 
-      localStorage.setItem('token', newAccessToken);
+      tokenStorage.setAccessToken(newAccessToken);
       processQueue(null, newAccessToken);
 
       originalRequest.headers = originalRequest.headers || {};
@@ -98,7 +119,7 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      localStorage.removeItem('token');
+      tokenStorage.clearToken();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

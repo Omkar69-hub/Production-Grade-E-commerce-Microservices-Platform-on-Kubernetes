@@ -15,9 +15,11 @@ RUN npm install
 # Copy frontend source
 COPY services/frontend/ ./
 
-# Build React application (defaults to relative /api base path)
-ARG VITE_API_GATEWAY_URL=""
+# Build React application (defaults to relative /api proxy path and disabled internal checkout)
+ARG VITE_API_GATEWAY_URL="/api"
 ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
+ARG VITE_ENABLE_INTERNAL_CHECKOUT="false"
+ENV VITE_ENABLE_INTERNAL_CHECKOUT=$VITE_ENABLE_INTERNAL_CHECKOUT
 RUN npm run build
 
 # ==========================================

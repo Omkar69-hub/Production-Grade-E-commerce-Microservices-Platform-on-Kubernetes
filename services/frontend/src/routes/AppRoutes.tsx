@@ -1,8 +1,9 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import MainLayout from '../layouts/MainLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import { env } from '../config/env';
 
 // Lazy Loaded Pages
 const HomePage = lazy(() => import('../pages/home/HomePage'));
@@ -48,15 +49,24 @@ const AppRoutes: React.FC = () => {
           <Route path="brands" element={<BrandDirectoryPage />} />
           <Route path="brands/:brandSlug" element={<BrandDetailPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
-          <Route path="cart" element={<CartPage />} />
+          <Route
+            path="cart"
+            element={env.ENABLE_INTERNAL_CHECKOUT ? <CartPage /> : <Navigate to="/collection" replace />}
+          />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
-          
+
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="profile" element={<ProfilePage />} />
-            <Route path="checkout" element={<CheckoutPage />} />
-            <Route path="orders/success/:id" element={<OrderSuccessPage />} />
+            <Route
+              path="checkout"
+              element={env.ENABLE_INTERNAL_CHECKOUT ? <CheckoutPage /> : <Navigate to="/collection" replace />}
+            />
+            <Route
+              path="orders/success/:id"
+              element={env.ENABLE_INTERNAL_CHECKOUT ? <OrderSuccessPage /> : <Navigate to="/collection" replace />}
+            />
           </Route>
         </Route>
 

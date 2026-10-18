@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { tokenStorage } from '../../services/tokenStorage';
 
 interface User {
   id: string;
@@ -32,18 +33,16 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      localStorage.setItem('token', action.payload.token);
+      tokenStorage.setAccessToken(action.payload.token);
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      tokenStorage.clearToken();
     },
   },
 });
 
 export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;
-
-

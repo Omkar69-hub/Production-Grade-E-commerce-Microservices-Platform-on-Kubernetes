@@ -39,7 +39,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage: customStorage,
-  whitelist: ['cart', 'auth'],
+  whitelist: ['cart'], // Fix 4: auth state must strictly remain in memory and never be persisted to browser storage
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

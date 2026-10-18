@@ -23,6 +23,7 @@ import { getBrandBySlug } from '../../data/brandsData';
 import { verifyBrandDomain, getSafeExternalLinkAttributes } from '../../utils/domainVerifier';
 import { useWishlist } from '../../utils/wishlistStorage';
 import SizingMatrixModal from '../../components/sizing/SizingMatrixModal';
+import { env } from '../../config/env';
 
 export type ProductActionState = 'VALID_REFERRAL' | 'UNTRUSTED_REFERRAL' | 'INTERNAL_PURCHASE';
 
@@ -140,6 +141,9 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const handleAddToCart = async () => {
+    if (!env.ENABLE_INTERNAL_CHECKOUT) {
+      return;
+    }
     if (!product || product.price <= 0) {
       return;
     }

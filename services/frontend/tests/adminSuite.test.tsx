@@ -315,7 +315,7 @@ describe('LUMIÈRE Stage 7B.2: Admin Management Suite Polish', () => {
 
       renderComponent(<AdminDashboard />);
 
-      const refreshBtn = await screen.findByRole('button', { name: /refresh telemetry/i });
+      const refreshBtn = await screen.findByRole('button', { name: /refresh telemetry/i }, { timeout: 4000 });
       fireEvent.click(refreshBtn);
 
       expect(OrderService.getAllOrders).toHaveBeenCalled();

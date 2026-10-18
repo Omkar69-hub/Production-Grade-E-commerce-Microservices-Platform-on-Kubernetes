@@ -11,6 +11,7 @@ import { useComparison } from '../../context/ComparisonContext';
 
 import { useWishlist } from '../../utils/wishlistStorage';
 import { verifyBrandDomain } from '../../utils/domainVerifier';
+import { env } from '../../config/env';
 
 export interface ProductCardEvaluation {
   isInquiryOrReferral: boolean;
@@ -119,8 +120,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Fail-closed: Never perform internal add-to-cart on inquiry or referral items
-    if (cardEvaluation.isInquiryOrReferral) {
+    // Fail-closed: Never perform internal add-to-cart on inquiry or referral items, or when internal checkout is disabled
+    if (cardEvaluation.isInquiryOrReferral || !env.ENABLE_INTERNAL_CHECKOUT) {
       return;
     }
     if (cartId && !addingToCart) {

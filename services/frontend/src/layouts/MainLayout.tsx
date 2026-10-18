@@ -15,6 +15,7 @@ import type { RootState } from '../store';
 import { logout } from '../store/slices/authSlice';
 import { AuthService } from '../services/AuthService';
 import { useEffects } from '../context/EffectsContext';
+import { env } from '../config/env';
 
 const MainLayout: React.FC = () => {
   const dispatch = useDispatch();
@@ -367,33 +368,35 @@ const MainLayout: React.FC = () => {
                 </IconButton>
               </Tooltip>
 
-              {/* Shopping Bag Button */}
-              <Tooltip title="Shopping Bag">
-                <IconButton 
-                  component={Link}
-                  to="/cart"
-                  sx={{ 
-                    color: '#0A0A0A',
-                    border: '1px solid #E8E4DC',
-                    p: 1,
-                    '&:hover': { borderColor: '#E50914', color: '#E50914' }
-                  }}
-                >
-                  <Badge 
-                    badgeContent={cartItemsCount} 
-                    sx={{ 
-                      '& .MuiBadge-badge': { 
-                        bgcolor: '#0A0A0A', 
-                        color: '#FFFFFF', 
-                        fontWeight: 700,
-                        fontSize: '0.68rem'
-                      } 
+              {/* Shopping Bag Button (rendered only when internal checkout is enabled) */}
+              {env.ENABLE_INTERNAL_CHECKOUT && (
+                <Tooltip title="Shopping Bag">
+                  <IconButton
+                    component={Link}
+                    to="/cart"
+                    sx={{
+                      color: '#0A0A0A',
+                      border: '1px solid #E8E4DC',
+                      p: 1,
+                      '&:hover': { borderColor: '#E50914', color: '#E50914' }
                     }}
                   >
-                    <ShoppingBagOutlined fontSize="small" />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
+                    <Badge
+                      badgeContent={cartItemsCount}
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          bgcolor: '#0A0A0A',
+                          color: '#FFFFFF',
+                          fontWeight: 700,
+                          fontSize: '0.68rem'
+                        }
+                      }}
+                    >
+                      <ShoppingBagOutlined fontSize="small" />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+              )}
 
               {/* User Account Menu */}
               {isAuthenticated ? (

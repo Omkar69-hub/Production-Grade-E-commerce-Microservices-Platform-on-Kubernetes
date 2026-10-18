@@ -42,7 +42,6 @@ const LoginPage: React.FC = () => {
     } catch (err: any) {
       // Security: Strictly fail closed. Wipe any residual credentials or stale tokens.
       dispatch(logout());
-      localStorage.removeItem('token');
 
       if (err.response?.status === 503) {
         setError('Authentication service is currently unavailable. Please contact the atelier concierge or try again later.');
