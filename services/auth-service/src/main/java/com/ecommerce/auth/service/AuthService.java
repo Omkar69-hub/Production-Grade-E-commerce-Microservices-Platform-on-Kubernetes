@@ -91,26 +91,21 @@ public class AuthService {
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        RefreshToken currentToken = tokenService.findByToken(requestRefreshToken)
-                .orElseThrow(() -> new UnauthorizedException("Invalid or expired refresh token"));
+        // Atomically rotate token: verifies existence, checks revoked status, invalidates family on reuse
+        RefreshToken newRefreshToken = tokenService.rotateToken(requestRefreshToken);
 
-        User user = userRepository.findByIdAndIsDeletedFalse(currentToken.getUserId())
+        User user = userRepository.findByIdAndIsDeletedFalse(newRefreshToken.getUserId())
                 .orElseThrow(() -> new UnauthorizedException("User account not found"));
 
         if (!user.isActive()) {
+            tokenService.deleteByToken(newRefreshToken.getRawToken());
             throw new UnauthorizedException("User account is inactive");
         }
-
-        // Token rotation: delete old refresh token
-        tokenService.deleteByToken(requestRefreshToken);
-
-        // Issue new refresh token
-        RefreshToken newRefreshToken = tokenService.createRefreshToken(user.getId());
 
         // Issue new access token
         String newAccessToken = generateJwtToken(user);
 
-        log.info("Successfully refreshed session and rotated refresh token for user: {}", user.getId());
+        log.info("Successfully refreshed session and atomically rotated refresh token for user: {}", user.getId());
 
         return TokenRefreshResponse.builder()
                 .accessToken(newAccessToken)

@@ -25,17 +25,20 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final CsrfProtectionFilter csrfProtectionFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disabled because we use stateless JWT
+                .csrf(AbstractHttpConfigurer::disable) // Disabled default session CSRF because we use stateless JWT with dedicated CsrfProtectionFilter for cookies
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/refresh",
+                                "/api/v1/auth/mobile/refresh",
                                 "/api/v1/auth/logout",
+                                "/api/v1/auth/csrf",
                                 "/actuator/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**"
@@ -44,6 +47,7 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(csrfProtectionFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

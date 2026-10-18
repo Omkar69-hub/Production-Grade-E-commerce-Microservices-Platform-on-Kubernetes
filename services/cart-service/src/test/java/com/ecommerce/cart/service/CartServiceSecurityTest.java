@@ -9,6 +9,7 @@ import com.ecommerce.cart.event.CartEventPublisher;
 import com.ecommerce.cart.mapper.CartMapper;
 import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.response.SuccessResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,7 @@ class CartServiceSecurityTest {
         userId = UUID.randomUUID();
         productId = UUID.randomUUID();
         ReflectionTestUtils.setField(cartService, "cartTtlDays", 30L);
+        ReflectionTestUtils.setField(cartService, "enableInternalCheckout", true);
     }
 
     private ProductServiceClient.ProductDto buildValidProductDto() {
@@ -778,6 +780,97 @@ class CartServiceSecurityTest {
             assertThatThrownBy(() -> cartService.updateItemQuantity(userId, productId, request))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Item not found in cart");
+
+            verify(cartRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Stage 9E: Fix 3 — Internal Checkout Feature Flag Hardening Tests")
+    class InternalCheckoutFeatureFlagTests {
+
+        @BeforeEach
+        void setFlagDisabled() {
+            // Explicitly verify behavior when feature flag is disabled (the default)
+            ReflectionTestUtils.setField(cartService, "enableInternalCheckout", false);
+        }
+
+        @Test
+        @DisplayName("Rejects addItemToCart with ForbiddenException when internal checkout is disabled")
+        void givenDisabledFlag_whenAddItemToCart_thenThrowsForbiddenException() {
+            CartItemRequest request = CartItemRequest.builder()
+                    .productId(productId)
+                    .quantity(1)
+                    .build();
+
+            assertThatThrownBy(() -> cartService.addItemToCart(userId, request))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout and cart operations are disabled");
+
+            verify(cartRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Rejects updateItemQuantity with ForbiddenException when internal checkout is disabled")
+        void givenDisabledFlag_whenUpdateItemQuantity_thenThrowsForbiddenException() {
+            CartItemRequest request = CartItemRequest.builder()
+                    .productId(productId)
+                    .quantity(2)
+                    .build();
+
+            assertThatThrownBy(() -> cartService.updateItemQuantity(userId, productId, request))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout and cart operations are disabled");
+
+            verify(cartRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Rejects removeItem with ForbiddenException when internal checkout is disabled")
+        void givenDisabledFlag_whenRemoveItem_thenThrowsForbiddenException() {
+            assertThatThrownBy(() -> cartService.removeItem(userId, productId))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout and cart operations are disabled");
+
+            verify(cartRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Rejects clearCart with ForbiddenException when internal checkout is disabled")
+        void givenDisabledFlag_whenClearCart_thenThrowsForbiddenException() {
+            assertThatThrownBy(() -> cartService.clearCart(userId))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout and cart operations are disabled");
+
+            verify(cartRepository, never()).deleteById(any());
+        }
+
+        @Test
+        @DisplayName("Enabling the flag does NOT bypass existing referral/inquiry restrictions")
+        void givenEnabledFlag_whenAddReferralProduct_thenStillRejectsWithBusinessException() {
+            ReflectionTestUtils.setField(cartService, "enableInternalCheckout", true);
+
+            Cart cart = Cart.builder()
+                    .userId(userId)
+                    .items(new ArrayList<>())
+                    .build();
+            when(cartRepository.findById(userId)).thenReturn(Optional.of(cart));
+
+            ProductServiceClient.ProductDto referralProduct = buildValidProductDto();
+            referralProduct.setAttributes("{\"destinationUrl\":\"https://www.sabyasachi.com/collection\",\"brandSlug\":\"sabyasachi\",\"isReferral\":true}");
+
+            when(productServiceClient.getProduct(productId)).thenReturn(
+                    SuccessResponse.<ProductServiceClient.ProductDto>builder().data(referralProduct).build()
+            );
+
+            CartItemRequest request = CartItemRequest.builder()
+                    .productId(productId)
+                    .quantity(1)
+                    .build();
+
+            assertThatThrownBy(() -> cartService.addItemToCart(userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("External atelier referral creations must be acquired via the brand's official portal");
 
             verify(cartRepository, never()).save(any());
         }

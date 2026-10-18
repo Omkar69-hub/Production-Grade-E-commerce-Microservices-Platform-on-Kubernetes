@@ -44,6 +44,17 @@ app:
       secret: ${JWT_SECRET}
       expiration-ms: 900000 # 15 minutes
       refresh-expiration-ms: 604800000 # 7 days
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Strict}
+      domain: ${COOKIE_DOMAIN:}
+      path: ${COOKIE_PATH:/api/v1/auth}
+    csrf:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  bootstrap:
+    admin:
+      email: ${ADMIN_EMAIL:}
+      password: ${ADMIN_PASSWORD:}
 
 management:
   endpoints:

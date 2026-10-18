@@ -1,12 +1,17 @@
 package com.ecommerce.order.service;
 
+import com.ecommerce.common.dto.PageResponse;
+import com.ecommerce.common.dto.PaginationDto;
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.response.SuccessResponse;
 import com.ecommerce.order.client.CartServiceClient;
 import com.ecommerce.order.client.ProductServiceClient;
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.OrderTrackingResponse;
 import com.ecommerce.order.dto.ShippingAddressDto;
+import com.ecommerce.order.dto.SimulateStatusRequest;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderStatus;
 import com.ecommerce.order.event.OrderCreatedEvent;
@@ -25,10 +30,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,6 +100,8 @@ class OrderServiceSecurityTest {
                 .paymentMethod("CREDIT_CARD")
                 .notes("Discreet atelier packaging please")
                 .build();
+
+        ReflectionTestUtils.setField(orderService, "enableInternalCheckout", true);
     }
 
     private ProductServiceClient.ProductDto buildValidProductDto() {
@@ -603,6 +615,128 @@ class OrderServiceSecurityTest {
             verify(orderRepository, never()).save(any());
             verify(cartServiceClient, never()).clearCart(any());
             verify(eventPublisher, never()).publishOrderCreated(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Internal Checkout Feature Flag Tests (Fix 3)")
+    class InternalCheckoutFeatureFlagTests {
+
+        @Test
+        @DisplayName("createOrder fails when internal checkout is disabled (default / false)")
+        void createOrder_fails_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(orderService, "enableInternalCheckout", false);
+
+            assertThatThrownBy(() -> orderService.createOrder(userId, token, validRequest))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout is disabled. Direct order creation is not permitted.");
+
+            verify(cartServiceClient, never()).getCart(any());
+            verify(productServiceClient, never()).getProduct(any());
+            verify(orderRepository, never()).save(any());
+            verify(eventPublisher, never()).publishOrderCreated(any());
+        }
+
+        @Test
+        @DisplayName("simulateStatusTransition fails when internal checkout is disabled")
+        void simulateStatusTransition_fails_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(orderService, "enableInternalCheckout", false);
+
+            SimulateStatusRequest req = new SimulateStatusRequest();
+            req.setStatus(OrderStatus.CONFIRMED);
+            req.setComment("Testing transition");
+
+            UUID orderId = UUID.randomUUID();
+
+            assertThatThrownBy(() -> orderService.simulateStatusTransition(userId, orderId, req))
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessageContaining("Internal checkout and status simulation are disabled.");
+
+            verify(orderRepository, never()).save(any());
+            verify(statusHistoryRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Historical order reads remain available when internal checkout is disabled")
+        void historicalOrderReads_succeed_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(orderService, "enableInternalCheckout", false);
+
+            UUID orderId = UUID.randomUUID();
+            Order mockOrder = Order.builder()
+                    .id(orderId)
+                    .userId(userId)
+                    .orderNumber("ORD-HIST-001")
+                    .status(OrderStatus.CONFIRMED)
+                    .totalAmount(BigDecimal.valueOf(500.00))
+                    .build();
+
+            when(orderRepository.findByIdAndUserId(orderId, userId)).thenReturn(Optional.of(mockOrder));
+            when(orderMapper.toResponse(mockOrder)).thenReturn(OrderResponse.builder().id(orderId).orderNumber("ORD-HIST-001").build());
+
+            OrderResponse response = orderService.getOrder(userId, orderId);
+            assertThat(response).isNotNull();
+            assertThat(response.getOrderNumber()).isEqualTo("ORD-HIST-001");
+
+            // Tracking reads
+            when(statusHistoryRepository.findAllByOrderIdOrderByCreatedAtAsc(orderId)).thenReturn(List.of());
+            OrderTrackingResponse tracking = orderService.getOrderTracking(userId, orderId);
+            assertThat(tracking).isNotNull();
+            assertThat(tracking.getOrderId()).isEqualTo(orderId);
+
+            // User orders pagination
+            PaginationDto pagination = new PaginationDto();
+            pagination.setPage(0);
+            pagination.setSize(10);
+            Page<Order> page = new PageImpl<>(List.of(mockOrder));
+            when(orderRepository.findAllByUserId(eq(userId), any(Pageable.class))).thenReturn(page);
+
+            PageResponse<OrderResponse> pageResponse = orderService.getUserOrders(userId, pagination);
+            assertThat(pageResponse).isNotNull();
+            assertThat(pageResponse.getTotalElements()).isEqualTo(1);
+
+            // Admin all orders pagination
+            when(orderRepository.findAll(any(Pageable.class))).thenReturn(page);
+            PageResponse<OrderResponse> allOrders = orderService.getAllOrders(pagination);
+            assertThat(allOrders).isNotNull();
+            assertThat(allOrders.getTotalElements()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Explicitly enabling internal checkout still rejects referral and inquiry items")
+        void enablingInternalCheckout_stillEnforcesReferralAndInquiryRestrictions() {
+            ReflectionTestUtils.setField(orderService, "enableInternalCheckout", true);
+
+            UUID refProdId = UUID.randomUUID();
+            CartServiceClient.CartItemDto item = CartServiceClient.CartItemDto.builder()
+                    .productId(refProdId)
+                    .name("External Atelier Coat")
+                    .quantity(1)
+                    .price(BigDecimal.valueOf(800.00))
+                    .build();
+
+            CartServiceClient.CartDto cart = CartServiceClient.CartDto.builder()
+                    .userId(userId)
+                    .items(List.of(item))
+                    .subtotal(BigDecimal.valueOf(800.00))
+                    .build();
+
+            when(cartServiceClient.getCart(any())).thenReturn(SuccessResponse.<CartServiceClient.CartDto>builder().data(cart).build());
+
+            ProductServiceClient.ProductDto referralProduct = ProductServiceClient.ProductDto.builder()
+                    .id(refProdId)
+                    .sku("REF-COAT-01")
+                    .status("ACTIVE")
+                    .price(BigDecimal.valueOf(800.00))
+                    .attributes("{\"destinationUrl\":\"https://external-brand.com/coat\"}")
+                    .build();
+
+            when(productServiceClient.getProduct(refProdId)).thenReturn(SuccessResponse.<ProductServiceClient.ProductDto>builder().data(referralProduct).build());
+
+            assertThatThrownBy(() -> orderService.createOrder(userId, token, validRequest))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("External atelier referral creations cannot be ordered internally");
+
+            verify(orderRepository, never()).save(any());
         }
     }
 }

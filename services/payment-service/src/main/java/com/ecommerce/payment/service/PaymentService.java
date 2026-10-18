@@ -1,6 +1,7 @@
 package com.ecommerce.payment.service;
 
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.exception.ValidationException;
 import com.ecommerce.payment.dto.PaymentRequest;
@@ -13,6 +14,7 @@ import com.ecommerce.payment.mapper.PaymentMapper;
 import com.ecommerce.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,15 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final PaymentEventPublisher eventPublisher;
 
+    @Value("${app.feature.internal-checkout.enabled:${ENABLE_INTERNAL_CHECKOUT:false}}")
+    private boolean enableInternalCheckout;
+
     @Transactional(noRollbackFor = {ValidationException.class})
     public void initializePayment(UUID orderId, UUID userId, BigDecimal amount) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and mock payments are disabled.");
+        }
+
         if (orderId == null) {
             throw new ValidationException("Order ID cannot be null");
         }
@@ -91,6 +100,10 @@ public class PaymentService {
 
     @Transactional(noRollbackFor = {BusinessException.class, ValidationException.class})
     public PaymentResponse processPayment(PaymentRequest request, UUID userId) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and mock payments are disabled.");
+        }
+
         Payment payment = paymentRepository.findByOrderId(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order"));
 

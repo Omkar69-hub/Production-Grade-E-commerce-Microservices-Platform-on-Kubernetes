@@ -15,19 +15,6 @@ spring:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost:80"
-              - "http://localhost:443"
-              - "http://localhost"
-              - "http://localhost:3000"
-              - "http://localhost:5173"
-              - "http://127.0.0.1:80"
-              - "http://127.0.0.1:443"
-              - "http://127.0.0.1:3000"
-              - "http://127.0.0.1:5173"
-              - "http://127.0.0.1"
-            allowedOriginPatterns:
-              - "${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*}"
             allowedMethods:
               - GET
               - POST
@@ -100,6 +87,9 @@ resilience4j:
         baseConfig: default
 
 app:
+  feature:
+    internal-checkout:
+      enabled: ${ENABLE_INTERNAL_CHECKOUT:false}
   security:
     jwt:
       secret: ${JWT_SECRET}

@@ -29,3 +29,19 @@ To run tests:
 mvn test
 ```
 *(Integration tests use Testcontainers and require a running Docker daemon).*
+
+## Mobile Authentication Transport Specification (Fix 4 Architecture)
+
+For future mobile clients (iOS / Android), authentication is decoupled from web browser ambient cookie mechanisms:
+
+### 1. Platform-Native Secure Storage
+Mobile clients must NEVER store refresh credentials or access tokens in standard unencrypted storage (`UserDefaults`, `AsyncStorage`, or `SharedPreferences`).
+- **iOS:** Apple Keychain Services (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`).
+- **Android:** `EncryptedSharedPreferences` backed by the Android Keystore system (`MasterKeys.AES256_GCM`).
+
+### 2. Mobile Transport Protocol
+- **Refresh Flow:** The mobile client issues a `POST /api/v1/auth/refresh` request passing the refresh token in the JSON request body (`{"refreshToken": "<raw_refresh_token>"}`).
+- **Access Tokens:** Retained in volatile mobile application memory only.
+- **CSRF Isolation:** The backend `CsrfProtectionFilter` enforces CSRF proof (`X-XSRF-TOKEN` / `X-CSRF-TOKEN`) exclusively when the request is authenticated via the ambient `refresh_token` browser cookie. Pure API/mobile requests carrying bearer credentials in the body/header are not subject to CSRF, maintaining browser protections without weakening web security.
+- **Token Rotation & Family Revocation:** Mobile refresh tokens are hashed (SHA-256) and tracked within families in Redis identically to browser sessions. Concurrency protection and reuse revocation apply universally across all platforms.
+

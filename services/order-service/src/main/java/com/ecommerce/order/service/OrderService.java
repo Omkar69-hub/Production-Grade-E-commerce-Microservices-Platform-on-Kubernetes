@@ -4,6 +4,7 @@ import com.ecommerce.common.constants.ApplicationConstants;
 import com.ecommerce.common.dto.PageResponse;
 import com.ecommerce.common.dto.PaginationDto;
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.response.SuccessResponse;
 import com.ecommerce.order.client.CartServiceClient;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +57,9 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+
+    @Value("${app.feature.internal-checkout.enabled:${ENABLE_INTERNAL_CHECKOUT:false}}")
+    private boolean enableInternalCheckout;
 
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getUserOrders(UUID userId, PaginationDto pagination) {
@@ -99,6 +104,10 @@ public class OrderService {
 
     @Transactional
     public OrderResponse createOrder(UUID userId, String token, OrderRequest request) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout is disabled. Direct order creation is not permitted.");
+        }
+
         // 1. Fetch Cart
         CartServiceClient.CartDto cart = fetchCart(token);
         if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
@@ -282,6 +291,10 @@ public class OrderService {
 
     @Transactional
     public OrderTrackingResponse simulateStatusTransition(UUID userId, UUID orderId, SimulateStatusRequest request) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and status simulation are disabled.");
+        }
+
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found or unauthorized: " + orderId));
 

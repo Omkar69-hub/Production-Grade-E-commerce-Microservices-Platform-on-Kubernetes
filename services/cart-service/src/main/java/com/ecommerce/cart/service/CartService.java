@@ -10,6 +10,7 @@ import com.ecommerce.cart.event.CartEventPublisher;
 import com.ecommerce.cart.mapper.CartMapper;
 import com.ecommerce.cart.repository.CartRepository;
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.response.SuccessResponse;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,6 +39,9 @@ public class CartService {
     @Value("${app.cart.ttl-days:30}")
     private Long cartTtlDays;
 
+    @Value("${app.feature.internal-checkout.enabled:${ENABLE_INTERNAL_CHECKOUT:false}}")
+    private boolean enableInternalCheckout;
+
     public CartResponse getCart(UUID userId) {
         Cart cart = getOrCreateCart(userId);
         return cartMapper.toResponse(cart);
@@ -49,6 +53,9 @@ public class CartService {
     }
 
     public CartResponse addItemToCart(UUID userId, CartItemRequest request) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and cart operations are disabled");
+        }
         Cart cart = getOrCreateCart(userId);
 
         // Check if item already exists in cart
@@ -90,6 +97,9 @@ public class CartService {
     }
 
     public CartResponse updateItemQuantity(UUID userId, UUID productId, CartItemRequest request) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and cart operations are disabled");
+        }
         if (request.getProductId() != null && !productId.equals(request.getProductId())) {
             throw new BusinessException("Product ID in path must match request body");
         }
@@ -117,6 +127,9 @@ public class CartService {
     }
 
     public CartResponse removeItem(UUID userId, UUID productId) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and cart operations are disabled");
+        }
         Cart cart = getCartOrThrow(userId);
         
         boolean removed = cart.getItems().removeIf(item -> item.getProductId().equals(productId));
@@ -130,6 +143,9 @@ public class CartService {
     }
 
     public void clearCart(UUID userId) {
+        if (!enableInternalCheckout) {
+            throw new ForbiddenException("Internal checkout and cart operations are disabled");
+        }
         cartRepository.deleteById(userId);
         eventPublisher.publishCartCleared(userId);
     }

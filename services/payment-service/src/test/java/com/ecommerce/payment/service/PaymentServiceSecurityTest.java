@@ -1,6 +1,7 @@
 package com.ecommerce.payment.service;
 
 import com.ecommerce.common.exception.BusinessException;
+import com.ecommerce.common.exception.ForbiddenException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.common.exception.ValidationException;
 import com.ecommerce.payment.dto.PaymentRequest;
@@ -22,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -54,6 +56,7 @@ class PaymentServiceSecurityTest {
     void setUp() {
         orderId = UUID.randomUUID();
         userId = UUID.randomUUID();
+        ReflectionTestUtils.setField(paymentService, "enableInternalCheckout", true);
     }
 
     @Nested
@@ -642,6 +645,99 @@ class PaymentServiceSecurityTest {
             } finally {
                 org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Internal Checkout Feature Flag Tests (Fix 3)")
+    class InternalCheckoutFeatureFlagTests {
+
+        @Test
+        @DisplayName("processPayment fails when internal checkout is disabled (default / false)")
+        void processPayment_fails_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(paymentService, "enableInternalCheckout", false);
+
+            PaymentRequest request = PaymentRequest.builder()
+                    .orderId(orderId)
+                    .paymentMethod("CREDIT_CARD")
+                    .token("tok_valid")
+                    .build();
+
+            ForbiddenException ex = assertThrows(ForbiddenException.class,
+                    () -> paymentService.processPayment(request, userId));
+
+            assertTrue(ex.getMessage().contains("Internal checkout and mock payments are disabled."));
+
+            verify(paymentRepository, never()).findByOrderId(any());
+            verify(paymentRepository, never()).save(any());
+            verify(eventPublisher, never()).publishPaymentCompleted(any());
+            verify(eventPublisher, never()).publishPaymentFailed(any());
+        }
+
+        @Test
+        @DisplayName("initializePayment fails when internal checkout is disabled (default / false)")
+        void initializePayment_fails_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(paymentService, "enableInternalCheckout", false);
+
+            ForbiddenException ex = assertThrows(ForbiddenException.class,
+                    () -> paymentService.initializePayment(orderId, userId, BigDecimal.valueOf(100.00)));
+
+            assertTrue(ex.getMessage().contains("Internal checkout and mock payments are disabled."));
+
+            verify(paymentRepository, never()).save(any());
+            verify(eventPublisher, never()).publishPaymentCompleted(any());
+            verify(eventPublisher, never()).publishPaymentFailed(any());
+        }
+
+        @Test
+        @DisplayName("Historical payment reads and admin refunds remain functional when internal checkout is disabled")
+        void historicalReadsAndAdminRefunds_succeed_whenInternalCheckoutDisabled() {
+            ReflectionTestUtils.setField(paymentService, "enableInternalCheckout", false);
+
+            Payment mockPayment = Payment.builder()
+                    .id(UUID.randomUUID())
+                    .orderId(orderId)
+                    .userId(userId)
+                    .amount(BigDecimal.valueOf(250.00))
+                    .status(PaymentStatus.COMPLETED)
+                    .transactionId("TXN-HISTORICAL-01")
+                    .paymentMethod("CREDIT_CARD")
+                    .build();
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(mockPayment));
+            when(paymentMapper.toResponse(mockPayment)).thenReturn(PaymentResponse.builder()
+                    .orderId(orderId)
+                    .userId(userId)
+                    .amount(BigDecimal.valueOf(250.00))
+                    .status(PaymentStatus.COMPLETED)
+                    .transactionId("TXN-HISTORICAL-01")
+                    .build());
+
+            // Historical read
+            PaymentResponse readResponse = paymentService.getPaymentByOrderId(orderId, userId);
+            assertNotNull(readResponse);
+            assertEquals("TXN-HISTORICAL-01", readResponse.getTransactionId());
+
+            // Admin refund
+            when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+            PaymentResponse refundResponse = paymentService.processRefund(orderId);
+            assertNotNull(refundResponse);
+            verify(paymentRepository).save(any(Payment.class));
+            verify(eventPublisher).publishRefundCompleted(any());
+        }
+
+        @Test
+        @DisplayName("Explicitly enabling internal checkout still rejects invalid/zero amounts")
+        void enablingInternalCheckout_stillEnforcesAmountValidation() {
+            ReflectionTestUtils.setField(paymentService, "enableInternalCheckout", true);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+            when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            ValidationException ex = assertThrows(ValidationException.class,
+                    () -> paymentService.initializePayment(orderId, userId, BigDecimal.ZERO));
+
+            assertTrue(ex.getMessage().contains("strictly greater than zero"));
         }
     }
 }

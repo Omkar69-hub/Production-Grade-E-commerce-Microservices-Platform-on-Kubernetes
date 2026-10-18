@@ -35,6 +35,9 @@ spring:
     password: ${RABBITMQ_PASSWORD:guest}
 
 app:
+  feature:
+    internal-checkout:
+      enabled: ${ENABLE_INTERNAL_CHECKOUT:false}
   security:
     jwt:
       secret: ${JWT_SECRET}
