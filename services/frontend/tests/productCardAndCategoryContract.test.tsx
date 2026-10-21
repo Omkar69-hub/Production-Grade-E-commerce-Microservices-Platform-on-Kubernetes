@@ -266,7 +266,7 @@ describe('LUMIÈRE Stage 6I-E: Frontend Contract Corrections & Regression Tests'
       expect(evalCrossBrand.ctaText).toBe('View Dossier');
     });
 
-    it('Scenario 6: Verified internal product with a positive price preserves normal purchasing behavior', async () => {
+    it('Scenario 6: Verified internal product preserves purchasing in authorized mode, but fails closed when checkout is disabled', async () => {
       const internalProduct: Product = {
         id: '123e4567-e89b-12d3-a456-426614174001',
         sku: 'INT-SILK-001',
@@ -283,24 +283,25 @@ describe('LUMIÈRE Stage 6I-E: Frontend Contract Corrections & Regression Tests'
         }),
       };
 
-      const evalInternal = evaluateProductCardState(internalProduct);
-      expect(evalInternal.isInquiryOrReferral).toBe(false);
-      expect(evalInternal.isPriceOnInquiry).toBe(false);
-      expect(evalInternal.ctaText).toBe('Acquire');
-      expect(evalInternal.subLabelText).toBeNull();
+      // 6a. Authorized checkout configuration
+      const evalAuthorized = evaluateProductCardState(internalProduct, true);
+      expect(evalAuthorized.isInquiryOrReferral).toBe(false);
+      expect(evalAuthorized.isPriceOnInquiry).toBe(false);
+      expect(evalAuthorized.ctaText).toBe('Acquire');
+      expect(evalAuthorized.subLabelText).toBeNull();
 
+      // 6b. Fail-closed default configuration (internal checkout disabled)
+      const evalFailClosed = evaluateProductCardState(internalProduct, false);
+      expect(evalFailClosed.isInquiryOrReferral).toBe(true);
+      expect(evalFailClosed.isPriceOnInquiry).toBe(false);
+      expect(evalFailClosed.ctaText).toBe('View Dossier');
+      expect(evalFailClosed.subLabelText).toBe('Atelier Consultation');
+
+      // 6c. Render under default configuration: must render View Dossier and NEVER internal Acquire
       renderProductCard(internalProduct);
       expect(screen.getByText(/1,50,000/)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /acquire/i })).toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /view dossier/i })).not.toBeInTheDocument();
-
-      // Trigger add to cart
-      const acquireBtn = screen.getByRole('button', { name: /acquire/i });
-      await act(async () => {
-        fireEvent.click(acquireBtn);
-      });
-      // Verify no throw and button was interactable
-      expect(acquireBtn).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /view dossier/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /acquire/i })).not.toBeInTheDocument();
     });
   });
 

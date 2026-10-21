@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
       } else if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Invalid credentials. Please verify your email and password.');
       } else {
-        setError(err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
+        setError(err.response?.data?.message || err.response?.data?.detail || 'Authentication failed. Please verify your credentials.');
       }
     }
   };

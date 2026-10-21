@@ -5,6 +5,9 @@ import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types
 export const AuthService = {
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<{ data: { accessToken: string; expiresIn: number } }>('/api/v1/auth/login', credentials);
+    if (!response.data || typeof response.data !== 'object' || !response.data.data?.accessToken) {
+      throw new Error('Authentication response format invalid. Expected backend JSON access token.');
+    }
     const accessToken = response.data.data.accessToken;
     tokenStorage.setAccessToken(accessToken);
 
@@ -21,7 +24,10 @@ export const AuthService = {
   },
 
   register: async (userData: RegisterRequest): Promise<void> => {
-    await apiClient.post('/api/v1/auth/register', userData);
+    const response = await apiClient.post('/api/v1/auth/register', userData);
+    if (typeof response.data === 'string' && response.data.trim().toLowerCase().startsWith('<!doctype')) {
+      throw new Error('Backend unavailable: Endpoint returned SPA fallback HTML instead of API response.');
+    }
   },
 
   getProfile: async (): Promise<User> => {

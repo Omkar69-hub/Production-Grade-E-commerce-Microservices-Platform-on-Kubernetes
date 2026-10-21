@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Badge, 
-  Drawer, List, ListItem, ListItemButton, ListItemText, Divider, InputBase, 
-  Menu, MenuItem, Tooltip, useTheme, useMediaQuery 
+import {
+  AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Badge,
+  Drawer, List, ListItem, ListItemButton, ListItemText, Divider, InputBase,
+  Menu, MenuItem, Tooltip, useTheme, useMediaQuery
 } from '@mui/material';
-import { 
-  ShoppingBagOutlined, Menu as MenuIcon, Search as SearchIcon, 
-  PersonOutlined, AutoAwesomeOutlined, AutoAwesome, LogoutOutlined, 
-  DashboardOutlined, FavoriteBorderOutlined 
+import {
+  ShoppingBagOutlined, Menu as MenuIcon, Search as SearchIcon,
+  PersonOutlined, AutoAwesomeOutlined, AutoAwesome, LogoutOutlined,
+  DashboardOutlined, FavoriteBorderOutlined
 } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store';
@@ -90,27 +90,27 @@ const MainLayout: React.FC = () => {
   ];
 
   const drawer = (
-    <Box sx={{ width: 300, bgcolor: '#FAFAFA', height: '100%', p: 2.5 }} role="presentation">
+    <Box sx={{ width: 300, bgcolor: 'var(--bg, #fbf6ec)', height: '100%', p: 2.5 }} role="presentation">
       <Box sx={{ py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography 
-          variant="h6" 
-          component={Link} 
-          to="/" 
+        <Typography
+          variant="h6"
+          component={Link}
+          to="/"
           onClick={handleDrawerToggle}
-          sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.18em', fontWeight: 800, color: '#0A0A0A' }}
+          sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: '#1a1420' }}
         >
           LUMIÈRE
         </Typography>
       </Box>
-      <Divider sx={{ borderColor: '#E8E4DC' }} />
-      
+      <Divider sx={{ borderColor: 'var(--line, #e5dccb)' }} />
+
       {/* Mobile Search */}
       <Box component="form" onSubmit={handleSearch} sx={{ my: 2.5 }}>
-        <Box sx={{ 
-          display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF', 
-          borderRadius: '30px', px: 2, py: 1, border: '1px solid #E8E4DC' 
+        <Box sx={{
+          display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF',
+          borderRadius: '30px', px: 2, py: 1, border: '1px solid var(--line, #e5dccb)'
         }}>
-          <SearchIcon sx={{ color: '#E50914', fontSize: 20, mr: 1 }} />
+          <SearchIcon sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 20, mr: 1 }} />
           <InputBase
             placeholder="Search fashion houses & styles..."
             value={searchInput}
@@ -120,41 +120,41 @@ const MainLayout: React.FC = () => {
           />
         </Box>
       </Box>
-      <Divider sx={{ borderColor: '#E8E4DC' }} />
+      <Divider sx={{ borderColor: 'var(--line, #e5dccb)' }} />
 
       <List sx={{ py: 1.5 }}>
         {navLinks.map((link) => (
           <ListItem disablePadding key={link.path}>
-            <ListItemButton 
-              component={Link} 
-              to={link.path} 
+            <ListItemButton
+              component={Link}
+              to={link.path}
               onClick={handleDrawerToggle}
               sx={{ py: 1.2, borderRadius: 1 }}
             >
-              <ListItemText 
+              <ListItemText
                 primary={
                   <Typography sx={{ fontWeight: 600, letterSpacing: '0.04em', fontSize: '0.92rem', color: '#0A0A0A' }}>
                     {link.label}
                   </Typography>
-                } 
+                }
               />
             </ListItemButton>
           </ListItem>
         ))}
 
         <ListItem disablePadding>
-          <ListItemButton 
-            component={Link} 
-            to="/wishlist" 
+          <ListItemButton
+            component={Link}
+            to="/wishlist"
             onClick={handleDrawerToggle}
             sx={{ py: 1.2, borderRadius: 1 }}
           >
-            <ListItemText 
+            <ListItemText
               primary={
                 <Typography sx={{ fontWeight: 600, letterSpacing: '0.04em', fontSize: '0.92rem', color: '#E50914' }}>
                   Private Wishlist ({wishlistCount})
                 </Typography>
-              } 
+              }
             />
           </ListItemButton>
         </ListItem>
@@ -165,9 +165,9 @@ const MainLayout: React.FC = () => {
         {!isAuthenticated ? (
           <>
             <ListItem disablePadding sx={{ mb: 1.5 }}>
-              <ListItemButton 
-                component={Link} 
-                to="/login" 
+              <ListItemButton
+                component={Link}
+                to="/login"
                 onClick={handleDrawerToggle}
                 className="lumiere-pill-btn"
                 sx={{ bgcolor: '#0A0A0A', color: '#FFFFFF', '&:hover': { bgcolor: '#222' } }}
@@ -176,9 +176,9 @@ const MainLayout: React.FC = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton 
-                component={Link} 
-                to="/register" 
+              <ListItemButton
+                component={Link}
+                to="/register"
                 onClick={handleDrawerToggle}
                 className="lumiere-pill-btn"
                 sx={{ border: '1.5px solid #0A0A0A' }}
@@ -213,31 +213,31 @@ const MainLayout: React.FC = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FAFAFA' }}>
-      
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'var(--bg, #fbf6ec)' }}>
+
       {/* Editorial Announcement Bar */}
-      <Box sx={{ 
-        bgcolor: '#0A0A0A', color: '#FAF8F5', py: 0.9, px: 2, 
-        textAlign: 'center', borderBottom: '1px solid rgba(229, 9, 20, 0.35)' 
+      <Box sx={{
+        bgcolor: 'var(--ink, #1a1420)', color: 'var(--bg, #fbf6ec)', py: 0.9, px: 2,
+        textAlign: 'center', borderBottom: '1px solid rgba(58, 60, 224, 0.35)'
       }}>
-        <Typography variant="body2" sx={{ 
-          fontFamily: '"Cinzel", serif', letterSpacing: '0.14em', 
-          fontSize: { xs: '0.70rem', sm: '0.78rem' }, color: '#FAF8F5' 
+        <Typography variant="body2" sx={{
+          fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.08em',
+          fontSize: { xs: '0.72rem', sm: '0.80rem' }, color: 'var(--bg, #fbf6ec)'
         }}>
-          LUMIÈRE ATELIER • DISCOVER 55+ VERIFIED COUTURE & SARTORIAL HOUSES • COMPLIMENTARY INSURED WHITE-GLOVE SHIPPING
+          LUMIÈRE ATELIER • DISCOVER 55+ VERIFIED COUTURE & SARTORIAL HOUSES • COMPLIMENTARY INSURED WHITE-GLOVE TRANSIT
         </Typography>
       </Box>
 
       {/* Main Sticky Header */}
-      <AppBar position="sticky" elevation={0} sx={{ 
-        bgcolor: 'rgba(255, 255, 255, 0.96)', 
-        backdropFilter: 'blur(20px)', 
-        borderBottom: '1px solid #E8E4DC' 
+      <AppBar position="sticky" elevation={0} sx={{
+        bgcolor: 'rgba(251, 246, 236, 0.96)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--line, #e5dccb)'
       }}>
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ py: { xs: 1.4, md: 1.8 }, gap: 2 }}>
             {isMobile && (
-              <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 0.5, color: '#0A0A0A' }}>
+              <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 0.5, color: 'var(--ink, #1a1420)' }}>
                 <MenuIcon />
               </IconButton>
             )}
@@ -249,12 +249,12 @@ const MainLayout: React.FC = () => {
                 component={Link}
                 to="/"
                 sx={{
-                  fontFamily: '"Cinzel", serif',
-                  fontWeight: 800,
-                  letterSpacing: '0.18em',
-                  color: '#0A0A0A',
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  fontWeight: 600,
+                  letterSpacing: '0.02em',
+                  color: 'var(--ink, #1a1420)',
                   textDecoration: 'none',
-                  fontSize: { xs: '1.35rem', md: '1.75rem' },
+                  fontSize: { xs: '1.45rem', md: '1.85rem' },
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1
@@ -262,15 +262,15 @@ const MainLayout: React.FC = () => {
               >
                 LUMIÈRE
               </Typography>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  fontFamily: '"Cinzel", serif', 
-                  fontSize: '0.56rem', 
-                  letterSpacing: '0.22em', 
-                  color: '#E50914', 
+              <Typography
+                variant="caption"
+                sx={{
+                  fontFamily: '"Instrument Sans", sans-serif',
+                  fontSize: '0.62rem',
+                  letterSpacing: '0.14em',
+                  color: 'var(--cobalt, #3a3ce0)',
                   textTransform: 'uppercase',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   display: { xs: 'none', sm: 'block' }
                 }}
               >
@@ -282,18 +282,18 @@ const MainLayout: React.FC = () => {
             {!isMobile && (
               <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 3.2 }}>
                 {navLinks.map((link) => (
-                  <Button 
+                  <Button
                     key={link.path}
-                    component={Link} 
-                    to={link.path} 
-                    color="inherit" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      color: '#0A0A0A', 
-                      letterSpacing: '0.04em',
-                      fontSize: '0.88rem',
+                    component={Link}
+                    to={link.path}
+                    color="inherit"
+                    sx={{
+                      fontWeight: 500,
+                      color: 'var(--ink, #1a1420)',
+                      letterSpacing: '0.02em',
+                      fontSize: '0.90rem',
                       px: 1.2,
-                      '&:hover': { color: '#E50914', bgcolor: 'transparent' } 
+                      '&:hover': { color: 'var(--cobalt, #3a3ce0)', bgcolor: 'transparent', textDecoration: 'underline', textUnderlineOffset: '6px' }
                     }}
                   >
                     {link.label}
@@ -304,8 +304,8 @@ const MainLayout: React.FC = () => {
 
             {/* Desktop Search Bar */}
             {!isMobile && (
-              <Box component="form" onSubmit={handleSearch} sx={{ 
-                display: 'flex', alignItems: 'center', bgcolor: '#F5F3EF', 
+              <Box component="form" onSubmit={handleSearch} sx={{
+                display: 'flex', alignItems: 'center', bgcolor: '#F5F3EF',
                 borderRadius: '30px', px: 2, py: 0.6, width: 250,
                 border: '1px solid #E8E4DC',
                 transition: 'all 0.25s ease',
@@ -323,13 +323,13 @@ const MainLayout: React.FC = () => {
 
             {/* Actions & Utilities */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              
+
               {/* Visual Effects Toggle */}
               <Tooltip title={effectsEnabled ? "Visual Atmosphere: Active (Click to reduce)" : "Visual Atmosphere: Reduced (Click to activate)"}>
-                <IconButton 
+                <IconButton
                   onClick={toggleEffects}
-                  sx={{ 
-                    color: effectsEnabled ? '#E50914' : '#888', 
+                  sx={{
+                    color: effectsEnabled ? '#E50914' : '#888',
                     border: '1px solid',
                     borderColor: effectsEnabled ? 'rgba(229, 9, 20, 0.35)' : '#E8E4DC',
                     bgcolor: effectsEnabled ? 'rgba(229, 9, 20, 0.06)' : 'transparent',
@@ -352,15 +352,15 @@ const MainLayout: React.FC = () => {
                     '&:hover': { borderColor: '#E50914', color: '#E50914' }
                   }}
                 >
-                  <Badge 
-                    badgeContent={wishlistCount} 
-                    sx={{ 
-                      '& .MuiBadge-badge': { 
-                        bgcolor: '#E50914', 
-                        color: '#FFFFFF', 
+                  <Badge
+                    badgeContent={wishlistCount}
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        bgcolor: '#E50914',
+                        color: '#FFFFFF',
                         fontWeight: 700,
                         fontSize: '0.68rem'
-                      } 
+                      }
                     }}
                   >
                     <FavoriteBorderOutlined fontSize="small" />
@@ -401,10 +401,10 @@ const MainLayout: React.FC = () => {
               {/* User Account Menu */}
               {isAuthenticated ? (
                 <>
-                  <IconButton 
+                  <IconButton
                     onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                    sx={{ 
-                      color: '#0A0A0A', 
+                    sx={{
+                      color: '#0A0A0A',
                       border: '1px solid #E8E4DC',
                       p: 1,
                       '&:hover': { borderColor: '#E50914', bgcolor: 'rgba(229, 9, 20, 0.05)' }
@@ -420,9 +420,9 @@ const MainLayout: React.FC = () => {
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     slotProps={{
                       paper: {
-                        sx: { 
-                          mt: 1.5, minWidth: 210, borderRadius: 2, 
-                          border: '1px solid #E8E4DC', boxShadow: '0 10px 30px rgba(10,10,10,0.08)' 
+                        sx: {
+                          mt: 1.5, minWidth: 210, borderRadius: 2,
+                          border: '1px solid #E8E4DC', boxShadow: '0 10px 30px rgba(10,10,10,0.08)'
                         }
                       }
                     }}
@@ -458,13 +458,13 @@ const MainLayout: React.FC = () => {
                   </Menu>
                 </>
               ) : (
-                <Button 
+                <Button
                   component={Link}
                   to="/login"
                   variant="outlined"
                   size="small"
                   className="lumiere-pill-btn"
-                  sx={{ 
+                  sx={{
                     display: { xs: 'none', sm: 'inline-flex' },
                     borderColor: '#0A0A0A',
                     color: '#0A0A0A',
@@ -482,7 +482,7 @@ const MainLayout: React.FC = () => {
           </Toolbar>
         </Container>
       </AppBar>
-      
+
       {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
@@ -501,12 +501,12 @@ const MainLayout: React.FC = () => {
       <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Outlet />
       </Box>
-      
+
       {/* Luxury Editorial Footer */}
       <Box component="footer" sx={{ bgcolor: '#0A0A0A', color: '#FAF8F5', pt: 10, pb: 6, borderTop: '1px solid rgba(229, 9, 20, 0.3)' }}>
         <Container maxWidth="xl">
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2.2fr 1fr 1fr 1fr' }, gap: 5, mb: 8 }}>
-            
+
             <Box>
               <Typography variant="h5" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.16em', fontWeight: 800, mb: 1.2, color: '#FFFFFF' }}>
                 LUMIÈRE
@@ -515,11 +515,11 @@ const MainLayout: React.FC = () => {
                 MAISON DE LUXE • EST. 2026
               </Typography>
               <Typography variant="body2" sx={{ color: '#A0988E', maxWidth: 360, lineHeight: 1.8 }}>
-                Curating the intersection of historic Indian artisanal heritage and avant-garde global fashion. 
+                Curating the intersection of historic Indian artisanal heritage and avant-garde global fashion.
                 Every maison in our directory is verified for authentic direct provenance.
               </Typography>
             </Box>
-            
+
             <Box>
               <Typography variant="subtitle2" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.12em', fontWeight: 700, mb: 2.5, color: '#FFFFFF' }}>
                 Couture Portfolios
@@ -595,16 +595,16 @@ const MainLayout: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-          
+
           <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 4 }} />
-          
+
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
             <Typography variant="caption" sx={{ color: '#7E766D', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} LUMIÈRE MAISON DE LUXE. ALL RIGHTS RESERVED.
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 onClick={toggleEffects}
                 sx={{ color: '#E50914', fontSize: '0.78rem', p: 0, textDecoration: 'underline' }}
               >

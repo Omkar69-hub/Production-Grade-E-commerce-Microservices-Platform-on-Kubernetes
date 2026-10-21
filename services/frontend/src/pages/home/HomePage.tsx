@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  Box, Container, Typography, Button, Grid, Card, CardMedia, CardContent, 
-  Chip, IconButton, Drawer, Divider 
+import {
+  Box, Container, Typography, Button, Grid, Card, CardMedia, CardContent,
+  Chip, IconButton, Drawer, Divider
 } from '@mui/material';
-import { 
-  ArrowForwardOutlined, VerifiedUserOutlined, StraightenOutlined, 
-  CloseOutlined, DiamondOutlined, PublicOutlined 
+import {
+  ArrowForwardOutlined, VerifiedUserOutlined, StraightenOutlined,
+  CloseOutlined, DiamondOutlined, PublicOutlined
 } from '@mui/icons-material';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { BRANDS_DATA } from '../../data/brandsData';
 import { useProducts } from '../../hooks/useProducts';
 import ProductCard from '../../components/product/ProductCard';
+import EditorialRunwayTrack from '../../components/editorial/EditorialRunwayTrack';
+import CuratedOccasionPanels from '../../components/editorial/CuratedOccasionPanels';
+import { CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
 
 export const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -25,15 +28,6 @@ export const HomePage: React.FC = () => {
   }
 
   const liveProducts = catalogData?.content?.filter(p => !p.name.toLowerCase().includes('phone') && !p.name.toLowerCase().includes('electronic')) || [];
-
-  // Marquee brand names list
-  const marqueeBrands = [
-    'Sabyasachi', 'Chanel', 'Anita Dongre', 'Saint Laurent', 'Raw Mango', 
-    'Bottega Veneta', 'Tarun Tahiliani', 'Brunello Cucinelli', 'Manish Malhotra', 
-    'The Row', 'Fabindia', 'Loewe', 'Manyavar', 'Jacquemus', 'Raymond', 
-    'Prada', 'Rahul Mishra', 'Loro Piana', 'Torani', 'Alexander McQueen', 
-    'Gaurav Gupta', 'Burberry', 'Good Earth', 'Tom Ford', 'Rare Rabbit'
-  ];
 
   // Editorial Curated Capsule Categories
   const capsuleCategories = [
@@ -83,12 +77,12 @@ export const HomePage: React.FC = () => {
 
   return (
     <Box sx={{ bgcolor: '#FAFAFA', color: '#0A0A0A', overflow: 'hidden' }}>
-      
+
       {/* =========================================================================
           1. CINEMATIC EDITORIAL HERO
       ========================================================================= */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           position: 'relative',
           minHeight: { xs: '85vh', md: '92vh' },
           display: 'flex',
@@ -106,21 +100,21 @@ export const HomePage: React.FC = () => {
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
           <Grid container spacing={{ xs: 6, lg: 8 }} sx={{ alignItems: 'center' }}>
-            
+
             {/* Left Headline & Action Column */}
             <Grid size={{ xs: 12, lg: 7 }}>
               <Box sx={{ maxWidth: 740 }}>
-                
+
                 {/* Editorial Collection Tag */}
                 <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
                   <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#E50914', boxShadow: '0 0 10px #E50914' }} />
-                  <Typography 
-                    variant="overline" 
-                    sx={{ 
-                      color: '#FAF8F5', 
-                      letterSpacing: '0.22em', 
-                      fontWeight: 700, 
-                      fontSize: { xs: '0.72rem', sm: '0.82rem' } 
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      color: '#FAF8F5',
+                      letterSpacing: '0.22em',
+                      fontWeight: 700,
+                      fontSize: { xs: '0.72rem', sm: '0.82rem' }
                     }}
                   >
                     LUMIÈRE HAUTE ATELIER • AUTUMN/WINTER 2026/27
@@ -128,10 +122,10 @@ export const HomePage: React.FC = () => {
                 </Box>
 
                 {/* Oversized Editorial Typography */}
-                <Typography 
-                  variant="h1" 
-                  sx={{ 
-                    color: '#FFFFFF', 
+                <Typography
+                  variant="h1"
+                  sx={{
+                    color: '#FFFFFF',
                     fontSize: { xs: '2.85rem', sm: '4.2rem', md: '5.2rem' },
                     lineHeight: { xs: 1.08, md: 1.02 },
                     fontWeight: 700,
@@ -143,28 +137,28 @@ export const HomePage: React.FC = () => {
                 </Typography>
 
                 {/* Refined Editorial Subtitle */}
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    color: '#C4BEB4', 
-                    fontSize: { xs: '1.05rem', md: '1.22rem' }, 
-                    lineHeight: 1.7, 
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#C4BEB4',
+                    fontSize: { xs: '1.05rem', md: '1.22rem' },
+                    lineHeight: 1.7,
                     maxWidth: 620,
                     mb: 5,
                     fontWeight: 300
                   }}
                 >
-                  Curating premier Indian artisanal heritage and iconic international couture. 
-                  Discover authentic brand-direct creations, verified official website referrals, 
+                  Curating premier Indian artisanal heritage and iconic international couture.
+                  Discover authentic brand-direct creations, verified official website referrals,
                   and standardized atelier size benchmarks.
                 </Typography>
 
                 {/* Pill-Shaped Calls To Action */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
-                  <Button 
+                  <Button
                     component={Link}
                     to="/products"
-                    variant="contained" 
+                    variant="contained"
                     size="large"
                     className="lumiere-red-btn lumiere-pill-btn"
                     endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
@@ -173,23 +167,23 @@ export const HomePage: React.FC = () => {
                     Explore Collections
                   </Button>
 
-                  <Button 
+                  <Button
                     component={Link}
                     to="/brands"
                     variant="outlined"
                     size="large"
                     className="lumiere-pill-btn"
-                    sx={{ 
-                      borderColor: 'rgba(255, 255, 255, 0.45)', 
+                    sx={{
+                      borderColor: 'rgba(255, 255, 255, 0.45)',
                       color: '#FFFFFF',
-                      px: 3.8, 
+                      px: 3.8,
                       py: 1.7,
                       fontSize: '0.96rem',
-                      '&:hover': { 
-                        borderColor: '#E50914', 
+                      '&:hover': {
+                        borderColor: '#E50914',
                         color: '#FFFFFF',
-                        backgroundColor: 'rgba(229, 9, 20, 0.12)' 
-                      } 
+                        backgroundColor: 'rgba(229, 9, 20, 0.12)'
+                      }
                     }}
                   >
                     Directory of 55+ Maisons
@@ -224,51 +218,51 @@ export const HomePage: React.FC = () => {
             {/* Right Asymmetrical Campaign Visual */}
             <Grid size={{ xs: 12, lg: 5 }}>
               <Box sx={{ position: 'relative', maxWidth: 500, mx: 'auto' }}>
-                
+
                 {/* Main Hero Portrait Card */}
-                <Card 
-                  sx={{ 
-                    borderRadius: '24px', 
-                    overflow: 'hidden', 
+                <Card
+                  sx={{
+                    borderRadius: '24px',
+                    overflow: 'hidden',
                     boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7)',
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     bgcolor: '#141414'
                   }}
                 >
                   <Box sx={{ position: 'relative', pt: '130%' }}>
-                    <CardMedia 
+                    <CardMedia
                       component="img"
                       image="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200"
                       alt="Lumière Editorial Haute Couture Campaign"
-                      sx={{ 
-                        position: 'absolute', 
-                        inset: 0, 
-                        width: '100%', 
-                        height: '100%', 
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
                         objectFit: 'cover',
                         filter: 'contrast(1.05) brightness(0.95)'
                       }}
                     />
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        inset: 0, 
-                        background: 'linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0.1) 60%, transparent 100%)' 
-                      }} 
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0.1) 60%, transparent 100%)'
+                      }}
                     />
                     <Box sx={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
-                      <Chip 
-                        label="AUTUMN / WINTER EDITORIAL" 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: '#E50914', 
-                          color: '#FFFFFF', 
-                          fontWeight: 700, 
-                          fontFamily: '"Cinzel", serif', 
+                      <Chip
+                        label="AUTUMN / WINTER EDITORIAL"
+                        size="small"
+                        sx={{
+                          bgcolor: '#E50914',
+                          color: '#FFFFFF',
+                          fontWeight: 700,
+                          fontFamily: '"Cinzel", serif',
                           letterSpacing: '0.1em',
                           mb: 1.5,
                           fontSize: '0.68rem'
-                        }} 
+                        }}
                       />
                       <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 0.5 }}>
                         Architectural Drapery & Velvet
@@ -281,16 +275,16 @@ export const HomePage: React.FC = () => {
                 </Card>
 
                 {/* Floating Asymmetrical Accent Card */}
-                <Box 
-                  sx={{ 
+                <Box
+                  sx={{
                     display: { xs: 'none', sm: 'block' },
-                    position: 'absolute', 
-                    top: -24, 
-                    left: -32, 
-                    bgcolor: 'rgba(20, 20, 20, 0.92)', 
+                    position: 'absolute',
+                    top: -24,
+                    left: -32,
+                    bgcolor: 'rgba(20, 20, 20, 0.92)',
                     backdropFilter: 'blur(16px)',
-                    p: 2.5, 
-                    borderRadius: '16px', 
+                    p: 2.5,
+                    borderRadius: '16px',
                     border: '1px solid rgba(229, 9, 20, 0.4)',
                     boxShadow: '0 16px 36px rgba(0, 0, 0, 0.5)',
                     maxWidth: 210
@@ -315,52 +309,11 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          2. ANIMATED HORIZONTAL FASHION-BRAND MARQUEE
-      ========================================================================= */}
-      <Box 
-        sx={{ 
-          bgcolor: '#0F0F0F', 
-          py: 2.2, 
-          borderTop: '1px solid rgba(229, 9, 20, 0.3)', 
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          position: 'relative',
-          zIndex: 5
-        }}
-      >
-        <Box className="marquee-container">
-          <Box className="marquee-track">
-            {/* First sequence */}
-            {marqueeBrands.map((brandName, idx) => (
-              <Box key={`mq1-${idx}`} sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                <Link to={`/brands?search=${encodeURIComponent(brandName)}`} className="marquee-item">
-                  {brandName}
-                </Link>
-                <Typography component="span" sx={{ color: '#E50914', fontSize: '0.85rem', mx: 1 }}>
-                  //
-                </Typography>
-              </Box>
-            ))}
-            {/* Second sequence for seamless infinite loop */}
-            {marqueeBrands.map((brandName, idx) => (
-              <Box key={`mq2-${idx}`} sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                <Link to={`/brands?search=${encodeURIComponent(brandName)}`} className="marquee-item">
-                  {brandName}
-                </Link>
-                <Typography component="span" sx={{ color: '#E50914', fontSize: '0.85rem', mx: 1 }}>
-                  //
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      </Box>
-
-      {/* =========================================================================
-          3. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS
+          2. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS
       ========================================================================= */}
       <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#FAFAFA' }}>
         <Container maxWidth="xl">
-          
+
           <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 6, md: 8 } }}>
             <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
               DISTINCT CURATIONS
@@ -374,39 +327,39 @@ export const HomePage: React.FC = () => {
           </Box>
 
           <Grid container spacing={4}>
-            
+
             {/* 1. WOMEN'S COLLECTION */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card 
+              <Card
                 component={Link}
                 to="/products?gender=women"
                 className="lumiere-card"
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  position: 'relative', 
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
                   cursor: 'pointer'
                 }}
               >
                 <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
-                  <CardMedia 
+                  <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900"
                     alt="Women's Haute Couture Collection"
-                    sx={{ 
+                    sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       '&:hover': { transform: 'scale(1.06)' }
                     }}
                   />
                   <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-                    <Chip 
-                      label="FEMME ATELIER" 
-                      size="small" 
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }} 
+                    <Chip
+                      label="FEMME ATELIER"
+                      size="small"
+                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
                     />
                   </Box>
                 </Box>
@@ -430,36 +383,36 @@ export const HomePage: React.FC = () => {
 
             {/* 2. MEN'S COLLECTION */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card 
+              <Card
                 component={Link}
                 to="/products?gender=men"
                 className="lumiere-card"
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  position: 'relative', 
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
                   cursor: 'pointer'
                 }}
               >
                 <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
-                  <CardMedia 
+                  <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900"
                     alt="Men's Sartorial Collection"
-                    sx={{ 
+                    sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       '&:hover': { transform: 'scale(1.06)' }
                     }}
                   />
                   <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-                    <Chip 
-                      label="HOMME SARTORIAL" 
-                      size="small" 
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }} 
+                    <Chip
+                      label="HOMME SARTORIAL"
+                      size="small"
+                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
                     />
                   </Box>
                 </Box>
@@ -483,36 +436,36 @@ export const HomePage: React.FC = () => {
 
             {/* 3. KIDS' COLLECTION */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card 
+              <Card
                 component={Link}
                 to="/products?gender=kids"
                 className="lumiere-card"
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  position: 'relative', 
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
                   cursor: 'pointer'
                 }}
               >
                 <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
-                  <CardMedia 
+                  <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=900"
                     alt="Kids' Festive & Heritage Collection"
-                    sx={{ 
+                    sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       '&:hover': { transform: 'scale(1.06)' }
                     }}
                   />
                   <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-                    <Chip 
-                      label="ENFANT HERITAGE" 
-                      size="small" 
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }} 
+                    <Chip
+                      label="ENFANT HERITAGE"
+                      size="small"
+                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
                     />
                   </Box>
                 </Box>
@@ -544,7 +497,7 @@ export const HomePage: React.FC = () => {
       <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#0A0A0A', color: '#FFFFFF', position: 'relative' }}>
         <Container maxWidth="xl">
           <Grid container spacing={{ xs: 6, lg: 8 }} sx={{ alignItems: 'center' }}>
-            
+
             <Grid size={{ xs: 12, lg: 5 }}>
               <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.22em' }}>
                 MAISON CURATION
@@ -553,8 +506,8 @@ export const HomePage: React.FC = () => {
                 Dual Heritage: <span className="lumiere-red-gradient-text">Indian Artistry</span> & Global Avant-Garde
               </Typography>
               <Typography variant="body1" sx={{ color: '#C4BEB4', mb: 4, lineHeight: 1.8, fontSize: '1.05rem' }}>
-                LUMIÈRE bridges the world’s most celebrated textile civilizations. 
-                From the timeless zardozi embroidery of Sabyasachi and handloom Chanderi weaves of Raw Mango 
+                LUMIÈRE bridges the world’s most celebrated textile civilizations.
+                From the timeless zardozi embroidery of Sabyasachi and handloom Chanderi weaves of Raw Mango
                 to the sculptural minimalism of The Row and Parisian tailoring of Saint Laurent.
               </Typography>
 
@@ -580,7 +533,7 @@ export const HomePage: React.FC = () => {
                 </Box>
               </Box>
 
-              <Button 
+              <Button
                 component={Link}
                 to="/brands"
                 variant="contained"
@@ -597,14 +550,14 @@ export const HomePage: React.FC = () => {
               <Grid container spacing={3}>
                 {BRANDS_DATA.slice(0, 4).map((brand) => (
                   <Grid key={brand.id} size={{ xs: 12, sm: 6 }}>
-                    <Card 
+                    <Card
                       component={Link}
                       to={`/brands?search=${encodeURIComponent(brand.name)}`}
                       className="lumiere-card"
-                      sx={{ 
-                        bgcolor: '#141414', 
-                        color: '#FFF', 
-                        p: 3, 
+                      sx={{
+                        bgcolor: '#141414',
+                        color: '#FFF',
+                        p: 3,
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         textDecoration: 'none',
                         height: '100%',
@@ -616,24 +569,24 @@ export const HomePage: React.FC = () => {
                     >
                       <Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Chip 
-                            label={brand.origin === 'INDIAN' ? 'INDIAN COUTURE' : 'INTERNATIONAL'} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: brand.origin === 'INDIAN' ? 'rgba(229, 9, 20, 0.2)' : 'rgba(255, 255, 255, 0.15)', 
+                          <Chip
+                            label={brand.origin === 'INDIAN' ? 'INDIAN COUTURE' : 'INTERNATIONAL'}
+                            size="small"
+                            sx={{
+                              bgcolor: brand.origin === 'INDIAN' ? 'rgba(229, 9, 20, 0.2)' : 'rgba(255, 255, 255, 0.15)',
                               color: brand.origin === 'INDIAN' ? '#FF5E5E' : '#FFF',
-                              fontWeight: 700, 
+                              fontWeight: 700,
                               fontSize: '0.65rem'
-                            }} 
+                            }}
                           />
-                          <Chip 
+                          <Chip
                             label={`✓ ${brand.verifiedDomain}`}
                             size="small"
                             variant="outlined"
                             sx={{ color: '#A0988E', borderColor: 'rgba(255, 255, 255, 0.2)', fontSize: '0.62rem' }}
                           />
                         </Box>
-                        
+
                         <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
                           {brand.name}
                         </Typography>
@@ -663,7 +616,7 @@ export const HomePage: React.FC = () => {
       ========================================================================= */}
       <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#FFFFFF' }}>
         <Container maxWidth="xl">
-          
+
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'flex-end' }, mb: 6 }}>
             <Box>
               <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
@@ -673,7 +626,7 @@ export const HomePage: React.FC = () => {
                 Signature Wardrobe Capsules
               </Typography>
             </Box>
-            <Button 
+            <Button
               component={Link}
               to="/products"
               endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
@@ -686,34 +639,34 @@ export const HomePage: React.FC = () => {
           <Grid container spacing={4}>
             {capsuleCategories.map((cat, idx) => (
               <Grid key={idx} size={{ xs: 12, sm: 6, lg: 4 }}>
-                <Card 
+                <Card
                   component={Link}
                   to={cat.link}
                   className="lumiere-card"
-                  sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
                     textDecoration: 'none',
                     bgcolor: '#FFFFFF',
                     cursor: 'pointer'
                   }}
                 >
                   <Box sx={{ position: 'relative', pt: '80%', overflow: 'hidden' }}>
-                    <CardMedia 
+                    <CardMedia
                       component="img"
                       image={cat.img}
                       alt={cat.title}
-                      sx={{ 
+                      sx={{
                         position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                         transition: 'transform 0.5s ease',
                         '&:hover': { transform: 'scale(1.05)' }
                       }}
                     />
-                    <Chip 
+                    <Chip
                       label={cat.tag}
                       size="small"
-                      sx={{ 
+                      sx={{
                         position: 'absolute', top: 14, left: 14,
                         bgcolor: 'rgba(10, 10, 10, 0.85)', color: '#FFF',
                         fontWeight: 600, fontSize: '0.65rem'
@@ -737,141 +690,40 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          6. TRENDING / FEATURED CATALOG SECTION
+          6. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#F5F3EF', borderTop: '1px solid #E8E4DC', borderBottom: '1px solid #E8E4DC' }}>
+      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: '#F5F3EF', borderTop: '1px solid #E8E4DC', borderBottom: '1px solid #E8E4DC' }}>
         <Container maxWidth="xl">
-          
-          <Box sx={{ textAlign: 'center', maxWidth: 680, mx: 'auto', mb: 6 }}>
-            <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
-              CURATED SELECTION
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, mt: 1, mb: 1.5 }}>
-              Featured Runway Pieces
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#66625B' }}>
-              Hand-selected signature creations showcasing the pinnacle of modern tailoring and textile craft.
-            </Typography>
-          </Box>
+          <EditorialRunwayTrack
+            eyebrow="CURATED SELECTION"
+            title="Featured Runway Pieces"
+            subtitle="Hand-selected signature creations showcasing the pinnacle of modern tailoring and textile craft."
+            ariaLabel="Featured runway pieces track"
+            action={
+              <Button
+                component={Link}
+                to="/products"
+                sx={{ color: '#1a1420', fontWeight: 600, fontFamily: '"Instrument Sans", sans-serif' }}
+              >
+                View Full Catalog
+              </Button>
+            }
+          >
+            {(liveProducts.length > 0 ? liveProducts : CLOTHING_CATALOG.slice(0, 8).map(toCatalogProduct)).map((p) => (
+              <Box key={p.id} sx={{ height: '100%' }}>
+                <ProductCard product={p} />
+              </Box>
+            ))}
+          </EditorialRunwayTrack>
+        </Container>
+      </Box>
 
-          {/* Render real products if available and clothing-oriented */}
-          {liveProducts.length > 0 ? (
-            <Grid container spacing={3.5}>
-              {liveProducts.map((p) => (
-                <Grid key={p.id} size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ProductCard product={p} />
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            /* Elegant, clearly labeled editorial concept showcase */
-            <Box>
-              <Grid container spacing={3.5}>
-                {[
-                  {
-                    id: 'feat-01',
-                    name: 'Hand-Embroidered Zardozi Velvet Bandhgala',
-                    brand: 'Sabyasachi',
-                    sku: 'SAB-V-01',
-                    category: 'Indian Sartorial',
-                    price: '₹1,45,000',
-                    img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900'
-                  },
-                  {
-                    id: 'feat-02',
-                    name: 'Sculptural Double-Faced Cashmere Trench Coat',
-                    brand: 'The Row',
-                    sku: 'ROW-CT-02',
-                    category: 'Haute Outerwear',
-                    price: '₹2,85,000',
-                    img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900'
-                  },
-                  {
-                    id: 'feat-03',
-                    name: 'Pure Handloom Chanderi Draped Silk Kurta Set',
-                    brand: 'Raw Mango',
-                    sku: 'RMG-CH-03',
-                    category: 'Heritage Festive',
-                    price: '₹48,500',
-                    img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=900'
-                  },
-                  {
-                    id: 'feat-04',
-                    name: 'Grain de Poudre Wool Tuxedo Dinner Jacket',
-                    brand: 'Saint Laurent',
-                    sku: 'YSL-SM-04',
-                    category: 'Modern Luxury',
-                    price: '₹2,40,000',
-                    img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=900'
-                  }
-                ].map((item) => (
-                  <Grid key={item.id} size={{ xs: 12, sm: 6, lg: 3 }}>
-                    <Card className="lumiere-card" sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#FFF' }}>
-                      <Box sx={{ position: 'relative', pt: '105%', overflow: 'hidden' }}>
-                        <CardMedia 
-                          component="img"
-                          image={item.img}
-                          alt={item.name}
-                          sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                        <Chip 
-                          label={item.brand}
-                          size="small"
-                          sx={{ position: 'absolute', bottom: 12, left: 12, bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem' }}
-                        />
-                        <Chip 
-                          label="Atelier Showcase"
-                          size="small"
-                          sx={{ position: 'absolute', top: 12, right: 12, bgcolor: 'rgba(255, 255, 255, 0.9)', color: '#0A0A0A', fontWeight: 600, fontSize: '0.65rem' }}
-                        />
-                      </Box>
-                      <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="caption" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.08em' }}>
-                          {item.sku}
-                        </Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.05rem', my: 0.8, color: '#0A0A0A', lineHeight: 1.3 }}>
-                          {item.name}
-                        </Typography>
-                        <Box sx={{ mt: 'auto', pt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #EBE8E2' }}>
-                          <Box>
-                            <Typography variant="caption" sx={{ color: '#888', display: 'block', fontSize: '0.68rem' }}>INDICATIVE PRICE</Typography>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0A0A0A' }}>{item.price}</Typography>
-                          </Box>
-                          <Button 
-                            component={Link}
-                            to={`/brands?search=${encodeURIComponent(item.brand)}`}
-                            size="small"
-                            variant="outlined"
-                            className="lumiere-pill-btn"
-                            sx={{ borderColor: '#0A0A0A', color: '#0A0A0A', fontSize: '0.75rem', px: 2 }}
-                          >
-                            Maison Link
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-              <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#888', mt: 3 }}>
-                * Verified Atelier Showcase • Official external flagship URLs and stock verified in Brand Directory.
-              </Typography>
-            </Box>
-          )}
-
-          <Box sx={{ textAlign: 'center', mt: 6 }}>
-            <Button 
-              component={Link}
-              to="/products"
-              variant="contained"
-              className="lumiere-red-btn lumiere-pill-btn"
-              endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-              sx={{ px: 4, py: 1.6 }}
-            >
-              Explore Complete Catalog
-            </Button>
-          </Box>
-
+      {/* =========================================================================
+          6B. CURATED OCCASION EDITORIAL PANELS
+      ========================================================================= */}
+      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FBF6EC' }}>
+        <Container maxWidth="xl">
+          <CuratedOccasionPanels />
         </Container>
       </Box>
 
@@ -880,11 +732,11 @@ export const HomePage: React.FC = () => {
       ========================================================================= */}
       <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FFFFFF' }}>
         <Container maxWidth="xl">
-          <Card 
-            sx={{ 
-              borderRadius: '24px', 
-              p: { xs: 4, md: 6 }, 
-              bgcolor: '#0A0A0A', 
+          <Card
+            sx={{
+              borderRadius: '24px',
+              p: { xs: 4, md: 6 },
+              bgcolor: '#0A0A0A',
               color: '#FFFFFF',
               position: 'relative',
               overflow: 'hidden',
@@ -903,13 +755,13 @@ export const HomePage: React.FC = () => {
                   Unified International & Indian Fit Matrix
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#C4BEB4', maxWidth: 650, lineHeight: 1.7 }}>
-                  Different couturiers adhere to distinct measurement standards. 
-                  LUMIÈRE’s measurement matrix provides millimeter-exact cross-references between 
+                  Different couturiers adhere to distinct measurement standards.
+                  LUMIÈRE’s measurement matrix provides millimeter-exact cross-references between
                   Indian kurta sizing (inches), French/Italian couture sizes (FR 36-44 / IT 38-48), and UK/US standards.
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }} sx={{ textAlign: { xs: 'left', md: 'right' } }}>
-                <Button 
+                <Button
                   onClick={() => setSizeDrawerOpen(true)}
                   variant="contained"
                   className="lumiere-red-btn lumiere-pill-btn"

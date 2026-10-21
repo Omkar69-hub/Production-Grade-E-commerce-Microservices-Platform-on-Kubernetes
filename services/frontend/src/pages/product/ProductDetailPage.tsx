@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  Container, Grid, Typography, Button, Box, CircularProgress, 
-  Breadcrumbs, Divider, IconButton, Snackbar, Alert, Accordion, 
-  AccordionSummary, AccordionDetails, Chip, Tooltip 
+import {
+  Container, Grid, Typography, Button, Box, CircularProgress,
+  Breadcrumbs, Divider, IconButton, Snackbar, Alert, Accordion,
+  AccordionSummary, AccordionDetails, Chip, Tooltip
 } from '@mui/material';
-import { 
-  ShoppingBagOutlined, StraightenOutlined, 
-  ExpandMoreOutlined, NavigateNextOutlined, FavoriteBorderOutlined, 
-  Favorite, SecurityOutlined, LocalShippingOutlined, DiamondOutlined, 
+import {
+  ShoppingBagOutlined, StraightenOutlined,
+  ExpandMoreOutlined, NavigateNextOutlined, FavoriteBorderOutlined,
+  Favorite, SecurityOutlined, LocalShippingOutlined, DiamondOutlined,
   CompareArrowsOutlined, OpenInNewOutlined, VerifiedUserOutlined
 } from '@mui/icons-material';
 import { useProductDetails, useProducts } from '../../hooks/useProducts';
@@ -23,9 +23,11 @@ import { getBrandBySlug } from '../../data/brandsData';
 import { verifyBrandDomain, getSafeExternalLinkAttributes } from '../../utils/domainVerifier';
 import { useWishlist } from '../../utils/wishlistStorage';
 import SizingMatrixModal from '../../components/sizing/SizingMatrixModal';
+import GarmentColorwaySwatches, { type ColorwayItem } from '../../components/editorial/GarmentColorwaySwatches';
+import EditorialRunwayTrack from '../../components/editorial/EditorialRunwayTrack';
 import { env } from '../../config/env';
 
-export type ProductActionState = 'VALID_REFERRAL' | 'UNTRUSTED_REFERRAL' | 'INTERNAL_PURCHASE';
+export type ProductActionState = 'VALID_REFERRAL' | 'UNTRUSTED_REFERRAL' | 'ATELIER_INQUIRY' | 'INTERNAL_PURCHASE';
 
 export interface ProductSecurityContext {
   isCuratedCatalog: boolean;
@@ -39,16 +41,20 @@ export interface ProductSecurityContext {
     isVerifiedOfficial: boolean;
     reason?: string;
     securityStatus?: string;
+    approvedDomain?: string;
   };
+  enableInternalCheckout?: boolean;
 }
 
 /**
  * Resolves mutually exclusive product action states:
  * 1. VALID_REFERRAL: Valid HTTPS destination on approved brand domain
- * 2. UNTRUSTED_REFERRAL: Referral intent present but destination is invalid, unapproved, deceptive, or missing
- * 3. INTERNAL_PURCHASE: Strictly ordinary internal product with zero referral intent
+ * 2. UNTRUSTED_REFERRAL: Destination URL provided but failed security verification
+ * 3. ATELIER_INQUIRY: Fail-closed safe discovery mode when internal checkout is disabled or external URL is unavailable
+ * 4. INTERNAL_PURCHASE: Strictly ordinary internal product with zero referral intent AND internal checkout explicitly enabled
  */
 export const resolveProductActionState = (ctx: ProductSecurityContext): ProductActionState => {
+  const isCheckoutEnabled = ctx.enableInternalCheckout ?? env.ENABLE_INTERNAL_CHECKOUT;
   const isReferralIntent = ctx.isCuratedCatalog || ctx.hasReferralMetadata;
 
   if (isReferralIntent) {
@@ -60,11 +66,21 @@ export const resolveProductActionState = (ctx: ProductSecurityContext): ProductA
     ) {
       return 'VALID_REFERRAL';
     }
-    // Fail-closed: do not infer internal purchase when referral intent exists
-    return 'UNTRUSTED_REFERRAL';
+    // A destination URL was provided but failed verification (insecure protocol, deceptive domain, cross-brand mismatch)
+    if (ctx.destinationUrl) {
+      return 'UNTRUSTED_REFERRAL';
+    }
+    // Destination URL is not available: fail closed to safe atelier consultation
+    return 'ATELIER_INQUIRY';
   }
 
-  // Pure ordinary internal product
+  // Pure ordinary database product with zero referral intent:
+  // When internal checkout is disabled (default luxury discovery model), fail-closed to ATELIER_INQUIRY
+  if (!isCheckoutEnabled) {
+    return 'ATELIER_INQUIRY';
+  }
+
+  // Permitted only when internal checkout is explicitly enabled in authorized test config
   return 'INTERNAL_PURCHASE';
 };
 
@@ -73,7 +89,7 @@ const ProductDetailPage: React.FC = () => {
 
   // 1. Check if ID or slug matches our curated atelier clothing catalog
   const catalogItem = id ? getProductByIdOrSlug(id) : undefined;
-  
+
   // 2. Otherwise query backend API
   const { data: apiProduct, isLoading: isApiLoading, isError: isApiError } = useProductDetails(
     catalogItem ? '' : (id || '')
@@ -83,12 +99,12 @@ const ProductDetailPage: React.FC = () => {
   const isCuratedAtelier = Boolean(catalogItem);
 
   // Fetch related products
-  const { data: relatedProductsData } = useProducts({ 
+  const { data: relatedProductsData } = useProducts({
     categoryId: !catalogItem ? product?.categoryId : undefined,
     size: 5
   });
-  
-  const relatedProducts = catalogItem 
+
+  const relatedProducts = catalogItem
     ? CLOTHING_CATALOG
         .filter(p => p.id !== catalogItem.id && (p.brandId === catalogItem.brandId || p.audience === catalogItem.audience))
         .slice(0, 4)
@@ -99,12 +115,13 @@ const ProductDetailPage: React.FC = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const { cartId } = useSelector((state: RootState) => state.cart);
-  
+
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [selectedColorway, setSelectedColorway] = useState<ColorwayItem | null>(null);
 
   // Wishlist integration
   const { isWishlisted: checkWishlisted, toggleWishlist: toggleWishlistGlobal } = useWishlist();
@@ -138,26 +155,6 @@ const ProductDetailPage: React.FC = () => {
       message: added ? 'Added to your private wishlist' : 'Removed from curated wishlist',
       severity: 'success'
     });
-  };
-
-  const handleAddToCart = async () => {
-    if (!env.ENABLE_INTERNAL_CHECKOUT) {
-      return;
-    }
-    if (!product || product.price <= 0) {
-      return;
-    }
-    if (cartId && !adding) {
-      setAdding(true);
-      try {
-        await dispatch(addToCart({ item: { productId: product.id, quantity } })).unwrap();
-        setSnackbar({ open: true, message: `Added ${quantity} item(s) to your shopping bag`, severity: 'success' });
-      } catch (err: any) {
-        setSnackbar({ open: true, message: err || 'Failed to add item to bag', severity: 'error' });
-      } finally {
-        setAdding(false);
-      }
-    }
   };
 
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
@@ -239,8 +236,30 @@ const ProductDetailPage: React.FC = () => {
     destinationType,
     priceVerificationStatus,
     hasReferralMetadata,
-    verifiedDestinationCheck
+    verifiedDestinationCheck,
+    enableInternalCheckout: env.ENABLE_INTERNAL_CHECKOUT,
   });
+
+  const handleAddToCart = async () => {
+    // Fail-closed: Never perform internal add-to-cart unless explicitly authorized in INTERNAL_PURCHASE state
+    if (!env.ENABLE_INTERNAL_CHECKOUT || productActionState !== 'INTERNAL_PURCHASE') {
+      return;
+    }
+    if (!product || product.price <= 0) {
+      return;
+    }
+    if (cartId && !adding) {
+      setAdding(true);
+      try {
+        await dispatch(addToCart({ item: { productId: product.id, quantity } })).unwrap();
+        setSnackbar({ open: true, message: `Added ${quantity} item(s) to your shopping bag`, severity: 'success' });
+      } catch (err: any) {
+        setSnackbar({ open: true, message: err || 'Failed to add item to bag', severity: 'error' });
+      } finally {
+        setAdding(false);
+      }
+    }
+  };
 
   const isPriceUponInquiry = priceVerificationStatus === 'PRICE_UPON_INQUIRY' || product.price === 0;
 
@@ -253,9 +272,9 @@ const ProductDetailPage: React.FC = () => {
   const fallbackImg = 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900';
 
   return (
-    <Box sx={{ pb: 12, bgcolor: '#FAF8F5' }}>
+    <Box sx={{ pb: 12, bgcolor: '#fbf6ec', minHeight: '100vh' }}>
       {/* Editorial Breadcrumbs */}
-      <Box sx={{ bgcolor: '#FFFFFF', py: 2, borderBottom: '1px solid #EAE5DC', mb: 6 }}>
+      <Box sx={{ bgcolor: '#FFFFFF', py: 2, borderBottom: '1px solid #e5dccb', mb: 6 }}>
         <Container maxWidth="xl">
           <Breadcrumbs separator={<NavigateNextOutlined fontSize="small" sx={{ color: 'text.secondary', fontSize: '0.85rem' }} />} aria-label="breadcrumb">
             <Link to="/" style={{ textDecoration: 'none', color: '#666' }}>
@@ -292,13 +311,13 @@ const ProductDetailPage: React.FC = () => {
         <Grid container spacing={8}>
           {/* Gallery Showcase Section */}
           <Grid size={{ xs: 12, md: 6, lg: 7 }}>
-            <Box 
+            <Box
               className="lumiere-card"
-              sx={{ 
-                position: 'relative', 
-                pt: '100%', 
-                bgcolor: '#FFFFFF', 
-                borderRadius: 2, 
+              sx={{
+                position: 'relative',
+                pt: '100%',
+                bgcolor: '#FFFFFF',
+                borderRadius: 2,
                 overflow: 'hidden',
                 border: '1px solid #EAE5DC',
                 boxShadow: '0 8px 30px rgba(24, 24, 22, 0.04)'
@@ -306,8 +325,8 @@ const ProductDetailPage: React.FC = () => {
             >
               <Box
                 component="img"
-                src={imgError ? fallbackImg : (product.imageUrl || fallbackImg)}
-                alt={product.name}
+                src={imgError ? fallbackImg : (selectedColorway?.imageUrl || product.imageUrl || fallbackImg)}
+                alt={selectedColorway ? `${product.name} in ${selectedColorway.name}` : product.name}
                 onError={() => setImgError(true)}
                 sx={{
                   position: 'absolute',
@@ -322,7 +341,7 @@ const ProductDetailPage: React.FC = () => {
                   }
                 }}
               />
-              
+
               {/* Category Ribbon */}
               <Box sx={{ position: 'absolute', top: 20, left: 20, display: 'flex', gap: 1 }}>
                 <Chip
@@ -408,20 +427,20 @@ const ProductDetailPage: React.FC = () => {
               </Tooltip>
 
               {isOutOfStock && productActionState === 'INTERNAL_PURCHASE' && (
-                <Box 
-                  sx={{ 
-                    position: 'absolute', 
-                    bottom: 24, 
-                    left: 24, 
-                    bgcolor: 'rgba(192, 57, 43, 0.95)', 
-                    color: 'white', 
-                    px: 2.5, 
-                    py: 0.8, 
-                    borderRadius: 1, 
-                    fontWeight: 700, 
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 24,
+                    left: 24,
+                    bgcolor: 'rgba(192, 57, 43, 0.95)',
+                    color: 'white',
+                    px: 2.5,
+                    py: 0.8,
+                    borderRadius: 1,
+                    fontWeight: 700,
                     fontSize: '0.75rem',
                     letterSpacing: '0.15em',
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase'
                   }}
                 >
                   Allocation Exhausted
@@ -444,11 +463,11 @@ const ProductDetailPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 {brandSlug && brandName ? (
                   <Link to={`/brands/${brandSlug}`} style={{ textDecoration: 'none' }}>
-                    <Typography 
-                      variant="overline" 
-                      sx={{ 
-                        color: '#B89758', 
-                        fontWeight: 700, 
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        color: '#B89758',
+                        fontWeight: 700,
                         letterSpacing: '0.18em',
                         display: 'block',
                         fontSize: '0.82rem',
@@ -459,11 +478,11 @@ const ProductDetailPage: React.FC = () => {
                     </Typography>
                   </Link>
                 ) : (
-                  <Typography 
-                    variant="overline" 
-                    sx={{ 
-                      color: 'primary.main', 
-                      fontWeight: 600, 
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      color: 'primary.main',
+                      fontWeight: 600,
                       letterSpacing: '0.2em',
                       display: 'block'
                     }}
@@ -472,33 +491,33 @@ const ProductDetailPage: React.FC = () => {
                   </Typography>
                 )}
               </Box>
-              
-              <Typography 
-                variant="h3" 
-                component="h1" 
-                sx={{ 
-                  fontFamily: '"Playfair Display", Georgia, serif',
-                  fontWeight: 700, 
-                  color: '#181816',
+
+              <Typography
+                variant="h3"
+                component="h1"
+                sx={{
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  fontWeight: 600,
+                  color: '#1a1420',
                   letterSpacing: '-0.01em',
                   lineHeight: 1.15,
-                  mb: 2 
+                  mb: 2
                 }}
               >
                 {product.name}
               </Typography>
-              
+
               {/* Pricing Dossier */}
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                 {isPriceUponInquiry ? (
                   <Box>
-                    <Typography 
-                      variant="h4" 
-                      sx={{ 
-                        fontFamily: '"Cinzel", serif',
-                        fontWeight: 700, 
-                        color: '#181816',
-                        letterSpacing: '0.04em' 
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontFamily: '"Fraunces", Georgia, serif',
+                        fontWeight: 600,
+                        color: '#1a1420',
+                        letterSpacing: '0.02em'
                       }}
                     >
                       Price Upon Inquiry
@@ -506,18 +525,18 @@ const ProductDetailPage: React.FC = () => {
                     <Chip
                       label="Bespoke Atelier Consultation"
                       size="small"
-                      sx={{ mt: 0.5, bgcolor: '#F4EFE6', color: '#181816', fontWeight: 600, fontSize: '0.72rem' }}
+                      sx={{ mt: 0.5, bgcolor: '#fbf6ec', border: '1px solid #e5dccb', color: '#1a1420', fontWeight: 600, fontSize: '0.72rem', fontFamily: '"Instrument Sans", sans-serif' }}
                     />
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
-                    <Typography 
-                      variant="h4" 
-                      sx={{ 
-                        fontFamily: '"Outfit", sans-serif',
-                        fontWeight: 700, 
-                        color: '#181816',
-                        letterSpacing: '-0.02em' 
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontFamily: '"Fraunces", Georgia, serif',
+                        fontWeight: 600,
+                        color: '#1a1420',
+                        letterSpacing: '-0.02em'
                       }}
                     >
                       {productAttributes?.priceFormatted || (catalogItem ? catalogItem.priceFormatted : formatINR(product.price))}
@@ -526,40 +545,41 @@ const ProductDetailPage: React.FC = () => {
                       <Chip
                         label="Verified Atelier Price"
                         size="small"
-                        sx={{ bgcolor: '#EBF5EB', color: '#1E7E34', fontWeight: 700, fontSize: '0.72rem' }}
+                        sx={{ bgcolor: '#EBF5EB', color: '#1E7E34', fontWeight: 700, fontSize: '0.72rem', fontFamily: '"Instrument Sans", sans-serif' }}
                       />
                     ) : productActionState === 'UNTRUSTED_REFERRAL' ? (
                       <Chip
                         label="Unverified Referral"
                         size="small"
                         variant="outlined"
-                        sx={{ color: '#D4A373', borderColor: '#D4A373', fontSize: '0.7rem', fontWeight: 600 }}
+                        sx={{ color: '#D4A373', borderColor: '#D4A373', fontSize: '0.7rem', fontWeight: 600, fontFamily: '"Instrument Sans", sans-serif' }}
                       />
                     ) : isDemoPrice(product.sku) ? (
                       <Chip
                         label="Unverified Demo Feed"
                         size="small"
                         variant="outlined"
-                        sx={{ color: '#A08040', borderColor: '#D4AF37', fontSize: '0.7rem', fontWeight: 600 }}
+                        sx={{ color: '#A08040', borderColor: '#D4AF37', fontSize: '0.7rem', fontWeight: 600, fontFamily: '"Instrument Sans", sans-serif' }}
                       />
                     ) : null}
                   </Box>
                 )}
               </Box>
 
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: '#6B665E', 
-                  mb: 4, 
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#686070',
+                  fontFamily: '"Instrument Sans", sans-serif',
+                  mb: 4,
                   lineHeight: 1.8,
                   fontSize: '0.95rem'
                 }}
               >
                 {product.description || 'Masterfully engineered and tailored with uncompromising materials for discerning connoisseurs.'}
               </Typography>
-              
-              <Divider sx={{ mb: 4, borderColor: '#EAE5DC' }} />
+
+              <Divider sx={{ mb: 4, borderColor: '#e5dccb' }} />
 
               {/* Supported Sizes & Colors (Only when supported by catalog) */}
               {(displaySizes || displayColors) && (
@@ -570,8 +590,8 @@ const ProductDetailPage: React.FC = () => {
                         <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#181816' }}>
                           Representative Sizing Benchmark
                         </Typography>
-                        <Button 
-                          size="small" 
+                        <Button
+                          size="small"
                           startIcon={<StraightenOutlined sx={{ fontSize: 16 }} />}
                           onClick={() => setSizeGuideOpen(true)}
                           sx={{ color: '#B89758', fontSize: '0.75rem', p: 0, textTransform: 'none' }}
@@ -581,34 +601,29 @@ const ProductDetailPage: React.FC = () => {
                       </Box>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {displaySizes.map(sz => (
-                          <Chip 
-                            key={sz} 
-                            label={sz} 
+                          <Chip
+                            key={sz}
+                            label={sz}
                             variant="outlined"
-                            sx={{ borderRadius: '4px', fontWeight: 600, borderColor: '#D5C9B3', color: '#181816' }} 
+                            sx={{ borderRadius: '4px', fontWeight: 600, borderColor: '#D5C9B3', color: '#181816' }}
                           />
                         ))}
                       </Box>
                     </Box>
                   )}
 
-                  {displayColors && displayColors.length > 0 && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#181816', display: 'block', mb: 1 }}>
-                        Atelier Colorways
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {displayColors.map(col => (
-                          <Chip 
-                            key={col} 
-                            label={col} 
-                            size="small"
-                            sx={{ bgcolor: '#F4EFE6', color: '#181816', fontWeight: 500 }} 
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+                  <GarmentColorwaySwatches
+                    colorways={productAttributes?.colorways || (catalogItem as any)?.colorways || []}
+                    colorNames={displayColors || []}
+                    selectedColor={selectedColorway?.name}
+                    onSelectColorway={(colorway) => {
+                      setSelectedColorway(colorway);
+                      if (colorway.imageUrl) {
+                        setImgError(false);
+                      }
+                    }}
+                    productName={product.name}
+                  />
                 </Box>
               )}
 
@@ -616,18 +631,18 @@ const ProductDetailPage: React.FC = () => {
               {productActionState === 'VALID_REFERRAL' ? (
                 /* OFFICIAL BRAND DIRECT REFERRAL FLOW */
                 <Box sx={{ mb: 4 }} data-testid="referral-action-section">
-                  <Button 
+                  <Button
                     fullWidth
                     component="a"
                     href={destinationUrl}
                     {...getSafeExternalLinkAttributes()}
-                    variant="contained" 
+                    variant="contained"
                     size="large"
                     endIcon={<OpenInNewOutlined />}
                     className="lumiere-red-btn lumiere-pill-btn"
-                    sx={{ 
-                      py: 2, 
-                      borderRadius: '30px', 
+                    sx={{
+                      py: 2,
+                      borderRadius: '30px',
                       mb: 2,
                       fontSize: '0.9rem',
                       letterSpacing: '0.08em',
@@ -639,11 +654,11 @@ const ProductDetailPage: React.FC = () => {
                   </Button>
 
                   {/* LUMIÈRE Direct-Referral Protocol Disclosure Box */}
-                  <Box sx={{ 
-                    p: 2.5, 
-                    bgcolor: '#FFFFFF', 
-                    borderRadius: '8px', 
-                    border: '1px solid #EAE5DC', 
+                  <Box sx={{
+                    p: 2.5,
+                    bgcolor: '#FFFFFF',
+                    borderRadius: '8px',
+                    border: '1px solid #EAE5DC',
                     mb: 2,
                     boxShadow: '0 2px 10px rgba(24, 24, 22, 0.02)'
                   }}>
@@ -660,12 +675,12 @@ const ProductDetailPage: React.FC = () => {
 
                   {/* Editorial Fashion Concept Notice */}
                   {(catalogItem?.isEditorialConcept || productAttributes?.isEditorialConcept) && (
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: '#FBF9F5', 
-                      borderRadius: '8px', 
-                      border: '1px dashed #D5C9B3', 
-                      mb: 3 
+                    <Box sx={{
+                      p: 2,
+                      bgcolor: '#FBF9F5',
+                      borderRadius: '8px',
+                      border: '1px dashed #D5C9B3',
+                      mb: 3
                     }}>
                       <Typography variant="caption" sx={{ fontWeight: 700, color: '#8A5800', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                         Curated Editorial Fashion Concept
@@ -679,13 +694,13 @@ const ProductDetailPage: React.FC = () => {
               ) : productActionState === 'UNTRUSTED_REFERRAL' ? (
                 /* UNTRUSTED / INVALID REFERRAL DESTINATION WARNING (FAIL-CLOSED) */
                 <Box sx={{ mb: 4 }} data-testid="untrusted-referral-section">
-                  <Alert 
-                    severity="warning" 
+                  <Alert
+                    severity="warning"
                     icon={<SecurityOutlined />}
-                    sx={{ 
-                      mb: 2.5, 
-                      border: '1px solid #D4A373', 
-                      bgcolor: '#FFFDF9', 
+                    sx={{
+                      mb: 2.5,
+                      border: '1px solid #D4A373',
+                      bgcolor: '#FFFDF9',
                       borderRadius: '8px',
                       '& .MuiAlert-message': { width: '100%' }
                     }}
@@ -698,14 +713,14 @@ const ProductDetailPage: React.FC = () => {
                     </Typography>
                   </Alert>
 
-                  <Button 
+                  <Button
                     fullWidth
                     disabled
-                    variant="contained" 
+                    variant="contained"
                     size="large"
-                    sx={{ 
-                      py: 2, 
-                      borderRadius: '30px', 
+                    sx={{
+                      py: 2,
+                      borderRadius: '30px',
                       mb: 2,
                       fontSize: '0.88rem',
                       letterSpacing: '0.08em',
@@ -718,11 +733,11 @@ const ProductDetailPage: React.FC = () => {
                     Direct Acquisition Blocked (Security Precaution)
                   </Button>
 
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: '#FFFFFF', 
-                    borderRadius: '8px', 
-                    border: '1px solid #EAE5DC', 
+                  <Box sx={{
+                    p: 2,
+                    bgcolor: '#FFFFFF',
+                    borderRadius: '8px',
+                    border: '1px solid #EAE5DC',
                     mb: 3
                   }}>
                     <Typography variant="caption" sx={{ color: '#8C827A', display: 'block', lineHeight: 1.5 }}>
@@ -730,45 +745,95 @@ const ProductDetailPage: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
-              ) : (
-                /* INTERNAL SHOPPING BAG FLOW FOR ORDINARY DATABASE PRODUCTS ONLY */
+              ) : productActionState === 'ATELIER_INQUIRY' ? (
+                /* ATELIER CONSULTATION / DOSSIER ACTION (FAIL-CLOSED SAFE REFERRAL MODE) */
+                <Box sx={{ mb: 4 }} data-testid="atelier-inquiry-section">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    onClick={() => setSnackbar({
+                      open: true,
+                      message: `Atelier consultation requested for "${product.name}". Our concierge will contact you.`,
+                      severity: 'success'
+                    })}
+                    className="lumiere-pill-btn"
+                    sx={{
+                      py: 2,
+                      borderRadius: '99px',
+                      mb: 2,
+                      fontSize: '0.88rem',
+                      letterSpacing: '0.08em',
+                      fontFamily: '"Instrument Sans", sans-serif',
+                      fontWeight: 600,
+                      bgcolor: '#1a1420',
+                      color: '#fbf6ec',
+                      '&:hover': {
+                        bgcolor: '#3a3ce0',
+                        color: '#ffffff'
+                      }
+                    }}
+                  >
+                    Atelier Consultation
+                  </Button>
+
+                  <Box sx={{
+                    p: 2.5,
+                    bgcolor: '#FFFFFF',
+                    borderRadius: '16px',
+                    border: '1px solid #e5dccb',
+                    mb: 3
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <VerifiedUserOutlined sx={{ color: '#3a3ce0', fontSize: 18 }} />
+                      <Typography variant="subtitle2" sx={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 600, color: '#1a1420', fontSize: '0.82rem' }}>
+                        LUMIÈRE ATELIER DISCOVERY PROTOCOL
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#686070', fontSize: '0.82rem', lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
+                      LUMIÈRE operates strictly as a luxury fashion discovery salon. Acquisitions, bespoke tailoring, and deliveries occur directly through official brand partner ateliers and verified flagship houses. Direct online purchase is not conducted on this platform; our concierge atelier is available for bespoke sourcing and inquiry.
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : productActionState === 'INTERNAL_PURCHASE' ? (
+                /* INTERNAL SHOPPING BAG FLOW FOR ORDINARY DATABASE PRODUCTS (ONLY IN AUTHORIZED CHECKOUT TEST CONFIG) */
                 <Box sx={{ mb: 4 }} data-testid="internal-purchase-section">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                       Quantity:
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #D5C9B3', borderRadius: 1, bgcolor: '#FFFFFF' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #e5dccb', borderRadius: 1, bgcolor: '#FFFFFF' }}>
                       <Button size="small" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={isOutOfStock || quantity <= 1}>-</Button>
                       <Typography sx={{ px: 2, fontWeight: 600 }}>{quantity}</Typography>
                       <Button size="small" onClick={() => setQuantity(Math.min(10, quantity + 1))} disabled={isOutOfStock || quantity >= 10}>+</Button>
                     </Box>
                   </Box>
 
-                  <Button 
+                  <Button
                     fullWidth
-                    variant="contained" 
+                    variant="contained"
                     size="large"
                     disabled={isOutOfStock || adding}
                     onClick={handleAddToCart}
                     startIcon={<ShoppingBagOutlined />}
-                    className="lumiere-red-btn lumiere-pill-btn"
-                    sx={{ py: 2, mb: 2 }}
+                    className="lumiere-pill-btn"
+                    sx={{ py: 2, mb: 2, bgcolor: '#1a1420', color: '#fbf6ec', borderRadius: '99px', '&:hover': { bgcolor: '#3a3ce0' } }}
                   >
                     {isOutOfStock ? 'Allocation Exhausted' : adding ? 'Securing Piece...' : 'Acquire Piece'}
                   </Button>
                 </Box>
-              )}
+              ) : null}
 
               {/* Utility Buttons: Salon Comparison & Sizing Specifications */}
               <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-                <Button 
+                <Button
                   fullWidth
-                  variant="outlined" 
+                  variant="outlined"
                   startIcon={<CompareArrowsOutlined />}
                   onClick={handleToggleComparison}
-                  sx={{ 
-                    py: 1.4, 
-                    borderRadius: 1, 
+                  sx={{
+                    py: 1.4,
+                    borderRadius: 1,
                     borderColor: comparing ? '#B89758' : '#D5C9B3',
                     bgcolor: comparing ? 'rgba(184, 151, 88, 0.08)' : 'transparent',
                     color: '#181816',
@@ -781,14 +846,14 @@ const ProductDetailPage: React.FC = () => {
                   {comparing ? 'In Salon Comparison' : 'Add to Comparison'}
                 </Button>
 
-                <Button 
+                <Button
                   fullWidth
-                  variant="outlined" 
+                  variant="outlined"
                   startIcon={<StraightenOutlined />}
                   onClick={() => setSizeGuideOpen(true)}
-                  sx={{ 
-                    py: 1.4, 
-                    borderRadius: 1, 
+                  sx={{
+                    py: 1.4,
+                    borderRadius: 1,
                     borderColor: '#D5C9B3',
                     color: '#181816',
                     letterSpacing: '0.06em',
@@ -855,12 +920,12 @@ const ProductDetailPage: React.FC = () => {
               )}
 
               {/* Maison Guarantees */}
-              <Box 
-                sx={{ 
-                  p: 2.5, 
-                  bgcolor: '#FFFFFF', 
-                  border: '1px solid #EAE5DC', 
-                  borderRadius: 1, 
+              <Box
+                sx={{
+                  p: 2.5,
+                  bgcolor: '#FFFFFF',
+                  border: '1px solid #EAE5DC',
+                  borderRadius: 1,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 1.5
@@ -889,30 +954,27 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Related Creations Showcase */}
+        {/* Related Creations Runway */}
         {relatedProducts.length > 0 && (
-          <Box sx={{ mt: 14 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 4, pb: 2, borderBottom: '1px solid #EAE5DC' }}>
-              <Box>
-                <Typography variant="overline" sx={{ color: '#B89758', fontWeight: 700, letterSpacing: '0.15em' }}>
-                  CURATED SALON
-                </Typography>
-                <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 700, color: '#181816', mt: 0.5 }}>
-                  Related Creations
-                </Typography>
-              </Box>
-              <Button component={Link} to="/products" sx={{ color: '#181816', fontWeight: 600 }}>
-                View All Collections
-              </Button>
-            </Box>
-
-            <Grid container spacing={4}>
+          <Box sx={{ mt: 10 }}>
+            <EditorialRunwayTrack
+              eyebrow="CURATED SALON"
+              title="Related Creations"
+              subtitle="Complementary looks and seasonal counterparts from verified luxury maisons."
+              action={
+                <Button component={Link} to="/products" sx={{ color: '#181816', fontWeight: 600, fontFamily: '"Instrument Sans", sans-serif' }}>
+                  View All Collections
+                </Button>
+              }
+              ariaLabel="Related runway creations"
+              itemMinWidth="clamp(260px, 26vw, 320px)"
+            >
               {relatedProducts.map((p) => (
-                <Grid key={p.id} size={{ xs: 12, sm: 6, lg: 3 }}>
+                <Box key={p.id} sx={{ height: '100%' }}>
                   <ProductCard product={p} />
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </EditorialRunwayTrack>
           </Box>
         )}
       </Container>
@@ -927,17 +989,17 @@ const ProductDetailPage: React.FC = () => {
         verifiedWebsiteUrl={catalogItem?.destinationUrl}
       />
 
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={4000} 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
-          sx={{ 
-            width: '100%', 
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{
+            width: '100%',
             fontWeight: 500,
             bgcolor: snackbar.severity === 'success' ? '#181816' : '#C0392B',
             color: '#FFFFFF',

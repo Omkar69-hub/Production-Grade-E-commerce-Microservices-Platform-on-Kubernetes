@@ -36,7 +36,11 @@ const RegisterPage: React.FC = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2200);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration could not be completed. The email may already be in use.');
+      const backendMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        (!err.response && err.message ? err.message : null);
+      setError(backendMessage || 'Registration could not be completed. The email may already be in use.');
     }
   };
 

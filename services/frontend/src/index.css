@@ -1,20 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --lumiere-noir: #0A0A0A;
-  --lumiere-noir-surface: #141414;
-  --lumiere-noir-soft: #1E1E1E;
-  --lumiere-blanc: #FFFFFF;
-  --lumiere-alabaster: #FAFAFA;
-  --lumiere-creme: #F5F3EF;
-  --lumiere-border: #E8E4DC;
-  --lumiere-border-dark: #2C2C2C;
-  --lumiere-crimson: #E50914;
-  --lumiere-crimson-light: #FF3B30;
-  --lumiere-crimson-dark: #8B0000;
-  --lumiere-crimson-glow: rgba(229, 9, 20, 0.28);
-  --lumiere-text-secondary: #66625B;
-  --lumiere-gold: #B89758; /* Compatibility token */
+  /* LUMIÈRE Editorial High-Fashion Tokens (Prototype Aligned) */
+  --bg: #fbf6ec;             /* Warm parchment linen */
+  --ink: #1a1420;            /* Deep ink noir */
+  --mute: #6b6173;           /* Muted plum slate */
+  --line: #e5dccb;           /* Fine paper border */
+  --lime: #d8f25a;           /* Vibrant chartreuse accent */
+  --cobalt: #3a3ce0;         /* High-fashion electric cobalt */
+  --tang: #e8572b;           /* Tangerine accent */
+  --eve-bg: #2b1238;         /* Midnight aubergine surface */
+  --eve-mute: #cbb8d6;       /* Soft lavender slate */
+
+  /* Semantic Lumière Tokens */
+  --lumiere-bg: var(--bg);
+  --lumiere-ink: var(--ink);
+  --lumiere-mute: var(--mute);
+  --lumiere-line: var(--line);
+  --lumiere-lime: var(--lime);
+  --lumiere-cobalt: var(--cobalt);
+  --lumiere-tang: var(--tang);
+  --lumiere-aubergine: var(--eve-bg);
+
+  /* Preserved Compatibility Tokens */
+  --lumiere-noir: var(--ink);
+  --lumiere-noir-surface: var(--eve-bg);
+  --lumiere-noir-soft: #241c2c;
+  --lumiere-blanc: #ffffff;
+  --lumiere-alabaster: var(--bg);
+  --lumiere-creme: #f5f0e6;
+  --lumiere-border: var(--line);
+  --lumiere-border-dark: #35293d;
+  --lumiere-crimson: var(--cobalt);
+  --lumiere-crimson-light: #5b5bf0;
+  --lumiere-crimson-dark: #1b1d6b;
+  --lumiere-crimson-glow: rgba(58, 60, 224, 0.28);
+  --lumiere-text-secondary: var(--mute);
+  --lumiere-gold: #b89758;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17111b;
+    --ink: #f4eee4;
+    --mute: #a79cb0;
+    --line: #35293d;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #17111b;
+  --ink: #f4eee4;
+  --mute: #a79cb0;
+  --line: #35293d;
 }
 
 html, body {
@@ -22,9 +60,9 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: var(--lumiere-alabaster);
-  color: var(--lumiere-noir);
-  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: 'Instrument Sans', 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -33,10 +71,17 @@ html, body {
   box-sizing: border-box;
 }
 
+/* Accessible focus visible with electric cobalt */
+:focus-visible {
+  outline: 3px solid var(--cobalt) !important;
+  outline-offset: 3px !important;
+}
+
 /* Luxury Editorial Headings */
 h1, h2, h3, .lumiere-display {
-  font-family: 'Playfair Display', Georgia, serif;
-  letter-spacing: -0.02em;
+  font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.025em;
+  font-weight: 400;
 }
 
 .lumiere-serif-caps {

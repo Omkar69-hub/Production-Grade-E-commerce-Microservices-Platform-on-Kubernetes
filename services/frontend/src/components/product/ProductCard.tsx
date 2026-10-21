@@ -22,7 +22,10 @@ export interface ProductCardEvaluation {
   ctaText: 'View Dossier' | 'Acquire' | 'Reserved';
 }
 
-export const evaluateProductCardState = (product: Product): ProductCardEvaluation => {
+export const evaluateProductCardState = (
+  product: Product,
+  enableInternalCheckout = env.ENABLE_INTERNAL_CHECKOUT
+): ProductCardEvaluation => {
   let attrData: any = {};
   try {
     if (product.attributes) {
@@ -33,14 +36,14 @@ export const evaluateProductCardState = (product: Product): ProductCardEvaluatio
   }
 
   const isPriceOnInquiry = attrData.priceVerificationStatus === 'PRICE_UPON_INQUIRY' || !product.price || product.price <= 0;
-  
+
   const destinationUrl = attrData.destinationUrl;
   const brandQuery = attrData.brandSlug || (product.brand ? product.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined);
   const domainCheck = destinationUrl ? verifyBrandDomain(destinationUrl, brandQuery) : undefined;
   const isTrustedDestination = Boolean(domainCheck?.isValid && domainCheck?.isVerifiedOfficial);
   const isUntrustedDestination = Boolean(destinationUrl && !isTrustedDestination);
 
-  const isInquiryOrReferral = Boolean(
+  const isExplicitInquiryOrReferral = Boolean(
     isPriceOnInquiry ||
     attrData.priceVerificationStatus === 'PRICE_UPON_INQUIRY' ||
     !product.price ||
@@ -55,19 +58,30 @@ export const evaluateProductCardState = (product: Product): ProductCardEvaluatio
     (product.id && product.id.startsWith('prod-'))
   );
 
+  // When internal checkout is disabled, fail closed: all products operate in inquiry/dossier mode
+  const isInquiryOrReferral = !enableInternalCheckout || isExplicitInquiryOrReferral;
+
   let subLabelText: string | null = null;
   if (isUntrustedDestination) {
     subLabelText = 'Unverified Referral';
-  } else if (isInquiryOrReferral) {
-    subLabelText = isPriceOnInquiry 
-      ? 'Atelier Consultation' 
-      : (attrData.priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' && product.price > 0 ? 'Verified Atelier Price' : 'Price on Inquiry');
+  } else if (isExplicitInquiryOrReferral || !enableInternalCheckout) {
+    if (isPriceOnInquiry) {
+      subLabelText = 'Atelier Consultation';
+    } else if (attrData.priceVerificationStatus === 'VERIFIED_ATELIER_PRICE' && product.price > 0) {
+      subLabelText = 'Verified Atelier Price';
+    } else if (!enableInternalCheckout) {
+      subLabelText = 'Atelier Consultation';
+    } else {
+      subLabelText = 'Price on Inquiry';
+    }
   } else if (isDemoPrice(product.sku)) {
     subLabelText = 'Unverified Demo Feed';
   }
 
   const isOutOfStock = product.status === 'OUT_OF_STOCK';
-  const ctaText = isInquiryOrReferral ? 'View Dossier' : (isOutOfStock ? 'Reserved' : 'Acquire');
+  const ctaText = (!enableInternalCheckout || isInquiryOrReferral)
+    ? 'View Dossier'
+    : (isOutOfStock ? 'Reserved' : 'Acquire');
 
   return {
     isInquiryOrReferral,
@@ -147,18 +161,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const luxuryFallbackImg = 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900';
 
   return (
-    <Card 
+    <Card
       className="lumiere-product-card"
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         position: 'relative',
         textDecoration: 'none',
         overflow: 'hidden',
         bgcolor: '#FFFFFF',
-        borderRadius: '8px',
-        border: '1px solid #EAE5DC',
+        borderRadius: '16px',
+        border: '1px solid #e5dccb',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+        '&:hover': {
+          transform: 'translateY(-3px)',
+          boxShadow: '0 12px 28px rgba(26, 20, 32, 0.08)',
+        },
       }}
       component={Link}
       to={`/products/${product.id}`}
@@ -262,14 +281,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </Box>
 
         {isOutOfStock && (
-          <Box sx={{ 
-            position: 'absolute', inset: 0, 
-            bgcolor: 'rgba(250, 248, 245, 0.75)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center' 
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            bgcolor: 'rgba(250, 248, 245, 0.75)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Typography variant="overline" sx={{ 
-              color: 'error.main', fontWeight: 700, 
-              bgcolor: '#FFFFFF', px: 2, py: 0.5, borderRadius: 1, border: '1px solid #EAE5DC' 
+            <Typography variant="overline" sx={{
+              color: 'error.main', fontWeight: 700,
+              bgcolor: '#FFFFFF', px: 2, py: 0.5, borderRadius: 1, border: '1px solid #EAE5DC'
             }}>
               Temporarily Reserved
             </Typography>
@@ -280,72 +299,74 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Content */}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
         <Box sx={{ mb: 1 }}>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              fontFamily: '"Cinzel", serif', 
-              color: '#B89758', 
-              letterSpacing: '0.1em',
+          <Typography
+            variant="caption"
+            sx={{
+              fontFamily: '"Instrument Sans", sans-serif',
+              color: '#8A5800',
+              letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              fontSize: '0.7rem',
+              fontSize: '0.72rem',
               fontWeight: 600
             }}
           >
             {product.sku || 'SIGNATURE EDITION'}
           </Typography>
-          <Typography 
-            variant="h6" 
-            component="h2" 
-            sx={{ 
-              fontFamily: '"Playfair Display", Georgia, serif',
-              fontWeight: 600, 
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{
+              fontFamily: '"Fraunces", Georgia, serif',
+              fontWeight: 600,
               fontSize: '1.15rem',
-              color: '#181816',
+              color: '#1a1420',
               lineHeight: 1.3,
               mt: 0.5,
-              display: '-webkit-box', 
-              WebkitLineClamp: 1, 
-              WebkitBoxOrient: 'vertical', 
-              overflow: 'hidden' 
+              display: '-webkit-box',
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
             }}
           >
             {product.name}
           </Typography>
         </Box>
 
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            color: '#6B665E', 
-            mb: 2, 
+        <Typography
+          variant="body2"
+          sx={{
+            color: '#686070',
+            fontFamily: '"Instrument Sans", sans-serif',
+            mb: 2,
             fontSize: '0.85rem',
             lineHeight: 1.5,
-            display: '-webkit-box', 
-            WebkitLineClamp: 2, 
-            WebkitBoxOrient: 'vertical', 
-            overflow: 'hidden' 
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
           }}
         >
           {product.description || 'Artisanal engineering tailored for effortless performance and distinction.'}
         </Typography>
 
         {/* Price and Action */}
-        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid #F0ECE4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid #e5dccb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
-            <Typography variant="caption" sx={{ color: '#8C827A', textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+            <Typography variant="caption" sx={{ color: '#8C827A', textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em', fontFamily: '"Instrument Sans", sans-serif' }}>
               PRICE (INR)
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#181816', fontSize: cardEvaluation.isPriceOnInquiry ? '0.92rem' : '1.1rem' }}>
+            <Typography variant="h6" sx={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 600, color: '#1a1420', fontSize: cardEvaluation.isPriceOnInquiry ? '0.92rem' : '1.1rem' }}>
               {cardEvaluation.isPriceOnInquiry ? 'Price on Inquiry' : formatINR(product.price)}
             </Typography>
             {cardEvaluation.subLabelText && (
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: cardEvaluation.isUntrustedDestination ? '#D32F2F' : '#B89758', 
-                  fontSize: '0.65rem', 
-                  display: 'block', 
+              <Typography
+                variant="caption"
+                sx={{
+                  color: cardEvaluation.isUntrustedDestination ? '#D32F2F' : '#3a3ce0',
+                  fontSize: '0.68rem',
+                  display: 'block',
                   fontWeight: 600,
+                  fontFamily: '"Instrument Sans", sans-serif',
                   letterSpacing: cardEvaluation.subLabelText === 'Unverified Demo Feed' ? '0.02em' : 'inherit'
                 }}
               >
@@ -355,39 +376,41 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Box>
 
           {cardEvaluation.isInquiryOrReferral ? (
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               className="lumiere-pill-btn"
-              sx={{ 
-                py: 0.8, 
-                px: 2, 
-                fontWeight: 600, 
+              sx={{
+                py: 0.8,
+                px: 2,
+                fontWeight: 600,
                 fontSize: '0.78rem',
-                borderRadius: '30px',
-                borderColor: '#181816',
-                color: '#181816',
-                '&:hover': { bgcolor: '#181816', color: '#FAF8F5' }
+                borderRadius: '99px',
+                fontFamily: '"Instrument Sans", sans-serif',
+                borderColor: '#1a1420',
+                color: '#1a1420',
+                '&:hover': { bgcolor: '#1a1420', color: '#fbf6ec' }
               }}
             >
               View Dossier
             </Button>
           ) : (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               className={!isOutOfStock ? "lumiere-shimmer-btn lumiere-pill-btn" : ""}
               onClick={handleAddToCart}
               disabled={isOutOfStock || addingToCart}
               startIcon={<ShoppingBagOutlined sx={{ fontSize: 16 }} />}
-              sx={{ 
-                py: 0.9, 
-                px: 2.4, 
-                fontWeight: 600, 
+              sx={{
+                py: 0.9,
+                px: 2.4,
+                fontWeight: 600,
                 fontSize: '0.82rem',
-                borderRadius: '30px',
-                bgcolor: '#0A0A0A',
-                color: '#FFFFFF',
+                borderRadius: '99px',
+                fontFamily: '"Instrument Sans", sans-serif',
+                bgcolor: '#1a1420',
+                color: '#fbf6ec',
                 border: '1px solid transparent',
-                '&:hover': { bgcolor: '#1E1E1E', borderColor: '#E50914', boxShadow: '0 4px 14px rgba(229, 9, 20, 0.28)' }
+                '&:hover': { bgcolor: '#3a3ce0', color: '#ffffff' }
               }}
             >
               {isOutOfStock ? 'Reserved' : addingToCart ? 'Added' : 'Acquire'}

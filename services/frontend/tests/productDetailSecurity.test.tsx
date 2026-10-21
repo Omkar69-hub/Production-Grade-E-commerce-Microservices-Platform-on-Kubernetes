@@ -10,6 +10,7 @@ import cartReducer from '../src/store/slices/cartSlice';
 import { ComparisonProvider } from '../src/context/ComparisonContext';
 import ProductDetailPage, { resolveProductActionState } from '../src/pages/product/ProductDetailPage';
 import { verifyBrandDomain } from '../src/utils/domainVerifier';
+import { env } from '../src/config/env';
 
 // Mock product hooks for backend product scenarios
 vi.mock('../src/hooks/useProducts', () => ({
@@ -78,17 +79,17 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
       expect(state).toBe('UNTRUSTED_REFERRAL');
     });
 
-    it('should resolve UNTRUSTED_REFERRAL when referral metadata exists but destinationUrl is missing (fail-closed)', () => {
+    it('should resolve ATELIER_INQUIRY when referral metadata exists but destinationUrl is missing (fail-closed)', () => {
       const state = resolveProductActionState({
         isCuratedCatalog: true,
         destinationUrl: undefined,
         brandSlug: 'sabyasachi',
         hasReferralMetadata: true,
       });
-      expect(state).toBe('UNTRUSTED_REFERRAL');
+      expect(state).toBe('ATELIER_INQUIRY');
     });
 
-    it('should resolve INTERNAL_PURCHASE only when product has zero referral intent or metadata', () => {
+    it('should resolve INTERNAL_PURCHASE only when product has zero referral intent AND internal checkout is explicitly enabled', () => {
       const state = resolveProductActionState({
         isCuratedCatalog: false,
         destinationUrl: undefined,
@@ -96,8 +97,22 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
         destinationType: undefined,
         priceVerificationStatus: undefined,
         hasReferralMetadata: false,
+        enableInternalCheckout: true,
       });
       expect(state).toBe('INTERNAL_PURCHASE');
+    });
+
+    it('should resolve ATELIER_INQUIRY for ordinary product when internal checkout is disabled (fail-closed)', () => {
+      const state = resolveProductActionState({
+        isCuratedCatalog: false,
+        destinationUrl: undefined,
+        brandSlug: undefined,
+        destinationType: undefined,
+        priceVerificationStatus: undefined,
+        hasReferralMetadata: false,
+        enableInternalCheckout: false,
+      });
+      expect(state).toBe('ATELIER_INQUIRY');
     });
   });
 
@@ -199,7 +214,7 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
       expect(screen.queryByRole('link', { name: /Acquire via Official/i })).not.toBeInTheDocument();
     });
 
-    it('should render Untrusted Destination Warning when referral product has missing destinationUrl (fail-closed)', async () => {
+    it('should fail closed to Atelier Consultation when referral product has missing destinationUrl', async () => {
       // Mock backend product with priceVerificationStatus but missing destinationUrl
       (useProductDetails as any).mockReturnValue({
         data: {
@@ -219,9 +234,9 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
 
       renderWithProviders('/products/backend-prod-missing-url');
 
-      // Must fail closed to Untrusted Destination Warning
-      expect(screen.getByText('UNTRUSTED DESTINATION WARNING')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Direct Acquisition Blocked/i })).toBeDisabled();
+      // Safe atelier consultation must be rendered
+      expect(screen.getByText('Atelier Consultation')).toBeInTheDocument();
+      expect(screen.getByText(/LUMIÈRE ATELIER DISCOVERY PROTOCOL/i)).toBeInTheDocument();
 
       // Must NEVER allow adding a ₹0 product to the internal bag
       expect(screen.queryByText('Acquire Piece')).not.toBeInTheDocument();
@@ -229,7 +244,7 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
       expect(screen.queryByText('₹0.00')).not.toBeInTheDocument();
     });
 
-    it('should render internal purchase flow for ordinary internal database product with zero referral intent', async () => {
+    it('should fail closed to Atelier Consultation for ordinary database product when internal checkout is disabled', async () => {
       // Mock ordinary in-house database product (e.g. legacy smartphone or in-house apparel)
       (useProductDetails as any).mockReturnValue({
         data: {
@@ -246,13 +261,44 @@ describe('LUMIÈRE Stage 6D: Product Detail Referral Security & Action State', (
 
       renderWithProviders('/products/ordinary-internal-item-001');
 
-      // 1. Internal shopping bag controls MUST be rendered
-      expect(screen.getByText('Quantity:')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Acquire Piece/i })).toBeInTheDocument();
+      // 1. Safe atelier consultation action MUST be rendered (NO internal purchase UI)
+      expect(screen.getByText('Atelier Consultation')).toBeInTheDocument();
+      expect(screen.getByText(/LUMIÈRE ATELIER DISCOVERY PROTOCOL/i)).toBeInTheDocument();
+      expect(screen.queryByText('Quantity:')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Acquire Piece/i })).not.toBeInTheDocument();
 
       // 2. No external referral CTA or warning alert
       expect(screen.queryByText(/Acquire via Official/i)).not.toBeInTheDocument();
       expect(screen.queryByText('UNTRUSTED DESTINATION WARNING')).not.toBeInTheDocument();
+    });
+
+    it('should render internal purchase flow for ordinary database product only when internal checkout is explicitly authorized', async () => {
+      const origCheckout = env.ENABLE_INTERNAL_CHECKOUT;
+      (env as any).ENABLE_INTERNAL_CHECKOUT = true;
+      try {
+        (useProductDetails as any).mockReturnValue({
+          data: {
+            id: 'ordinary-internal-item-001',
+            name: 'Classic Atelier Silk Pocket Square',
+            price: 2500,
+            brand: 'LUMIÈRE Atelier',
+            categoryName: 'Accessories',
+            status: 'ACTIVE',
+          },
+          isLoading: false,
+          isError: false,
+        });
+
+        renderWithProviders('/products/ordinary-internal-item-001');
+
+        // Internal shopping bag controls MUST be rendered only in authorized mode
+        expect(screen.getByText('Quantity:')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Acquire Piece/i })).toBeInTheDocument();
+        expect(screen.queryByText(/Acquire via Official/i)).not.toBeInTheDocument();
+        expect(screen.queryByText('UNTRUSTED DESTINATION WARNING')).not.toBeInTheDocument();
+      } finally {
+        (env as any).ENABLE_INTERNAL_CHECKOUT = origCheckout;
+      }
     });
 
     it('should resolve curated product via canonical UUID and render editorial concept disclosure without verified price label', async () => {

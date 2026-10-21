@@ -1,87 +1,100 @@
 import { createTheme } from '@mui/material/styles';
 
-// LUMIÈRE High-Fashion Editorial Palette: Noir, Blanc & Crimson Red Accent
+// LUMIÈRE High-Fashion Editorial Palette (Prototype Aligned)
 export const lumierePalette = {
-  noir: '#0A0A0A',
-  noirSurface: '#141414',
-  noirMuted: '#242424',
+  // Prototype Tokens
+  bg: '#fbf6ec',             // Warm parchment linen
+  ink: '#1a1420',            // Deep ink noir
+  mute: '#6b6173',           // Muted plum slate
+  line: '#e5dccb',           // Fine paper border
+  lime: '#d8f25a',           // Vibrant chartreuse accent
+  cobalt: '#3a3ce0',         // High-fashion electric cobalt
+  tang: '#e8572b',           // Tangerine accent
+  aubergine: '#2b1238',      // Midnight aubergine surface
+  aubergineMute: '#cbb8d6',  // Soft lavender slate
+
+  // Preserved Semantic Mappings
+  noir: '#1a1420',
+  noirSurface: '#2b1238',
+  noirMuted: '#35293d',
   blanc: '#FFFFFF',
-  alabaster: '#FAFAFA',
-  creme: '#F5F3EF',
-  border: '#E8E4DC',
-  borderDark: '#2C2C2C',
-  crimson: '#E50914',
-  crimsonLight: '#FF3B30',
-  crimsonDark: '#990000',
-  crimsonGlow: 'rgba(229, 9, 20, 0.25)',
-  crimsonSubtle: 'rgba(229, 9, 20, 0.06)',
-  textPrimary: '#0A0A0A',
-  textSecondary: '#66625B',
-  goldLegacy: '#B89758', // Preserved for backwards compatibility with existing badges
+  alabaster: '#fbf6ec',
+  creme: '#f5f0e6',
+  border: '#e5dccb',
+  borderDark: '#35293d',
+  crimson: '#3a3ce0',        // Electric cobalt primary accent
+  crimsonLight: '#5b5bf0',
+  crimsonDark: '#1b1d6b',
+  crimsonGlow: 'rgba(58, 60, 224, 0.25)',
+  crimsonSubtle: 'rgba(58, 60, 224, 0.08)',
+  textPrimary: '#1a1420',
+  textSecondary: '#6b6173',
+  goldLegacy: '#B89758',     // Preserved for backwards compatibility with existing badges
 };
 
 export const theme = createTheme({
   palette: {
     primary: {
-      main: lumierePalette.noir,
-      light: '#282828',
-      dark: '#000000',
+      main: lumierePalette.ink,
+      light: '#2d2436',
+      dark: '#0e0b12',
       contrastText: '#FFFFFF',
     },
     secondary: {
-      main: lumierePalette.crimson,
+      main: lumierePalette.cobalt,
       light: lumierePalette.crimsonLight,
       dark: lumierePalette.crimsonDark,
       contrastText: '#FFFFFF',
     },
     background: {
-      default: lumierePalette.alabaster,
+      default: lumierePalette.bg,
       paper: lumierePalette.blanc,
     },
     text: {
       primary: lumierePalette.textPrimary,
       secondary: lumierePalette.textSecondary,
     },
-    divider: lumierePalette.border,
+    divider: lumierePalette.line,
   },
   typography: {
-    fontFamily: '"Outfit", "Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily: '"Instrument Sans", "Outfit", "Inter", -apple-system, BlinkMacSystemFont, sans-serif',
     h1: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: '"Fraunces", "Playfair Display", Georgia, serif',
       fontSize: '3.5rem',
-      fontWeight: 700,
-      letterSpacing: '-0.025em',
-      lineHeight: 1.08,
-      color: lumierePalette.noir,
+      fontWeight: 400,
+      letterSpacing: '-0.03em',
+      lineHeight: 1.05,
+      color: lumierePalette.ink,
     },
     h2: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: '"Fraunces", "Playfair Display", Georgia, serif',
       fontSize: '2.5rem',
-      fontWeight: 700,
+      fontWeight: 400,
       letterSpacing: '-0.02em',
       lineHeight: 1.15,
-      color: lumierePalette.noir,
+      color: lumierePalette.ink,
     },
     h3: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: '"Fraunces", "Playfair Display", Georgia, serif',
       fontSize: '2rem',
-      fontWeight: 600,
+      fontWeight: 400,
       letterSpacing: '-0.015em',
       lineHeight: 1.2,
-      color: lumierePalette.noir,
+      color: lumierePalette.ink,
     },
     h4: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: '"Fraunces", "Playfair Display", Georgia, serif',
       fontSize: '1.6rem',
       fontWeight: 600,
       letterSpacing: '-0.01em',
-      color: lumierePalette.noir,
+      color: lumierePalette.ink,
     },
     h5: {
-      fontFamily: '"Playfair Display", Georgia, serif',
+      fontFamily: '"Fraunces", "Playfair Display", Georgia, serif',
       fontSize: '1.25rem',
       fontWeight: 600,
       letterSpacing: '-0.005em',
+      color: lumierePalette.ink,
     },
     h6: {
       fontSize: '1.05rem',
@@ -89,27 +102,27 @@ export const theme = createTheme({
       letterSpacing: '0.01em',
     },
     overline: {
-      fontFamily: '"Cinzel", serif',
+      fontFamily: '"Fraunces", "Cinzel", serif',
       fontSize: '0.78rem',
-      fontWeight: 700,
-      letterSpacing: '0.18em',
+      fontWeight: 600,
+      letterSpacing: '0.14em',
       textTransform: 'uppercase',
-      color: lumierePalette.crimson,
+      color: lumierePalette.cobalt,
     },
     button: {
       textTransform: 'none',
       fontWeight: 600,
-      letterSpacing: '0.03em',
+      letterSpacing: '0.02em',
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 16,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 40, // Pill-shaped calls to action
+          borderRadius: 99, // Pill-shaped calls to action from prototype
           padding: '11px 26px',
           boxShadow: 'none',
           fontSize: '0.9rem',
@@ -119,23 +132,23 @@ export const theme = createTheme({
           },
         },
         contained: {
-          backgroundColor: lumierePalette.noir,
+          backgroundColor: lumierePalette.ink,
           color: '#FFFFFF',
           border: '1px solid transparent',
           '&:hover': {
-            backgroundColor: '#1E1E1E',
-            borderColor: lumierePalette.crimson,
+            backgroundColor: lumierePalette.cobalt,
+            borderColor: lumierePalette.cobalt,
             boxShadow: `0 8px 24px ${lumierePalette.crimsonGlow}`,
           },
         },
         outlined: {
-          borderColor: lumierePalette.noir,
-          color: lumierePalette.noir,
+          borderColor: lumierePalette.ink,
+          color: lumierePalette.ink,
           borderWidth: '1.5px',
           '&:hover': {
             borderWidth: '1.5px',
-            borderColor: lumierePalette.crimson,
-            color: lumierePalette.crimson,
+            borderColor: lumierePalette.cobalt,
+            color: lumierePalette.cobalt,
             backgroundColor: lumierePalette.crimsonSubtle,
           },
         },
@@ -144,11 +157,11 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16, // Rounded image cards
+          borderRadius: 22, // Rounded editorial cards from prototype
           backgroundColor: lumierePalette.blanc,
-          boxShadow: '0 4px 20px rgba(10, 10, 10, 0.04)',
+          boxShadow: '0 4px 20px rgba(26, 20, 32, 0.04)',
           transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-          border: `1px solid ${lumierePalette.border}`,
+          border: `1px solid ${lumierePalette.line}`,
           overflow: 'hidden',
         },
       },
@@ -164,10 +177,10 @@ export const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: 'rgba(251, 246, 236, 0.96)',
           backdropFilter: 'blur(20px)',
-          color: lumierePalette.noir,
-          boxShadow: '0 1px 0 #E8E4DC',
+          color: lumierePalette.ink,
+          boxShadow: `0 1px 0 ${lumierePalette.line}`,
         },
       },
     },
