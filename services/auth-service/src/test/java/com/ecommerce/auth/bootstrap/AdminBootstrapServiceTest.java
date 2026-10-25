@@ -59,6 +59,7 @@ class AdminBootstrapServiceTest {
         assertThat(savedUser.getRoles()).contains(Role.ADMIN.name());
         assertThat(savedUser.isActive()).isTrue();
         assertThat(savedUser.isDeleted()).isFalse();
+        assertThat(savedUser.getId()).isNull();
     }
 
     @Test

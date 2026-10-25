@@ -48,28 +48,34 @@ public class AuthService {
 
     @Transactional
     public void registerUser(RegisterRequest request) {
-        if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmailAndIsDeletedFalse(normalizedEmail)) {
             throw new ConflictException("Email is already in use");
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(normalizedEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .roles(Set.of(Role.CUSTOMER.name()))
+                .firstName(request.getFirstName().trim())
+                .lastName(request.getLastName().trim())
+                .roles(new java.util.HashSet<>(Set.of(Role.CUSTOMER.name())))
                 .build();
 
         userRepository.save(user);
-        log.info("Successfully registered user with email: {}", request.getEmail());
+        log.info("Successfully registered user with email: {}", normalizedEmail);
     }
 
     public LoginResponse authenticate(LoginRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword()));
 
-        User user = userRepository.findByEmailAndIsDeletedFalse(request.getEmail())
+        User user = userRepository.findByEmailAndIsDeletedFalse(normalizedEmail)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        if (!user.isActive()) {
+            throw new UnauthorizedException("User account is inactive");
+        }
 
         String accessToken = generateJwtToken(user, authentication);
         
@@ -80,7 +86,8 @@ public class AuthService {
     }
 
     public RefreshToken generateRefreshToken(String email) {
-        User user = userRepository.findByEmailAndIsDeletedFalse(email)
+        String normalizedEmail = email.trim().toLowerCase();
+        User user = userRepository.findByEmailAndIsDeletedFalse(normalizedEmail)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
         return tokenService.createRefreshToken(user.getId());
     }

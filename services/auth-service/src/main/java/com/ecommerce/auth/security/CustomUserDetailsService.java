@@ -21,15 +21,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         User user;
+        String trimmedIdentifier = identifier != null ? identifier.trim() : "";
         try {
-            UUID id = UUID.fromString(identifier);
+            UUID id = UUID.fromString(trimmedIdentifier);
             user = userRepository.findById(id)
                     .filter(u -> !u.isDeleted())
-                    .orElseGet(() -> userRepository.findByEmailAndIsDeletedFalse(identifier)
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier)));
+                    .orElseGet(() -> userRepository.findByEmailAndIsDeletedFalse(trimmedIdentifier.toLowerCase())
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + trimmedIdentifier)));
         } catch (IllegalArgumentException e) {
-            user = userRepository.findByEmailAndIsDeletedFalse(identifier)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + identifier));
+            user = userRepository.findByEmailAndIsDeletedFalse(trimmedIdentifier.toLowerCase())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + trimmedIdentifier));
         }
 
         if (!user.isActive()) {

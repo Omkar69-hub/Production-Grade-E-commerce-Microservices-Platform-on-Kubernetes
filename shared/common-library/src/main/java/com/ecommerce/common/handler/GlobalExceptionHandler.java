@@ -91,6 +91,7 @@ public class GlobalExceptionHandler {
                 .title(title)
                 .status(status.value())
                 .detail(detail)
+                .message(detail)
                 .instance(request.getRequestURI())
                 .timestamp(Instant.now().toString())
                 .errors(errors)

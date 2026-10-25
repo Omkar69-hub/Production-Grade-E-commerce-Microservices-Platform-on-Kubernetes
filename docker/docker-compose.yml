@@ -58,9 +58,9 @@ services:
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
+    restart: always
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "127.0.0.1:8025:8025"
     networks:
       - infrastructure-network
 
@@ -112,10 +112,11 @@ services:
       - DB_NAME=product_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_USER=${PRODUCT_RABBITMQ_USER:-${RABBITMQ_USER:-guest}}
+      - RABBITMQ_PASSWORD=${PRODUCT_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:-guest}}
       - JWT_SECRET=${JWT_SECRET}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms256m -Xmx512m}
@@ -144,10 +145,11 @@ services:
       - DB_NAME=cart_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_USER=${CART_RABBITMQ_USER:-${RABBITMQ_USER:-guest}}
+      - RABBITMQ_PASSWORD=${CART_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:-guest}}
       - JWT_SECRET=${JWT_SECRET}
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - ENABLE_INTERNAL_CHECKOUT=${ENABLE_INTERNAL_CHECKOUT:-false}
@@ -180,8 +182,8 @@ services:
       - DB_NAME=order_db
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_USER=${ORDER_RABBITMQ_USER:-${RABBITMQ_USER:-guest}}
+      - RABBITMQ_PASSWORD=${ORDER_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:-guest}}
       - JWT_SECRET=${JWT_SECRET}
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - CART_SERVICE_URL=http://cart-service:8080
@@ -213,8 +215,8 @@ services:
       - DB_NAME=payment_db
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_USER=${PAYMENT_RABBITMQ_USER:-${RABBITMQ_USER:-guest}}
+      - RABBITMQ_PASSWORD=${PAYMENT_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:-guest}}
       - JWT_SECRET=${JWT_SECRET}
       - ENABLE_INTERNAL_CHECKOUT=${ENABLE_INTERNAL_CHECKOUT:-false}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
@@ -244,8 +246,8 @@ services:
       - DB_NAME=notification_db
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_USER=${NOTIFICATION_RABBITMQ_USER:-${RABBITMQ_USER:-guest}}
+      - RABBITMQ_PASSWORD=${NOTIFICATION_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:-guest}}
       - SPRING_MAIL_HOST=mailhog
       - SPRING_MAIL_PORT=1025
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
@@ -258,6 +260,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      mailhog:
+        condition: service_started
 
   api-gateway:
     build:

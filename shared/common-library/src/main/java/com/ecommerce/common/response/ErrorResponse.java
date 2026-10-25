@@ -16,6 +16,7 @@ public class ErrorResponse {
     private String title;
     private int status;
     private String detail;
+    private String message;
     private String instance;
     private String timestamp;
     private String traceId;

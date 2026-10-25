@@ -1,0 +1,155 @@
+# ==============================================================================
+# LUMIÈRE — Minimal Authentication Backend Stack
+# Minimum Services: PostgreSQL (auth_db), Redis (tokens), auth-service, api-gateway
+# Resource Footprint: ~600-800 MB RAM (Fits on 1GB free-tier VMs or local workstation)
+# ==============================================================================
+
+services:
+
+  # ----------------------------------------------------------------------------
+  # INFRASTRUCTURE
+  # ----------------------------------------------------------------------------
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: auth-stack-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER must be set in environment}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in environment}
+      POSTGRES_DB: ${DB_NAME:-auth_db}
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+      - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql:ro
+    networks:
+      - auth-internal-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: auth-stack-redis
+    restart: always
+    command:
+      - sh
+      - -c
+      - |
+        set +x
+        umask 077
+        touch /tmp/redis.conf
+        chmod 600 /tmp/redis.conf
+        echo "requirepass $$(cat /run/secrets/redis_password)" > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
+    volumes:
+      - auth-redis-data:/data
+    secrets:
+      - redis_password
+    networks:
+      - auth-internal-network
+    healthcheck:
+      test: [ "CMD-SHELL", "REDISCLI_AUTH=\"$$(cat /run/secrets/redis_password)\" redis-cli ping | grep PONG || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # AUTHENTICATION SERVICE
+  # ----------------------------------------------------------------------------
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
+    image: ecommerce/auth-service:latest
+    container_name: auth-stack-auth-service
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:?DB_USER must be set}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - DB_NAME=auth_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+      - COOKIE_SAME_SITE=${COOKIE_SAME_SITE:-None}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
+      - COOKIE_PATH=${COOKIE_PATH:-/api/v1/auth}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseSerialGC -Xms64m -Xmx192m}
+    networks:
+      - auth-internal-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ----------------------------------------------------------------------------
+  # API GATEWAY (Routes /api/v1/auth/**, Enforces CORS & Rate Limiting)
+  # ----------------------------------------------------------------------------
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: services/api-gateway/Dockerfile
+    image: ecommerce/api-gateway:latest
+    container_name: auth-stack-api-gateway
+    restart: always
+    environment:
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - CART_SERVICE_URL=http://cart-service:8080
+      - ORDER_SERVICE_URL=http://order-service:8080
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
+      - ENABLE_INTERNAL_CHECKOUT=false
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set}
+      - CORS_ALLOWED_ORIGIN_PATTERNS=${CORS_ALLOWED_ORIGIN_PATTERNS:-}
+      - JAVA_OPTS=${JAVA_OPTS:--XX:+UseSerialGC -Xms64m -Xmx192m}
+    ports:
+      - "${GATEWAY_BIND_IP:-127.0.0.1}:${GATEWAY_PORT:-8080}:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - auth-internal-network
+      - backend-network
+    depends_on:
+      auth-service:
+        condition: service_healthy
+
+networks:
+  auth-internal-network:
+    driver: bridge
+  backend-network:
+    external: true
+    name: docker_backend-network
+
+volumes:
+  auth-postgres-data:
+  auth-redis-data:
+
+secrets:
+  redis_password:
+    file: ${REDIS_PASSWORD_FILE:-C:/Users/Asus/.lumiere/redis_password.txt}

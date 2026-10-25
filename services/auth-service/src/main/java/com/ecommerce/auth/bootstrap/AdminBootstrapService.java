@@ -106,7 +106,6 @@ public class AdminBootstrapService implements ApplicationRunner {
 
         // Create new initial administrator with hashed password
         User newAdmin = User.builder()
-                .id(UUID.randomUUID())
                 .email(normalizedEmail)
                 .password(passwordEncoder.encode(password))
                 .firstName("System")
