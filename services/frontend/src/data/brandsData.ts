@@ -37,15 +37,6 @@ export interface Brand {
   heroImage: string;
 }
 
-export const getBrandBySlug = (slug: string): Brand | undefined => {
-  const query = slug.toLowerCase();
-  return BRANDS_DATA.find(b => b.slug.toLowerCase() === query || b.id.toLowerCase() === query);
-};
-
-export const getBrandById = (id: string): Brand | undefined => {
-  const query = id.toLowerCase();
-  return BRANDS_DATA.find(b => b.id.toLowerCase() === query);
-};
 
 export const BRANDS_DATA: Brand[] = [
   // ==========================================
@@ -767,6 +758,7 @@ export const BRANDS_DATA: Brand[] = [
     category: 'Contemporary Pret',
     website: 'https://www.levi.com',
     verifiedDomain: 'levi.com',
+    approvedDomains: ['levi.com', 'www.levi.com', 'levi.in', 'www.levi.in'],
     isVerified: true,
     description: 'The global benchmark for authentic American denim, 501 original jeans, selvedge denim, and trucker jackets.',
     founded: '1853',
@@ -799,6 +791,7 @@ export const BRANDS_DATA: Brand[] = [
     category: 'Contemporary Pret',
     website: 'https://www.hm.com',
     verifiedDomain: 'hm.com',
+    approvedDomains: ['hm.com', 'www.hm.com', 'www2.hm.com'],
     isVerified: true,
     description: 'Swedish global fashion giant known for accessible contemporary wardrobe staples, Studio capsules, and designer collaborations.',
     founded: '1947',
@@ -984,3 +977,232 @@ export const BRANDS_DATA: Brand[] = [
     heroImage: 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&q=80&w=1200',
   },
 ];
+
+// =========================================================================
+// EXPANDED LIFESTYLE, ACTIVEWEAR & STREETWEAR BRANDS (STAGE 14B.4)
+// =========================================================================
+export const EXPANDED_LIFESTYLE_BRANDS: Brand[] = [
+  {
+    id: 'brand-tss',
+    name: 'The Souled Store',
+    slug: 'the-souled-store',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://www.thesouledstore.com',
+    verifiedDomain: 'thesouledstore.com',
+    approvedDomains: ['thesouledstore.com', 'www.thesouledstore.com'],
+    isVerified: true,
+    description: 'Homegrown Indian pop-culture streetwear, heavyweight graphic tees, oversized hoodies, and relaxed cargo joggers.',
+    founded: '2013',
+    city: 'Mumbai',
+    country: 'India',
+    signatureStyle: 'Heavyweight graphic prints, licensed pop-culture artwork & boxy drop-shoulder fits',
+    heroImage: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-bewakoof',
+    name: 'Bewakoof',
+    slug: 'bewakoof',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://www.bewakoof.com',
+    verifiedDomain: 'bewakoof.com',
+    approvedDomains: ['bewakoof.com', 'www.bewakoof.com'],
+    isVerified: true,
+    description: 'Youth casualwear, bold typography tees, colorful hoodies, and relaxed everyday apparel.',
+    founded: '2012',
+    city: 'Mumbai',
+    country: 'India',
+    signatureStyle: 'Expressive typography, oversized silhouettes & casual daily basics',
+    heroImage: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-snitch',
+    name: 'Snitch',
+    slug: 'snitch',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://snitch.co.in',
+    verifiedDomain: 'snitch.co.in',
+    approvedDomains: ['snitch.co.in', 'www.snitch.co.in'],
+    isVerified: true,
+    description: 'Modern menswear, textured Cuban-collar bowling shirts, relaxed cargos, and trend-led co-ord sets.',
+    founded: '2020',
+    city: 'Bengaluru',
+    country: 'India',
+    signatureStyle: 'Textured resort shirts, tactical cargo trousers & relaxed monochrome street fits',
+    heroImage: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-nike',
+    name: 'Nike',
+    slug: 'nike',
+    origin: 'INTERNATIONAL',
+    category: 'Modern Luxury',
+    website: 'https://www.nike.com/in/',
+    verifiedDomain: 'nike.com',
+    approvedDomains: ['nike.com', 'www.nike.com'],
+    isVerified: true,
+    description: 'High-performance athleticwear, engineered Dri-FIT running tops, technical shorts, and iconic sports apparel.',
+    founded: '1964',
+    city: 'Beaverton',
+    country: 'United States',
+    signatureStyle: 'Aeroloft technical fabrics, aerodynamic activewear & engineered compression apparel',
+    heroImage: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-adidas',
+    name: 'Adidas',
+    slug: 'adidas',
+    origin: 'INTERNATIONAL',
+    category: 'Modern Luxury',
+    website: 'https://www.adidas.co.in/',
+    verifiedDomain: 'adidas.co.in',
+    approvedDomains: ['adidas.co.in', 'www.adidas.co.in', 'adidas.com', 'www.adidas.com'],
+    isVerified: true,
+    description: 'Three-stripe sports heritage, Aeroready training apparel, track jackets, and collaborative runway sportswear.',
+    founded: '1949',
+    city: 'Herzogenaurach',
+    country: 'Germany',
+    signatureStyle: 'Three-stripe tracksuits, Primeknit training sets & archival sportswear',
+    heroImage: 'https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-puma',
+    name: 'Puma',
+    slug: 'puma',
+    origin: 'INTERNATIONAL',
+    category: 'Modern Luxury',
+    website: 'https://in.puma.com/',
+    verifiedDomain: 'puma.com',
+    approvedDomains: ['puma.com', 'in.puma.com', 'www.puma.com'],
+    isVerified: true,
+    description: 'Speed-inspired athleticwear, dryCELL moisture-wicking tights, training shorts, and coordinated sportswear.',
+    founded: '1948',
+    city: 'Herzogenaurach',
+    country: 'Germany',
+    signatureStyle: 'Speedcat retro tracksuits, dryCELL performance gear & high-intensity training tops',
+    heroImage: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-hrx',
+    name: 'HRX',
+    slug: 'hrx',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://hrxbrand.com',
+    verifiedDomain: 'hrxbrand.com',
+    approvedDomains: ['hrxbrand.com', 'www.hrxbrand.com', 'myntra.com'],
+    isVerified: true,
+    description: 'Homegrown Indian fitness & activewear brand founded by Hrithik Roshan. Rapid-Dry workout tees, training shorts, and athleisure.',
+    founded: '2013',
+    city: 'Mumbai',
+    country: 'India',
+    signatureStyle: 'Anti-microbial Rapid-Dry fabrics, conditioning joggers & athletic graphic tees',
+    heroImage: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-decathlon',
+    name: 'Decathlon',
+    slug: 'decathlon',
+    origin: 'INTERNATIONAL',
+    category: 'Contemporary Pret',
+    website: 'https://www.decathlon.in',
+    verifiedDomain: 'decathlon.in',
+    approvedDomains: ['decathlon.in', 'www.decathlon.in', 'decathlon.com', 'www.decathlon.com'],
+    isVerified: true,
+    description: 'Technical multi-sport and fitness training apparel, breathable stretch tops, and entry-level cardio essentials.',
+    founded: '1976',
+    city: 'Villeneuve-d’Ascq',
+    country: 'France',
+    signatureStyle: '360-degree cardio stretch fabrics, quick-dry micro-poly knits & practical training basics',
+    heroImage: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-coitonic',
+    name: 'Coitonic',
+    slug: 'coitonic',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://coitonic.com',
+    verifiedDomain: 'coitonic.com',
+    approvedDomains: ['coitonic.com', 'www.coitonic.com'],
+    isVerified: true,
+    description: 'Indian activewear label specializing in heavyweight fleece joggers, drop-armhole stringers, and bodybuilding-inspired fits.',
+    founded: '2021',
+    city: 'New Delhi',
+    country: 'India',
+    signatureStyle: 'Drop-armhole athletic stringers, heavyweight French terry fleece & physique-focused cuts',
+    heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-hopscotch',
+    name: 'Hopscotch',
+    slug: 'hopscotch',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://www.hopscotch.in',
+    verifiedDomain: 'hopscotch.in',
+    approvedDomains: ['hopscotch.in', 'www.hopscotch.in'],
+    isVerified: true,
+    description: 'Curated children’s fashion, formal waistcoat sets, party dresses, and coordinated festive outfits for kids.',
+    founded: '2012',
+    city: 'Mumbai',
+    country: 'India',
+    signatureStyle: 'Boys tailored waistcoat sets, girls partywear frocks & coordinated festive kids fashion',
+    heroImage: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-firstcry',
+    name: 'FirstCry',
+    slug: 'firstcry',
+    origin: 'INDIAN',
+    category: 'Contemporary Pret',
+    website: 'https://www.firstcry.com',
+    verifiedDomain: 'firstcry.com',
+    approvedDomains: ['firstcry.com', 'www.firstcry.com'],
+    isVerified: true,
+    description: 'Comprehensive baby, toddler, and children’s clothing platform specializing in organic cotton essentials and sleepwear.',
+    founded: '2010',
+    city: 'Pune',
+    country: 'India',
+    signatureStyle: 'Organic cotton baby rompers, snap-closure bodysuits & gentle toddler essentials',
+    heroImage: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=1200',
+  },
+  {
+    id: 'brand-carters',
+    name: 'Carter’s',
+    slug: 'carters',
+    origin: 'INTERNATIONAL',
+    category: 'Contemporary Pret',
+    website: 'https://www.carters.com',
+    verifiedDomain: 'carters.com',
+    approvedDomains: ['carters.com', 'www.carters.com'],
+    isVerified: true,
+    description: 'Heritage American infant and toddler apparel maison renowned for super-soft cotton bodysuits and playwear sets.',
+    founded: '1865',
+    city: 'Atlanta',
+    country: 'United States',
+    signatureStyle: 'Expandable shoulder baby bodysuits, ribbed cotton cuff sets & cozy toddler sleepwear',
+    heroImage: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&q=80&w=1200',
+  },
+];
+
+/**
+ * Complete verified brand registry combining canonical couture houses (58)
+ * with the verified lifestyle, streetwear, and activewear brands.
+ */
+export const ALL_VERIFIED_BRANDS: Brand[] = [
+  ...BRANDS_DATA,
+  ...EXPANDED_LIFESTYLE_BRANDS,
+];
+
+export const getBrandBySlug = (slug: string): Brand | undefined => {
+  const query = slug.toLowerCase();
+  return ALL_VERIFIED_BRANDS.find(b => b.slug.toLowerCase() === query || b.id.toLowerCase() === query);
+};
+
+export const getBrandById = (id: string): Brand | undefined => {
+  const query = id.toLowerCase();
+  return ALL_VERIFIED_BRANDS.find(b => b.id.toLowerCase() === query);
+};

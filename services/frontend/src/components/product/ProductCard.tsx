@@ -163,6 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card
       className="lumiere-product-card"
+      data-cursor="view"
       sx={{
         height: '100%',
         display: 'flex',
@@ -171,23 +172,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         textDecoration: 'none',
         overflow: 'hidden',
         bgcolor: '#FFFFFF',
-        borderRadius: '16px',
-        border: '1px solid #e5dccb',
-        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+        borderRadius: '22px',
+        border: '1px solid var(--line, #e5dccb)',
+        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
         '&:hover': {
-          transform: 'translateY(-3px)',
-          boxShadow: '0 12px 28px rgba(26, 20, 32, 0.08)',
+          transform: 'translateY(-4px)',
+          boxShadow: '0 14px 32px rgba(26, 20, 32, 0.08)',
+        },
+        '&:hover .product-quick-sizes': {
+          opacity: 1,
+          transform: 'translateY(0)',
         },
       }}
       component={Link}
       to={`/products/${product.id}`}
     >
       {/* Product Image Area */}
-      <Box sx={{ position: 'relative', pt: '105%', overflow: 'hidden', bgcolor: '#F8F6F2' }}>
+      <Box sx={{ position: 'relative', pt: '115%', overflow: 'hidden', bgcolor: '#F5F0E6' }}>
         <CardMedia
           component="img"
           image={imgError ? luxuryFallbackImg : (product.imageUrl || luxuryFallbackImg)}
           alt={product.name}
+          loading="lazy"
           onError={() => setImgError(true)}
           sx={{
             position: 'absolute',
@@ -203,18 +209,69 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }}
         />
 
+        {/* Hover Quick Size Availability Overlay (VIVANT Inspired) */}
+        <Box
+          className="product-quick-sizes"
+          sx={{
+            position: 'absolute',
+            bottom: 12,
+            left: 12,
+            right: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.6,
+            bgcolor: 'rgba(251, 246, 236, 0.92)',
+            backdropFilter: 'blur(8px)',
+            py: 0.8,
+            px: 1.5,
+            borderRadius: '999px',
+            border: '1px solid rgba(229, 220, 203, 0.8)',
+            opacity: 0,
+            transform: 'translateY(8px)',
+            transition: 'opacity 0.25s ease, transform 0.25s ease',
+            zIndex: 3,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a1420', mr: 0.5, fontFamily: '"Instrument Sans", sans-serif' }}>
+            SIZES:
+          </Typography>
+          {['XS', 'S', 'M', 'L', 'XL'].map((size) => (
+            <Box
+              key={size}
+              component="span"
+              sx={{
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                color: '#1a1420',
+                px: 0.6,
+                py: 0.1,
+                borderRadius: '4px',
+                bgcolor: 'rgba(26, 20, 32, 0.06)',
+                fontFamily: '"Instrument Sans", sans-serif',
+              }}
+            >
+              {size}
+            </Box>
+          ))}
+        </Box>
+
         {/* Top Actions: Compare & Wishlist */}
         <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 1 }}>
           <Tooltip title={comparing ? "Remove from Comparison" : "Add to Comparison"}>
             <IconButton
               onClick={toggleComparison}
               sx={{
-                bgcolor: comparing ? '#B89758' : 'rgba(255, 255, 255, 0.88)',
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                bgcolor: comparing ? 'var(--cobalt, #3a3ce0)' : 'rgba(255, 255, 255, 0.90)',
                 backdropFilter: 'blur(8px)',
-                p: 0.9,
-                color: comparing ? '#181816' : '#6B665E',
-                border: '1px solid rgba(234, 229, 220, 0.8)',
-                '&:hover': { bgcolor: '#FFFFFF', color: '#B89758' }
+                p: 0,
+                color: comparing ? '#FFFFFF' : 'var(--ink, #1a1420)',
+                border: '1px solid var(--line, #e5dccb)',
+                '&:hover': { bgcolor: '#FFFFFF', color: 'var(--cobalt, #3a3ce0)' }
               }}
             >
               <CompareArrowsOutlined sx={{ fontSize: 18 }} />
@@ -223,17 +280,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           <IconButton
             onClick={toggleWishlist}
+            aria-pressed={isWishlisted}
+            aria-label={`Save ${product.name}`}
             sx={{
-              bgcolor: 'rgba(255, 255, 255, 0.88)',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              bgcolor: isWishlisted ? 'var(--tang, #e8572b)' : 'rgba(255, 255, 255, 0.90)',
               backdropFilter: 'blur(8px)',
-              p: 0.9,
-              color: isWishlisted ? '#E50914' : '#6B665E',
-              border: '1px solid rgba(234, 229, 220, 0.8)',
-              '&:hover': { bgcolor: '#FFFFFF', color: '#E50914' }
+              p: 0,
+              color: isWishlisted ? '#FFFFFF' : 'var(--ink, #1a1420)',
+              border: isWishlisted ? '1px solid var(--tang, #e8572b)' : '1px solid var(--line, #e5dccb)',
+              '&:hover': {
+                bgcolor: isWishlisted ? '#d2481f' : '#FFFFFF',
+                color: isWishlisted ? '#FFFFFF' : 'var(--tang, #e8572b)'
+              }
             }}
           >
             {isWishlisted ? (
-              <Favorite className={heartAnim ? "heart-popped" : ""} sx={{ fontSize: 18, color: '#E50914' }} />
+              <Favorite className={heartAnim ? "heart-popped" : ""} sx={{ fontSize: 18, color: '#FFFFFF' }} />
             ) : (
               <FavoriteBorder className={heartAnim ? "heart-popped" : ""} sx={{ fontSize: 18 }} />
             )}
@@ -299,19 +364,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Content */}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
         <Box sx={{ mb: 1 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              fontFamily: '"Instrument Sans", sans-serif',
-              color: '#8A5800',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              fontSize: '0.72rem',
-              fontWeight: 600
-            }}
-          >
-            {product.sku || 'SIGNATURE EDITION'}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: '"Instrument Sans", sans-serif',
+                color: 'var(--cobalt, #3a3ce0)',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontSize: '0.80rem',
+                fontWeight: 700,
+              }}
+            >
+              {product.brand || 'ATELIER'}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                fontFamily: '"Instrument Sans", sans-serif',
+                color: '#8A5800',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                fontSize: '0.66rem',
+                fontWeight: 600
+              }}
+            >
+              {product.sku || 'SIGNATURE'}
+            </Typography>
+          </Box>
           <Typography
             variant="h6"
             component="h2"
@@ -377,18 +457,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {cardEvaluation.isInquiryOrReferral ? (
             <Button
-              variant="outlined"
+              variant="contained"
               className="lumiere-pill-btn"
               sx={{
-                py: 0.8,
-                px: 2,
+                py: 0.9,
+                px: 2.4,
                 fontWeight: 600,
-                fontSize: '0.78rem',
+                fontSize: '0.82rem',
                 borderRadius: '99px',
                 fontFamily: '"Instrument Sans", sans-serif',
-                borderColor: '#1a1420',
-                color: '#1a1420',
-                '&:hover': { bgcolor: '#1a1420', color: '#fbf6ec' }
+                bgcolor: 'var(--ink, #1a1420)',
+                color: 'var(--bg, #fbf6ec)',
+                border: '1px solid var(--ink, #1a1420)',
+                '&:hover': { bgcolor: 'var(--cobalt, #3a3ce0)', color: '#FFFFFF', borderColor: 'var(--cobalt, #3a3ce0)' }
               }}
             >
               View Dossier

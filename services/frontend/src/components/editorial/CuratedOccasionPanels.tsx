@@ -368,6 +368,19 @@ export const CuratedOccasionPanels: React.FC<CuratedOccasionPanelsProps> = ({
                           {/* Card Content */}
                           <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                             <Typography
+                              sx={{
+                                fontFamily: '"Instrument Sans", sans-serif',
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                letterSpacing: '0.12em',
+                                textTransform: 'uppercase',
+                                color: 'var(--cobalt, #3a3ce0)',
+                                mb: 0.5,
+                              }}
+                            >
+                              {piece.brandName}
+                            </Typography>
+                            <Typography
                               variant="h6"
                               sx={{
                                 fontFamily: '"Fraunces", Georgia, serif',
@@ -440,6 +453,7 @@ export const CuratedOccasionPanels: React.FC<CuratedOccasionPanelsProps> = ({
                               <Button
                                 component={Link}
                                 to={`/products/${piece.id}`}
+                                aria-label={`View Dossier for ${piece.brandName}`}
                                 size="small"
                                 variant="contained"
                                 endIcon={<ArrowForwardOutlined sx={{ fontSize: '14px !important' }} />}
@@ -459,7 +473,7 @@ export const CuratedOccasionPanels: React.FC<CuratedOccasionPanelsProps> = ({
                                   },
                                 }}
                               >
-                                Dossier
+                                Explore Piece
                               </Button>
                             </Box>
                           </CardContent>

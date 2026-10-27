@@ -112,6 +112,10 @@ describe('Stage 9E: Fix 3 — Internal Checkout Disabled by Default & Route Redi
   // 2. ROUTE GUARDS AND REDIRECTIONS
   // =========================================================================
   describe('2. Route Redirections When Internal Checkout Is Disabled', () => {
+    beforeEach(() => {
+      (env as any).ENABLE_INTERNAL_CHECKOUT = false;
+    });
+
     const renderWithRoute = (initialPath: string) => {
       return render(
         <QueryClientProvider client={queryClient}>

@@ -32,7 +32,7 @@ const NotFound = () => (
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', my: 12 }}>
-    <CircularProgress sx={{ color: '#E50914' }} />
+    <CircularProgress sx={{ color: '#3a3ce0' }} />
   </Box>
 );
 

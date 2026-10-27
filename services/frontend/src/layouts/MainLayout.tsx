@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Badge,
   Drawer, List, ListItem, ListItemButton, ListItemText, Divider, InputBase,
@@ -16,6 +16,8 @@ import { logout } from '../store/slices/authSlice';
 import { AuthService } from '../services/AuthService';
 import { useEffects } from '../context/EffectsContext';
 import { env } from '../config/env';
+import { SilkPreloader } from '../components/common/SilkPreloader';
+import { CustomAtmosphereCursor } from '../components/common/CustomAtmosphereCursor';
 
 const MainLayout: React.FC = () => {
   const dispatch = useDispatch();
@@ -31,6 +33,7 @@ const MainLayout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
 
@@ -151,7 +154,7 @@ const MainLayout: React.FC = () => {
           >
             <ListItemText
               primary={
-                <Typography sx={{ fontWeight: 600, letterSpacing: '0.04em', fontSize: '0.92rem', color: '#E50914' }}>
+                <Typography sx={{ fontWeight: 600, letterSpacing: '0.04em', fontSize: '0.92rem', color: 'var(--ink, #1a1420)' }}>
                   Private Wishlist ({wishlistCount})
                 </Typography>
               }
@@ -214,17 +217,37 @@ const MainLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'var(--bg, #fbf6ec)' }}>
+      {/* Skip to Content for Keyboard and Screen Reader Accessibility */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
+
+      {/* Silk Curtain Opening Preloader */}
+      <SilkPreloader />
+
+      {/* Interactive Atmosphere Custom Cursor */}
+      <CustomAtmosphereCursor />
 
       {/* Editorial Announcement Bar */}
       <Box sx={{
         bgcolor: 'var(--ink, #1a1420)', color: 'var(--bg, #fbf6ec)', py: 0.9, px: 2,
-        textAlign: 'center', borderBottom: '1px solid rgba(58, 60, 224, 0.35)'
+        textAlign: 'center', borderBottom: '1px solid var(--line, #e5dccb)'
       }}>
         <Typography variant="body2" sx={{
           fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.08em',
-          fontSize: { xs: '0.72rem', sm: '0.80rem' }, color: 'var(--bg, #fbf6ec)'
+          fontSize: { xs: '0.72rem', sm: '0.80rem' }, color: 'var(--bg, #fbf6ec)',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: { xs: 0.8, sm: 1.5 }, flexWrap: 'wrap'
         }}>
-          LUMIÈRE ATELIER • DISCOVER 55+ VERIFIED COUTURE & SARTORIAL HOUSES • COMPLIMENTARY INSURED WHITE-GLOVE TRANSIT
+          <Box component="span" sx={{ color: 'var(--lime, #d8f25a)' }}>✦</Box>
+          LUMIÈRE ATELIER • DISCOVER 55+ VERIFIED COUTURE & SARTORIAL HOUSES •
+          <Box component="span" sx={{
+            bgcolor: 'var(--lime, #d8f25a)', color: '#1a1420', px: 1.2, py: 0.2,
+            borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700,
+            fontFamily: '"Instrument Sans", sans-serif', letterSpacing: '0.06em'
+          }}>
+            DIRECT ATELIER REFERRALS
+          </Box>
+          <Box component="span" sx={{ color: 'var(--lime, #d8f25a)' }}>✦</Box>
         </Typography>
       </Box>
 
@@ -281,37 +304,50 @@ const MainLayout: React.FC = () => {
             {/* Desktop Navigation Links */}
             {!isMobile && (
               <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 3.2 }}>
-                {navLinks.map((link) => (
-                  <Button
-                    key={link.path}
-                    component={Link}
-                    to={link.path}
-                    color="inherit"
-                    sx={{
-                      fontWeight: 500,
-                      color: 'var(--ink, #1a1420)',
-                      letterSpacing: '0.02em',
-                      fontSize: '0.90rem',
-                      px: 1.2,
-                      '&:hover': { color: 'var(--cobalt, #3a3ce0)', bgcolor: 'transparent', textDecoration: 'underline', textUnderlineOffset: '6px' }
-                    }}
-                  >
-                    {link.label}
-                  </Button>
-                ))}
+                {navLinks.map((link) => {
+                  const isActive = link.path === '/' 
+                    ? location.pathname === '/' 
+                    : location.pathname.startsWith(link.path);
+
+                  return (
+                    <Box key={link.path} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {isActive && (
+                        <Box sx={{
+                          position: 'absolute', top: -3, width: 5, height: 5,
+                          borderRadius: '50%', bgcolor: 'var(--tang, #e8572b)'
+                        }} />
+                      )}
+                      <Button
+                        component={Link}
+                        to={link.path}
+                        color="inherit"
+                        sx={{
+                          fontWeight: isActive ? 600 : 500,
+                          color: 'var(--ink, #1a1420)',
+                          letterSpacing: '0.02em',
+                          fontSize: '0.90rem',
+                          px: 1.2,
+                          '&:hover': { color: 'var(--cobalt, #3a3ce0)', bgcolor: 'transparent' }
+                        }}
+                      >
+                        {link.label}
+                      </Button>
+                    </Box>
+                  );
+                })}
               </Box>
             )}
 
             {/* Desktop Search Bar */}
             {!isMobile && (
               <Box component="form" onSubmit={handleSearch} sx={{
-                display: 'flex', alignItems: 'center', bgcolor: '#F5F3EF',
+                display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF',
                 borderRadius: '30px', px: 2, py: 0.6, width: 250,
-                border: '1px solid #E8E4DC',
+                border: '1px solid var(--line, #e5dccb)',
                 transition: 'all 0.25s ease',
-                '&:focus-within': { borderColor: '#E50914', bgcolor: '#FFFFFF', boxShadow: '0 0 0 3px rgba(229, 9, 20, 0.12)' }
+                '&:focus-within': { borderColor: 'var(--cobalt, #3a3ce0)', bgcolor: '#FFFFFF', boxShadow: '0 0 0 3px rgba(58, 60, 224, 0.12)' }
               }}>
-                <SearchIcon sx={{ color: '#E50914', fontSize: 18, mr: 1 }} />
+                <SearchIcon sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 18, mr: 1 }} />
                 <InputBase
                   placeholder="Search collections..."
                   value={searchInput}
@@ -329,10 +365,10 @@ const MainLayout: React.FC = () => {
                 <IconButton
                   onClick={toggleEffects}
                   sx={{
-                    color: effectsEnabled ? '#E50914' : '#888',
+                    color: effectsEnabled ? 'var(--cobalt, #3a3ce0)' : 'var(--mute, #6b6173)',
                     border: '1px solid',
-                    borderColor: effectsEnabled ? 'rgba(229, 9, 20, 0.35)' : '#E8E4DC',
-                    bgcolor: effectsEnabled ? 'rgba(229, 9, 20, 0.06)' : 'transparent',
+                    borderColor: effectsEnabled ? 'rgba(58, 60, 224, 0.35)' : 'var(--line, #e5dccb)',
+                    bgcolor: effectsEnabled ? 'rgba(58, 60, 224, 0.08)' : 'transparent',
                     p: 1
                   }}
                 >
@@ -340,32 +376,54 @@ const MainLayout: React.FC = () => {
                 </IconButton>
               </Tooltip>
 
-              {/* Curated Wishlist Button */}
+              {/* Curated Wishlist Button (Prototype-Aligned Pill) */}
               <Tooltip title="Curated Wishlist">
-                <IconButton
+                <Button
                   component={Link}
                   to="/wishlist"
+                  aria-label="Curated Wishlist"
+                  id="wl"
                   sx={{
-                    color: '#0A0A0A',
-                    border: '1px solid #E8E4DC',
-                    p: 1,
-                    '&:hover': { borderColor: '#E50914', color: '#E50914' }
+                    border: '1px solid var(--ink, #1a1420)',
+                    bgcolor: 'transparent',
+                    color: 'var(--ink, #1a1420)',
+                    borderRadius: '99px',
+                    px: 2,
+                    py: 0.7,
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    fontFamily: '"Instrument Sans", sans-serif',
+                    textTransform: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.8,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      bgcolor: 'var(--ink, #1a1420)',
+                      color: 'var(--bg, #fbf6ec)',
+                      borderColor: 'var(--ink, #1a1420)'
+                    }
                   }}
                 >
-                  <Badge
-                    badgeContent={wishlistCount}
+                  <span>♡</span>
+                  <span>Saved</span>
+                  <Box
+                    component="span"
+                    id="wc"
                     sx={{
-                      '& .MuiBadge-badge': {
-                        bgcolor: '#E50914',
-                        color: '#FFFFFF',
-                        fontWeight: 700,
-                        fontSize: '0.68rem'
-                      }
+                      bgcolor: wishlistCount > 0 ? 'var(--tang, #e8572b)' : 'var(--line, #e5dccb)',
+                      color: wishlistCount > 0 ? '#FFFFFF' : 'var(--ink, #1a1420)',
+                      borderRadius: '99px',
+                      px: 0.8,
+                      py: 0.1,
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      lineHeight: 1.2
                     }}
                   >
-                    <FavoriteBorderOutlined fontSize="small" />
-                  </Badge>
-                </IconButton>
+                    {wishlistCount}
+                  </Box>
+                </Button>
               </Tooltip>
 
               {/* Shopping Bag Button (rendered only when internal checkout is enabled) */}
@@ -375,17 +433,17 @@ const MainLayout: React.FC = () => {
                     component={Link}
                     to="/cart"
                     sx={{
-                      color: '#0A0A0A',
-                      border: '1px solid #E8E4DC',
+                      color: 'var(--ink, #1a1420)',
+                      border: '1px solid var(--line, #e5dccb)',
                       p: 1,
-                      '&:hover': { borderColor: '#E50914', color: '#E50914' }
+                      '&:hover': { borderColor: 'var(--cobalt, #3a3ce0)', color: 'var(--cobalt, #3a3ce0)' }
                     }}
                   >
                     <Badge
                       badgeContent={cartItemsCount}
                       sx={{
                         '& .MuiBadge-badge': {
-                          bgcolor: '#0A0A0A',
+                          bgcolor: 'var(--ink, #1a1420)',
                           color: '#FFFFFF',
                           fontWeight: 700,
                           fontSize: '0.68rem'
@@ -404,10 +462,10 @@ const MainLayout: React.FC = () => {
                   <IconButton
                     onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                     sx={{
-                      color: '#0A0A0A',
-                      border: '1px solid #E8E4DC',
+                      color: 'var(--ink, #1a1420)',
+                      border: '1px solid var(--line, #e5dccb)',
                       p: 1,
-                      '&:hover': { borderColor: '#E50914', bgcolor: 'rgba(229, 9, 20, 0.05)' }
+                      '&:hover': { borderColor: 'var(--cobalt, #3a3ce0)', bgcolor: 'rgba(58, 60, 224, 0.05)' }
                     }}
                   >
                     <PersonOutlined fontSize="small" />
@@ -422,16 +480,16 @@ const MainLayout: React.FC = () => {
                       paper: {
                         sx: {
                           mt: 1.5, minWidth: 210, borderRadius: 2,
-                          border: '1px solid #E8E4DC', boxShadow: '0 10px 30px rgba(10,10,10,0.08)'
+                          border: '1px solid var(--line, #e5dccb)', boxShadow: '0 10px 30px rgba(26,20,32,0.08)'
                         }
                       }
                     }}
                   >
                     <Box sx={{ px: 2, py: 1.5 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'var(--ink, #1a1420)' }}>
                         {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#E50914', fontWeight: 600, letterSpacing: '0.05em' }}>
+                      <Typography variant="caption" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 600, letterSpacing: '0.05em' }}>
                         {user?.roles?.includes('ADMIN') ? 'Maison Curator (Admin)' : 'Verified Client'}
                       </Typography>
                     </Box>
@@ -466,12 +524,13 @@ const MainLayout: React.FC = () => {
                   className="lumiere-pill-btn"
                   sx={{
                     display: { xs: 'none', sm: 'inline-flex' },
-                    borderColor: '#0A0A0A',
-                    color: '#0A0A0A',
+                    borderColor: 'var(--ink, #1a1420)',
+                    color: 'var(--ink, #1a1420)',
                     px: 2.2,
                     py: 0.8,
                     fontSize: '0.8rem',
-                    '&:hover': { borderColor: '#E50914', color: '#E50914' }
+                    borderRadius: '99px',
+                    '&:hover': { borderColor: 'var(--cobalt, #3a3ce0)', color: 'var(--cobalt, #3a3ce0)' }
                   }}
                 >
                   Sign In
@@ -498,115 +557,155 @@ const MainLayout: React.FC = () => {
       </Drawer>
 
       {/* Main Outlet */}
-      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box id="main-content" component="main" tabIndex={-1} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', outline: 'none' }}>
         <Outlet />
       </Box>
 
       {/* Luxury Editorial Footer */}
-      <Box component="footer" sx={{ bgcolor: '#0A0A0A', color: '#FAF8F5', pt: 10, pb: 6, borderTop: '1px solid rgba(229, 9, 20, 0.3)' }}>
+      <Box
+        component="footer"
+        sx={{
+          bgcolor: 'var(--bg, #fbf6ec)',
+          color: 'var(--ink, #1a1420)',
+          pt: { xs: 8, md: 12 },
+          pb: 6,
+          borderTop: '1px solid var(--line, #e5dccb)'
+        }}
+      >
         <Container maxWidth="xl">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2.2fr 1fr 1fr 1fr' }, gap: 5, mb: 8 }}>
+          {/* Monumental Prototype Typography */}
+          <Typography
+            variant="h1"
+            sx={{
+              fontFamily: '"Fraunces", Georgia, serif',
+              fontWeight: 600,
+              fontSize: { xs: 'clamp(54px, 15vw, 110px)', md: 'clamp(70px, 18vw, 240px)' },
+              lineHeight: 0.88,
+              letterSpacing: '-0.04em',
+              color: 'var(--ink, #1a1420)',
+              mb: 3
+            }}
+          >
+            LUMIÈRE
+          </Typography>
 
+          <Typography
+            variant="body1"
+            sx={{
+              fontFamily: '"Instrument Sans", sans-serif',
+              color: 'var(--mute, #6b6173)',
+              maxWidth: 720,
+              fontSize: { xs: '0.92rem', md: '1.02rem' },
+              lineHeight: 1.7,
+              mb: 6
+            }}
+          >
+            LUMIÈRE is an independent clothing discovery and brand-referral platform. We curate exquisite apparel and direct you to each brand&apos;s official flagship website for direct purchase. All customer-facing prices are presented in INR (₹) or marked upon atelier inquiry. LUMIÈRE holds no inventory, fulfills no shipments, and never processes customer checkout payments.
+          </Typography>
+
+          <Divider sx={{ borderColor: 'var(--line, #e5dccb)', mb: 6 }} />
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2.2fr 1fr 1fr 1fr' }, gap: 5, mb: 8 }}>
             <Box>
-              <Typography variant="h5" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.16em', fontWeight: 800, mb: 1.2, color: '#FFFFFF' }}>
-                LUMIÈRE
+              <Typography variant="h6" sx={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.04em', fontWeight: 600, mb: 1.2, color: 'var(--ink, #1a1420)' }}>
+                ATELIER DOSSIER
               </Typography>
-              <Typography variant="caption" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.2em', color: '#E50914', display: 'block', mb: 2, fontWeight: 700 }}>
-                MAISON DE LUXE • EST. 2026
+              <Typography variant="caption" sx={{ fontFamily: '"Instrument Sans", sans-serif', letterSpacing: '0.14em', color: 'var(--cobalt, #3a3ce0)', display: 'block', mb: 2, fontWeight: 700, textTransform: 'uppercase' }}>
+                MAISON DE LUXE • REFERRAL DIRECTORY
               </Typography>
-              <Typography variant="body2" sx={{ color: '#A0988E', maxWidth: 360, lineHeight: 1.8 }}>
+              <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', maxWidth: 360, lineHeight: 1.8 }}>
                 Curating the intersection of historic Indian artisanal heritage and avant-garde global fashion.
                 Every maison in our directory is verified for authentic direct provenance.
               </Typography>
             </Box>
 
             <Box>
-              <Typography variant="subtitle2" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.12em', fontWeight: 700, mb: 2.5, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.04em', fontWeight: 600, mb: 2.5, color: 'var(--ink, #1a1420)' }}>
                 Couture Portfolios
               </Typography>
               <List disablePadding>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/products?gender=women" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>Women’s Atelier</Typography>
+                  <Link to="/products?gender=women" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>Women’s Atelier</Typography>
                   </Link>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/products?gender=men" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>Men’s Sartorial</Typography>
+                  <Link to="/products?gender=men" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>Men’s Sartorial</Typography>
                   </Link>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/products?gender=kids" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>Kids’ Heritage</Typography>
+                  <Link to="/products?gender=kids" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>Kids’ Heritage</Typography>
                   </Link>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/brands" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>58 Brand Directory</Typography>
+                  <Link to="/brands" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>58 Brand Directory</Typography>
                   </Link>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/products" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>All Garment Capsules</Typography>
+                  <Link to="/products" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>All Garment Capsules</Typography>
                   </Link>
                 </ListItem>
               </List>
             </Box>
 
             <Box>
-              <Typography variant="subtitle2" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.12em', fontWeight: 700, mb: 2.5, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.04em', fontWeight: 600, mb: 2.5, color: 'var(--ink, #1a1420)' }}>
                 Client Services
               </Typography>
               <List disablePadding>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Link to="/wishlist" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>Private Wishlist Vault</Typography>
+                  <Link to="/wishlist" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>Private Wishlist Vault</Typography>
                   </Link>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Typography variant="body2" sx={{ color: '#A0988E' }}>Verified Domain Security</Typography>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)' }}>Verified Domain Security</Typography>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <Typography variant="body2" sx={{ color: '#A0988E' }}>Insured White-Glove Transit</Typography>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)' }}>Official Brand Checkout</Typography>
                 </ListItem>
                 <ListItem disablePadding sx={{ mb: 1.2 }}>
-                  <a href="mailto:concierge@lumiere.fashion" style={{ color: '#A0988E', textDecoration: 'none' }}>
-                    <Typography variant="body2" sx={{ '&:hover': { color: '#E50914' } }}>Atelier Concierge</Typography>
+                  <a href="mailto:concierge@lumiere.fashion" style={{ color: 'var(--mute, #6b6173)', textDecoration: 'none' }}>
+                    <Typography variant="body2" sx={{ '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}>Atelier Concierge</Typography>
                   </a>
                 </ListItem>
               </List>
             </Box>
 
             <Box>
-              <Typography variant="subtitle2" sx={{ fontFamily: '"Cinzel", serif', letterSpacing: '0.12em', fontWeight: 700, mb: 2.5, color: '#FFFFFF' }}>
+              <Typography variant="subtitle2" sx={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.04em', fontWeight: 600, mb: 2.5, color: 'var(--ink, #1a1420)' }}>
                 Heritage Salons
               </Typography>
-              <Typography variant="body2" sx={{ color: '#A0988E', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 1 }}>
                 • 12 Place Vendôme, Paris
               </Typography>
-              <Typography variant="body2" sx={{ color: '#A0988E', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 1 }}>
                 • 18 Mehrauli Heritage, New Delhi
               </Typography>
-              <Typography variant="body2" sx={{ color: '#A0988E', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 1 }}>
                 • 740 Fifth Avenue, New York
               </Typography>
-              <Typography variant="body2" sx={{ color: '#A0988E' }}>
+              <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)' }}>
                 • Kala Ghoda Arts Precinct, Mumbai
               </Typography>
             </Box>
           </Box>
 
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 4 }} />
+          <Divider sx={{ borderColor: 'var(--line, #e5dccb)', mb: 4 }} />
 
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-            <Typography variant="caption" sx={{ color: '#7E766D', letterSpacing: '0.04em' }}>
+            <Typography variant="caption" sx={{ color: 'var(--mute, #6b6173)', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} LUMIÈRE MAISON DE LUXE. ALL RIGHTS RESERVED.
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Button
                 size="small"
                 onClick={toggleEffects}
-                sx={{ color: '#E50914', fontSize: '0.78rem', p: 0, textDecoration: 'underline' }}
+                sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: '0.78rem', p: 0, textDecoration: 'underline' }}
               >
                 {effectsEnabled ? "Visual Atmosphere: Active" : "Visual Atmosphere: Reduced"}
               </Button>

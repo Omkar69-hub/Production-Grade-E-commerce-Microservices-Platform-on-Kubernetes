@@ -77,6 +77,27 @@ html, body {
   outline-offset: 3px !important;
 }
 
+/* Accessibility: Skip to Content */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--cobalt, #3a3ce0);
+  color: #ffffff !important;
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  z-index: 9999;
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(58, 60, 224, 0.35);
+}
+.skip-to-content:focus {
+  top: 16px;
+}
+
 /* Luxury Editorial Headings */
 h1, h2, h3, .lumiere-display {
   font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
@@ -90,30 +111,31 @@ h1, h2, h3, .lumiere-display {
   text-transform: uppercase;
 }
 
-/* Red Gradient Text Accents */
-.lumiere-red-gradient-text {
-  background: linear-gradient(135deg, #FF3B30 0%, #E50914 45%, #990000 100%);
+/* High-Fashion Gradient Text Accents */
+.lumiere-red-gradient-text, .lumiere-cobalt-gradient-text {
+  background: linear-gradient(135deg, #5b5bf0 0%, #3a3ce0 45%, #1b1d6b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Red Gradient Accent Borders & Buttons */
-.lumiere-red-btn {
-  background: linear-gradient(135deg, #E50914 0%, #C40812 50%, #8B0000 100%) !important;
+/* Prototype-Aligned Pill & Accent Buttons */
+.lumiere-red-btn, .lumiere-cobalt-btn {
+  background: #3a3ce0 !important;
   color: #FFFFFF !important;
-  border-radius: 40px !important;
+  border-radius: 99px !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 4px 16px rgba(229, 9, 20, 0.22);
+  box-shadow: 0 4px 16px rgba(58, 60, 224, 0.22);
 }
 
-.lumiere-red-btn:hover {
+.lumiere-red-btn:hover, .lumiere-cobalt-btn:hover {
+  background: #1b1d6b !important;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(229, 9, 20, 0.38) !important;
+  box-shadow: 0 8px 24px rgba(58, 60, 224, 0.38) !important;
 }
 
 /* Pill Call To Action */
 .lumiere-pill-btn {
-  border-radius: 40px !important;
+  border-radius: 99px !important;
   padding: 12px 28px !important;
   font-weight: 600 !important;
   letter-spacing: 0.04em !important;
@@ -127,16 +149,16 @@ h1, h2, h3, .lumiere-display {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F0ECE4;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C4BEB4;
+  background: var(--line);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--lumiere-crimson);
+  background: var(--cobalt);
 }
 
 /* Base link styles */
@@ -192,14 +214,14 @@ a {
 
 /* High-Fashion Editorial Product & Brand Card */
 .lumiere-card, .lumiere-product-card {
-  border-radius: 16px !important;
+  border-radius: 22px !important;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
 .lumiere-card:hover, .lumiere-product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(10, 10, 10, 0.08), 0 0 0 1px rgba(229, 9, 20, 0.25) !important;
-  border-color: rgba(229, 9, 20, 0.4) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(26, 20, 32, 0.06), 0 0 0 1px rgba(58, 60, 224, 0.15) !important;
+  border-color: rgba(58, 60, 224, 0.3) !important;
 }
 
 /* Subtle Shimmer & Light-trail (Compatibility) */
@@ -216,11 +238,11 @@ a {
   background-size: 200% 100%;
   background-image: linear-gradient(
     105deg,
-    #0A0A0A 0%,
-    #0A0A0A 40%,
-    rgba(229, 9, 20, 0.45) 50%,
-    #0A0A0A 60%,
-    #0A0A0A 100%
+    #1a1420 0%,
+    #1a1420 40%,
+    rgba(58, 60, 224, 0.35) 50%,
+    #1a1420 60%,
+    #1a1420 100%
   );
   transition: all 0.3s ease;
 }
@@ -241,7 +263,7 @@ a {
   color: var(--lumiere-crimson) !important;
 }
 
-/* Subtle Atmospheric Red Halo for Hero */
+/* Subtle Atmospheric Halo for Hero */
 .hero-atmospheric-glow {
   position: absolute;
   top: 20%;
@@ -250,9 +272,29 @@ a {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(229, 9, 20, 0.12) 0%, rgba(229, 9, 20, 0.03) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(58, 60, 224, 0.08) 0%, rgba(216, 242, 90, 0.04) 45%, transparent 70%);
   pointer-events: none;
   filter: blur(40px);
+}
+
+/* 3D Perspective & Stage Styles (VIVANT Inspired) */
+.perspective-stage {
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Custom Interactive Atmosphere Cursor Helpers */
+[data-cursor="drag"], [data-cursor="view"] {
+  cursor: grab;
+}
+
+[data-cursor="drag"]:active {
+  cursor: grabbing;
 }
 
 /* Reduced Motion Override */

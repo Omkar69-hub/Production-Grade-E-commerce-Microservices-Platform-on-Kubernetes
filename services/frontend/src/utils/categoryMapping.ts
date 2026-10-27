@@ -93,17 +93,49 @@ export const EDITORIAL_CAPSULES: Record<string, CapsuleDefinition> = {
     name: 'Quiet Luxury Casualwear',
     subcategories: ['Heritage Festive', 'Couture Pret'],
     keywords: ['kurta', 'festive', 'anarkali', 'pret', 'brocade']
+  },
+  'gymwear': {
+    name: 'Activewear & Performance',
+    subcategories: ['Activewear', 'Gymwear', 'Performance Activewear'],
+    keywords: ['gym', 'activewear', 'training', 'compression', 'joggers', 't-shirt', 'leggings', 'sports', 'quick-dry', 'stringer']
+  },
+  'streetwear': {
+    name: 'Streetwear & Graphic Apparel',
+    subcategories: ['Streetwear', 'Graphic Apparel', 'Streetwear & Oversized'],
+    keywords: ['streetwear', 'oversized', 'graphic', 'hoodie', 'cargo', 'co-ord']
+  },
+  'casualwear': {
+    name: 'Everyday Casuals & Smart Pret',
+    subcategories: ['Casualwear', 'Smart Casuals', 'Denim & Casuals'],
+    keywords: ['casual', 'linen', 'oxford', 'denim', 'jeans', 'basics', 'polo', 'chinos']
+  },
+  'ethnicwear': {
+    name: 'Artisanal & Contemporary Ethnicwear',
+    subcategories: ['Ethnicwear', 'Contemporary Ethnic', 'Sarees', 'Bridal Lehengas', 'Sherwanis & Bandhgalas'],
+    keywords: ['ethnic', 'kurta', 'saree', 'lehenga', 'sherwani', 'chanderi', 'cotton', 'block-print', 'anarkali']
+  },
+  'kidswear': {
+    name: 'Children’s Playwear & Toddler Basics',
+    subcategories: ['Kidswear', 'Babywear', 'Heritage Festive'],
+    keywords: ['kids', 'kid', 'child', 'baby', 'romper', 'toddler', 'junior', 'bodysuit']
   }
 };
 
 export const isCapsuleSlug = (slug?: string): boolean => {
-  if (!slug) return false;
-  return Boolean(EDITORIAL_CAPSULES[slug.trim().toLowerCase()]);
+  return Boolean(getCapsuleDefinition(slug));
 };
 
 export const getCapsuleDefinition = (slug?: string): CapsuleDefinition | undefined => {
   if (!slug) return undefined;
-  return EDITORIAL_CAPSULES[slug.trim().toLowerCase()];
+  const clean = slug.trim().toLowerCase();
+  if (EDITORIAL_CAPSULES[clean]) return EDITORIAL_CAPSULES[clean];
+  if (clean === 'gym & activewear' || clean === 'gym-activewear' || clean === 'activewear' || clean === 'gym') {
+    return EDITORIAL_CAPSULES['gymwear'];
+  }
+  if (clean === 'kids' || clean === 'kid' || clean === 'children') {
+    return EDITORIAL_CAPSULES['kidswear'];
+  }
+  return undefined;
 };
 
 /**

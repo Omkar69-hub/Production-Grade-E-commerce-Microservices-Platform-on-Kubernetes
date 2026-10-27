@@ -1,4 +1,5 @@
 import type { Product } from '../types/product';
+import { LIFESTYLE_CATALOG } from './lifestyleCatalogData';
 
 export type ProductDestinationType = 'EXACT_PRODUCT_PAGE' | 'OFFICIAL_CATEGORY_DESTINATION';
 export type PriceVerificationStatus = 'VERIFIED_ATELIER_PRICE' | 'PRICE_UPON_INQUIRY' | 'ILLUSTRATIVE_ESTIMATE';
@@ -446,9 +447,17 @@ export const CLOTHING_CATALOG: VerifiedClothingProduct[] = [
   }
 ];
 
+/**
+ * Combined complete catalog including canonical couture and verified lifestyle apparel
+ */
+export const ALL_CLOTHING_CATALOG: VerifiedClothingProduct[] = [
+  ...CLOTHING_CATALOG,
+  ...LIFESTYLE_CATALOG,
+];
+
 export const getProductsByBrand = (brandIdOrSlug: string): VerifiedClothingProduct[] => {
   const query = brandIdOrSlug.toLowerCase().trim();
-  return CLOTHING_CATALOG.filter(
+  return ALL_CLOTHING_CATALOG.filter(
     p => p.brandId.toLowerCase() === query || p.brandSlug.toLowerCase() === query || p.brandName.toLowerCase() === query
   );
 };
@@ -456,7 +465,7 @@ export const getProductsByBrand = (brandIdOrSlug: string): VerifiedClothingProdu
 export const getProductBySlug = (identifier: string): VerifiedClothingProduct | undefined => {
   if (!identifier) return undefined;
   const query = identifier.toLowerCase().trim();
-  return CLOTHING_CATALOG.find(
+  return ALL_CLOTHING_CATALOG.find(
     p => p.slug.toLowerCase() === query || 
          p.id.toLowerCase() === query || 
          (p.uuid && p.uuid.toLowerCase() === query)
@@ -464,6 +473,8 @@ export const getProductBySlug = (identifier: string): VerifiedClothingProduct | 
 };
 
 export const getProductByIdOrSlug = getProductBySlug;
+
+export const getAllClothingProducts = (): Product[] => ALL_CLOTHING_CATALOG.map(toCatalogProduct);
 
 export const toCatalogProduct = (item: VerifiedClothingProduct): Product => ({
   id: item.id,

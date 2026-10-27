@@ -1,23 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Box, Container, Typography, Button, Grid, Card, CardMedia, CardContent,
   Chip, IconButton, Drawer, Divider
 } from '@mui/material';
 import {
   ArrowForwardOutlined, VerifiedUserOutlined, StraightenOutlined,
-  CloseOutlined, DiamondOutlined, PublicOutlined
+  CloseOutlined, DiamondOutlined, PublicOutlined, PlayArrowRounded
 } from '@mui/icons-material';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
-import { BRANDS_DATA } from '../../data/brandsData';
+import { ALL_VERIFIED_BRANDS, BRANDS_DATA } from '../../data/brandsData';
 import { useProducts } from '../../hooks/useProducts';
 import ProductCard from '../../components/product/ProductCard';
 import EditorialRunwayTrack from '../../components/editorial/EditorialRunwayTrack';
 import CuratedOccasionPanels from '../../components/editorial/CuratedOccasionPanels';
-import { CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
+import { ALL_CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
+import { Concave3DCarousel } from '../../components/product/Concave3DCarousel';
+import { ExpandableLookbookAccordion } from '../../components/editorial/ExpandableLookbookAccordion';
 
 export const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [sizeDrawerOpen, setSizeDrawerOpen] = useState(false);
+  const [brandCategory, setBrandCategory] = useState<'ALL' | 'INDIAN' | 'INTERNATIONAL' | 'STREETWEAR' | 'ACTIVEWEAR'>('ALL');
+
+  // Hero scroll-driven animation refs (scale 1.0 -> 0.95 and title parallax over first 400px)
+  const heroImageRef = useRef<HTMLDivElement>(null);
+  const heroHeadlineRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let animationFrameId: number;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const handleScroll = () => {
+      if (mediaQuery.matches) return;
+      animationFrameId = requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        // Smoothly interpolate across the first 400 pixels of scroll
+        const progress = Math.min(Math.max(scrollY / 400, 0), 1);
+        const scale = 1.0 - progress * 0.05; // 1.0 -> 0.95
+        const translateY = progress * -18; // layered title parallax movement
+        
+        if (heroImageRef.current) {
+          heroImageRef.current.style.transform = `scale(${scale.toFixed(4)})`;
+        }
+        if (heroHeadlineRef.current) {
+          heroHeadlineRef.current.style.transform = `translateY(${translateY.toFixed(2)}px)`;
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  // Multi-brand catalog: showcase at least 8 distinct verified brands in Section 4
+  const featuredBrands = useMemo(() => {
+    const registry = ALL_VERIFIED_BRANDS || BRANDS_DATA;
+    if (brandCategory === 'INDIAN') {
+      return registry.filter((b) => b.origin === 'INDIAN').slice(0, 8);
+    }
+    if (brandCategory === 'INTERNATIONAL') {
+      return registry.filter((b) => b.origin === 'INTERNATIONAL').slice(0, 8);
+    }
+    if (brandCategory === 'STREETWEAR') {
+      const slugs = ['the-souled-store', 'bewakoof', 'snitch', 'levis', 'rare-rabbit', 'superdry', 'zara', 'hm'];
+      return registry.filter((b) => slugs.includes(b.slug) || b.signatureStyle.toLowerCase().includes('streetwear')).slice(0, 8);
+    }
+    if (brandCategory === 'ACTIVEWEAR') {
+      const slugs = ['nike', 'adidas', 'puma', 'hrx', 'decathlon', 'coitonic', 'technosport', 'nivia'];
+      return registry.filter((b) => slugs.includes(b.slug) || b.signatureStyle.toLowerCase().includes('training') || b.signatureStyle.toLowerCase().includes('compression')).slice(0, 8);
+    }
+    // 'ALL': Diverse 8-brand curation across Indian couture, streetwear, activewear & international fashion
+    const spotlightSlugs = ['sabyasachi', 'nike', 'the-souled-store', 'uniqlo', 'snitch', 'fabindia', 'the-row', 'hopscotch'];
+    const curated = spotlightSlugs.map((s) => registry.find((b) => b.slug === s)).filter(Boolean) as typeof registry;
+    return curated.length >= 8 ? curated : registry.slice(0, 8);
+  }, [brandCategory]);
+
+  // Curated runway pieces spanning diverse brands for Section 6
+  const runwaySpotlight = useMemo(() => {
+    const diverseIds = ['prod-nike-01', 'prod-souled-01', 'prod-ind-01', 'prod-uniqlo-01', 'prod-snitch-01', 'prod-fab-01', 'prod-puma-01', 'prod-hop-01'];
+    const items = diverseIds.map((id) => ALL_CLOTHING_CATALOG.find((p) => p.id === id)).filter(Boolean) as typeof ALL_CLOTHING_CATALOG;
+    return items.length >= 8 ? items.map(toCatalogProduct) : ALL_CLOTHING_CATALOG.slice(0, 8).map(toCatalogProduct);
+  }, []);
 
   // Call React Hooks unconditionally at the top level
   const { data: catalogData } = useProducts({ size: 4 });
@@ -79,23 +145,24 @@ export const HomePage: React.FC = () => {
     <Box sx={{ bgcolor: '#FAFAFA', color: '#0A0A0A', overflow: 'hidden' }}>
 
       {/* =========================================================================
-          1. CINEMATIC EDITORIAL HERO
+          1. PROTOTYPE-ALIGNED EDITORIAL HERO
       ========================================================================= */}
       <Box
         sx={{
           position: 'relative',
-          minHeight: { xs: '85vh', md: '92vh' },
+          minHeight: { xs: '80vh', md: '88vh' },
           display: 'flex',
           alignItems: 'center',
-          bgcolor: '#0A0A0A',
-          color: '#FFFFFF',
-          backgroundImage: 'radial-gradient(circle at 75% 30%, rgba(229, 9, 20, 0.16) 0%, rgba(10, 10, 10, 0.95) 60%)',
+          bgcolor: 'var(--bg, #fbf6ec)',
+          color: 'var(--ink, #1a1420)',
+          backgroundImage: 'radial-gradient(circle at 80% 25%, rgba(58, 60, 224, 0.07) 0%, transparent 65%)',
           overflow: 'hidden',
-          pt: { xs: 8, md: 4 },
-          pb: { xs: 8, md: 6 }
+          pt: { xs: 8, md: 6 },
+          pb: { xs: 8, md: 8 },
+          borderBottom: '1px solid var(--line, #e5dccb)'
         }}
       >
-        {/* Subtle Atmospheric Red Halo */}
+        {/* Subtle Atmospheric Glow */}
         <Box className="hero-atmospheric-glow" />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
@@ -103,66 +170,93 @@ export const HomePage: React.FC = () => {
 
             {/* Left Headline & Action Column */}
             <Grid size={{ xs: 12, lg: 7 }}>
-              <Box sx={{ maxWidth: 740 }}>
+              <Box ref={heroHeadlineRef} sx={{ maxWidth: 740, willChange: 'transform', transition: 'transform 0.05s ease-out' }}>
 
                 {/* Editorial Collection Tag */}
                 <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#E50914', boxShadow: '0 0 10px #E50914' }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'var(--cobalt, #3a3ce0)', boxShadow: '0 0 10px rgba(58, 60, 224, 0.5)' }} />
                   <Typography
                     variant="overline"
                     sx={{
-                      color: '#FAF8F5',
+                      color: 'var(--mute, #6b6173)',
                       letterSpacing: '0.22em',
                       fontWeight: 700,
-                      fontSize: { xs: '0.72rem', sm: '0.82rem' }
+                      fontSize: { xs: '0.72rem', sm: '0.82rem' },
+                      fontFamily: '"Instrument Sans", sans-serif'
                     }}
                   >
-                    LUMIÈRE HAUTE ATELIER • AUTUMN/WINTER 2026/27
+                    LUMIÈRE CLOTHING DISCOVERY GUIDE • 2026/27
                   </Typography>
                 </Box>
 
-                {/* Oversized Editorial Typography */}
+                {/* Oversized Fraunces Editorial Typography (Prototype Aligned) */}
                 <Typography
                   variant="h1"
                   sx={{
-                    color: '#FFFFFF',
-                    fontSize: { xs: '2.85rem', sm: '4.2rem', md: '5.2rem' },
-                    lineHeight: { xs: 1.08, md: 1.02 },
-                    fontWeight: 700,
-                    letterSpacing: '-0.03em',
+                    color: 'var(--ink, #1a1420)',
+                    fontSize: { xs: '2.85rem', sm: '4.2rem', md: 'clamp(46px, 7.5vw, 108px)' },
+                    lineHeight: { xs: 1.08, md: 0.96 },
+                    fontWeight: 400,
+                    letterSpacing: '-0.035em',
+                    fontFamily: '"Fraunces", Georgia, serif',
                     mb: 3
                   }}
                 >
-                  The Architecture of <span className="lumiere-red-gradient-text">Modern Distinction.</span>
+                  Find the look.
+                  <Box
+                    component="i"
+                    sx={{
+                      display: 'block',
+                      fontStyle: 'italic',
+                      fontWeight: 400,
+                      color: 'var(--cobalt, #3a3ce0)',
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Buy it from the brand.
+                  </Box>
                 </Typography>
 
                 {/* Refined Editorial Subtitle */}
                 <Typography
                   variant="body1"
                   sx={{
-                    color: '#C4BEB4',
+                    color: 'var(--mute, #6b6173)',
                     fontSize: { xs: '1.05rem', md: '1.22rem' },
                     lineHeight: 1.7,
-                    maxWidth: 620,
+                    maxWidth: 580,
                     mb: 5,
-                    fontWeight: 300
+                    fontWeight: 400,
+                    fontFamily: '"Instrument Sans", sans-serif'
                   }}
                 >
-                  Curating premier Indian artisanal heritage and iconic international couture.
-                  Discover authentic brand-direct creations, verified official website referrals,
-                  and standardized atelier size benchmarks.
+                  LUMIÈRE is a clothing discovery guide. We show you what’s worth wearing, then send you to each brand’s own website to buy it.
                 </Typography>
 
-                {/* Pill-Shaped Calls To Action */}
+                {/* Pill-Shaped Calls To Action (VIVANT Inspired) */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
                   <Button
                     component={Link}
                     to="/products"
                     variant="contained"
                     size="large"
-                    className="lumiere-red-btn lumiere-pill-btn"
+                    className="lumiere-pill-btn"
                     endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-                    sx={{ px: 4, py: 1.8, fontSize: '0.96rem' }}
+                    sx={{
+                      px: 4,
+                      py: 1.8,
+                      fontSize: '0.96rem',
+                      fontWeight: 700,
+                      bgcolor: 'var(--lime, #d8f25a)',
+                      color: '#1a1420',
+                      borderRadius: '99px',
+                      fontFamily: '"Instrument Sans", sans-serif',
+                      boxShadow: '0 8px 24px rgba(216, 242, 90, 0.35)',
+                      '&:hover': {
+                        bgcolor: '#c6e245',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
                   >
                     Explore Collections
                   </Button>
@@ -174,39 +268,77 @@ export const HomePage: React.FC = () => {
                     size="large"
                     className="lumiere-pill-btn"
                     sx={{
-                      borderColor: 'rgba(255, 255, 255, 0.45)',
-                      color: '#FFFFFF',
+                      borderColor: 'var(--ink, #1a1420)',
+                      color: 'var(--ink, #1a1420)',
                       px: 3.8,
                       py: 1.7,
                       fontSize: '0.96rem',
+                      borderRadius: '99px',
                       '&:hover': {
-                        borderColor: '#E50914',
-                        color: '#FFFFFF',
-                        backgroundColor: 'rgba(229, 9, 20, 0.12)'
+                        borderColor: 'var(--cobalt, #3a3ce0)',
+                        color: 'var(--cobalt, #3a3ce0)',
+                        backgroundColor: 'rgba(58, 60, 224, 0.05)'
                       }
                     }}
                   >
                     Directory of 55+ Maisons
                   </Button>
+
+                  {/* Secondary Circular Play Button (VIVANT Inspired) */}
+                  <Box
+                    component="a"
+                    href="#runway-track"
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 1.2,
+                      textDecoration: 'none',
+                      color: 'var(--ink, #1a1420)',
+                      cursor: 'pointer',
+                      py: 0.8,
+                      px: 1.2
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: '50%',
+                        bgcolor: 'rgba(26, 20, 32, 0.08)',
+                        border: '1px solid var(--line, #e5dccb)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--ink, #1a1420)',
+                        transition: 'all 0.2s ease',
+                        '&:hover': { bgcolor: 'var(--ink, #1a1420)', color: '#FFFFFF' }
+                      }}
+                    >
+                      <PlayArrowRounded sx={{ fontSize: 22, ml: 0.2 }} />
+                    </Box>
+                    <Typography sx={{ fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      WATCH FILM
+                    </Typography>
+                  </Box>
                 </Box>
 
                 {/* Verification Trust Indicators */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mt: 6, pt: 4, borderTop: '1px solid rgba(255, 255, 255, 0.12)' }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mt: 6, pt: 4, borderTop: '1px solid var(--line, #e5dccb)' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                    <VerifiedUserOutlined sx={{ color: '#E50914', fontSize: 22 }} />
-                    <Typography variant="caption" sx={{ color: '#DDD', letterSpacing: '0.04em', fontWeight: 500 }}>
+                    <VerifiedUserOutlined sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 22 }} />
+                    <Typography variant="caption" sx={{ color: 'var(--ink, #1a1420)', letterSpacing: '0.04em', fontWeight: 600 }}>
                       100% Verified Brand Domains
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                    <DiamondOutlined sx={{ color: '#E50914', fontSize: 22 }} />
-                    <Typography variant="caption" sx={{ color: '#DDD', letterSpacing: '0.04em', fontWeight: 500 }}>
+                    <DiamondOutlined sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 22 }} />
+                    <Typography variant="caption" sx={{ color: 'var(--ink, #1a1420)', letterSpacing: '0.04em', fontWeight: 600 }}>
                       Indian Couture & Global Luxury
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                    <StraightenOutlined sx={{ color: '#E50914', fontSize: 22 }} />
-                    <Typography variant="caption" sx={{ color: '#DDD', letterSpacing: '0.04em', fontWeight: 500 }}>
+                    <StraightenOutlined sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 22 }} />
+                    <Typography variant="caption" sx={{ color: 'var(--ink, #1a1420)', letterSpacing: '0.04em', fontWeight: 600 }}>
                       Unified Precision Sizing Matrix
                     </Typography>
                   </Box>
@@ -221,12 +353,16 @@ export const HomePage: React.FC = () => {
 
                 {/* Main Hero Portrait Card */}
                 <Card
+                  ref={heroImageRef}
                   sx={{
                     borderRadius: '24px',
                     overflow: 'hidden',
-                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    bgcolor: '#141414'
+                    boxShadow: '0 24px 60px rgba(26, 20, 32, 0.12)',
+                    border: '1px solid var(--line, #e5dccb)',
+                    bgcolor: '#FFFFFF',
+                    willChange: 'transform',
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.05s ease-out'
                   }}
                 >
                   <Box sx={{ position: 'relative', pt: '130%' }}>
@@ -239,15 +375,14 @@ export const HomePage: React.FC = () => {
                         inset: 0,
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
-                        filter: 'contrast(1.05) brightness(0.95)'
+                        objectFit: 'cover'
                       }}
                     />
                     <Box
                       sx={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0.1) 60%, transparent 100%)'
+                        background: 'linear-gradient(to top, rgba(26, 20, 32, 0.85) 0%, rgba(26, 20, 32, 0.1) 60%, transparent 100%)'
                       }}
                     />
                     <Box sx={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
@@ -255,48 +390,49 @@ export const HomePage: React.FC = () => {
                         label="AUTUMN / WINTER EDITORIAL"
                         size="small"
                         sx={{
-                          bgcolor: '#E50914',
-                          color: '#FFFFFF',
+                          bgcolor: 'var(--lime, #d8f25a)',
+                          color: '#1a1420',
                           fontWeight: 700,
-                          fontFamily: '"Cinzel", serif',
-                          letterSpacing: '0.1em',
+                          fontFamily: '"Instrument Sans", sans-serif',
+                          letterSpacing: '0.08em',
                           mb: 1.5,
-                          fontSize: '0.68rem'
+                          fontSize: '0.68rem',
+                          borderRadius: '99px'
                         }}
                       />
-                      <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 0.5 }}>
+                      <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, fontFamily: '"Fraunces", Georgia, serif', mb: 0.5 }}>
                         Architectural Drapery & Velvet
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#D0CAC0', display: 'block' }}>
+                      <Typography variant="caption" sx={{ color: '#E5DCCB', display: 'block', fontFamily: '"Instrument Sans", sans-serif' }}>
                         Curated from Parisian & New Delhi ateliers • 2026/27 Showcase
                       </Typography>
                     </Box>
                   </Box>
                 </Card>
 
-                {/* Floating Asymmetrical Accent Card */}
+                {/* Floating Asymmetrical Accent Card (Preserved for Tests) */}
                 <Box
                   sx={{
                     display: { xs: 'none', sm: 'block' },
                     position: 'absolute',
                     top: -24,
                     left: -32,
-                    bgcolor: 'rgba(20, 20, 20, 0.92)',
+                    bgcolor: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(16px)',
                     p: 2.5,
-                    borderRadius: '16px',
-                    border: '1px solid rgba(229, 9, 20, 0.4)',
-                    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.5)',
-                    maxWidth: 210
+                    borderRadius: '18px',
+                    border: '1px solid var(--line, #e5dccb)',
+                    boxShadow: '0 16px 36px rgba(26, 20, 32, 0.08)',
+                    maxWidth: 220
                   }}
                 >
-                  <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, display: 'block', lineHeight: 1.2 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, display: 'block', lineHeight: 1.2, letterSpacing: '0.1em' }}>
                     AUTHENTICITY
                   </Typography>
-                  <Typography variant="subtitle2" sx={{ color: '#FFFFFF', fontWeight: 600, mt: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ color: 'var(--ink, #1a1420)', fontWeight: 600, mt: 0.5, fontFamily: '"Fraunces", Georgia, serif' }}>
                     Zero Counterfeits
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#A0988E', display: 'block', mt: 0.5, lineHeight: 1.4 }}>
+                  <Typography variant="caption" sx={{ color: 'var(--mute, #6b6173)', display: 'block', mt: 0.5, lineHeight: 1.4, fontFamily: '"Instrument Sans", sans-serif' }}>
                     Direct referrals exclusively to certified brand flagships.
                   </Typography>
                 </Box>
@@ -306,22 +442,94 @@ export const HomePage: React.FC = () => {
 
           </Grid>
         </Container>
+
+        {/* Vertical Running Text (VIVANT Inspired) */}
+        <Box
+          sx={{
+            display: { xs: 'none', xl: 'block' },
+            position: 'absolute',
+            right: 28,
+            top: '50%',
+            transform: 'translateY(-50%) rotate(90deg)',
+            transformOrigin: 'center center',
+            whiteSpace: 'nowrap',
+            fontFamily: '"Instrument Sans", sans-serif',
+            fontSize: '11px',
+            letterSpacing: '0.24em',
+            textTransform: 'uppercase',
+            color: 'rgba(26, 20, 32, 0.45)',
+            fontWeight: 600,
+            pointerEvents: 'none',
+          }}
+        >
+          Cut in Certified Indian & European Ateliers • Direct Flagship Referrals
+        </Box>
+
+        {/* Floating Bottom Glass Trust Bar (VIVANT Inspired) */}
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            position: 'absolute',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bgcolor: 'rgba(26, 20, 32, 0.88)',
+            backdropFilter: 'blur(16px)',
+            color: '#fbf6ec',
+            py: 1.2,
+            px: 3.5,
+            borderRadius: '999px',
+            border: '1px solid rgba(229, 220, 203, 0.25)',
+            boxShadow: '0 16px 40px rgba(26, 20, 32, 0.25)',
+            alignItems: 'center',
+            gap: 4,
+            zIndex: 10,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box component="span" sx={{ color: 'var(--lime, #d8f25a)', fontSize: '13px' }}>✂</Box>
+            <Box>
+              <Typography sx={{ fontSize: '0.74rem', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>58 Master Ateliers</Typography>
+              <Typography sx={{ fontSize: '0.65rem', color: 'rgba(251, 246, 236, 0.65)', fontFamily: '"Instrument Sans", sans-serif' }}>Fair wages & couture craft</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ width: '1px', height: '24px', bgcolor: 'rgba(251, 246, 236, 0.2)' }} />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box component="span" sx={{ color: 'var(--lime, #d8f25a)', fontSize: '13px' }}>★</Box>
+            <Box>
+              <Typography sx={{ fontSize: '0.74rem', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>Direct Brand Checkout</Typography>
+              <Typography sx={{ fontSize: '0.65rem', color: 'rgba(251, 246, 236, 0.65)', fontFamily: '"Instrument Sans", sans-serif' }}>Official designer domains</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ width: '1px', height: '24px', bgcolor: 'rgba(251, 246, 236, 0.2)' }} />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box component="span" sx={{ color: 'var(--lime, #d8f25a)', fontSize: '13px' }}>↺</Box>
+            <Box>
+              <Typography sx={{ fontSize: '0.74rem', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>Zero Middlemen</Typography>
+              <Typography sx={{ fontSize: '0.65rem', color: 'rgba(251, 246, 236, 0.65)', fontFamily: '"Instrument Sans", sans-serif' }}>Authentic atelier prices</Typography>
+            </Box>
+          </Box>
+        </Box>
       </Box>
 
       {/* =========================================================================
           2. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#FAFAFA' }}>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
 
           <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 6, md: 8 } }}>
-            <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
+            <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
               DISTINCT CURATIONS
             </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, mt: 1, mb: 2 }}>
+            <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, mb: 2, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
               Choose Your Atelier Universe
             </Typography>
-            <Typography variant="body1" sx={{ color: '#66625B', fontSize: '1.05rem' }}>
+            <Typography variant="body1" sx={{ color: 'var(--mute, #6b6173)', fontSize: '1.05rem', fontFamily: '"Instrument Sans", sans-serif' }}>
               Explore dedicated fashion portfolios tailored to women’s couture, men’s bespoke sartorial suiting, and exquisite young heritage wear.
             </Typography>
           </Box>
@@ -341,6 +549,8 @@ export const HomePage: React.FC = () => {
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
+                  borderRadius: '22px',
+                  border: '1px solid var(--line, #e5dccb)',
                   cursor: 'pointer'
                 }}
               >
@@ -359,22 +569,22 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="FEMME ATELIER"
                       size="small"
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
                 <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
                     PORTFOLIO I
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, my: 1, color: '#0A0A0A' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
                     Women’s Couture & Pret
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#66625B', mb: 3, lineHeight: 1.6 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
                     Fluid silk lehengas, structured double-breasted blazers, hand-embroidered anarkalis, and evening gowns.
                   </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: '#E50914', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em' }}>Explore Women's</Typography>
+                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Women's</Typography>
                     <ArrowForwardOutlined sx={{ fontSize: 16 }} />
                   </Box>
                 </CardContent>
@@ -394,6 +604,8 @@ export const HomePage: React.FC = () => {
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
+                  borderRadius: '22px',
+                  border: '1px solid var(--line, #e5dccb)',
                   cursor: 'pointer'
                 }}
               >
@@ -412,22 +624,22 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="HOMME SARTORIAL"
                       size="small"
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
                 <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
                     PORTFOLIO II
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, my: 1, color: '#0A0A0A' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
                     Men’s Sartorial & Festive
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#66625B', mb: 3, lineHeight: 1.6 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
                     Bespoke wool suiting, royal jacquard sherwanis, bandhgalas, raw silk kurtas, and luxury linen overshirts.
                   </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: '#E50914', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em' }}>Explore Men's</Typography>
+                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Men's</Typography>
                     <ArrowForwardOutlined sx={{ fontSize: 16 }} />
                   </Box>
                 </CardContent>
@@ -447,6 +659,8 @@ export const HomePage: React.FC = () => {
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
+                  borderRadius: '22px',
+                  border: '1px solid var(--line, #e5dccb)',
                   cursor: 'pointer'
                 }}
               >
@@ -465,22 +679,22 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="ENFANT HERITAGE"
                       size="small"
-                      sx={{ bgcolor: '#0A0A0A', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
                 <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
                     PORTFOLIO III
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, my: 1, color: '#0A0A0A' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
                     Kids’ Festive & Heritage
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#66625B', mb: 3, lineHeight: 1.6 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
                     Pure organic cotton kurta sets, festive lehengas for young girls, miniature sherwanis, and celebration wear.
                   </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: '#E50914', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em' }}>Explore Kids'</Typography>
+                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Kids'</Typography>
                     <ArrowForwardOutlined sx={{ fontSize: 16 }} />
                   </Box>
                 </CardContent>
@@ -492,20 +706,25 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
+          3. VIVANT-INSPIRED CONCAVE 3D CAROUSEL (LUMIÈRE SIGNATURES)
+      ========================================================================= */}
+      <Concave3DCarousel />
+
+      {/* =========================================================================
           4. EDITORIAL BRAND SPOTLIGHT: INDIAN CRAFT X GLOBAL LUXURY
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#0A0A0A', color: '#FFFFFF', position: 'relative' }}>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--eve-bg, #2b1238)', color: '#FFFFFF', position: 'relative' }}>
         <Container maxWidth="xl">
           <Grid container spacing={{ xs: 6, lg: 8 }} sx={{ alignItems: 'center' }}>
 
             <Grid size={{ xs: 12, lg: 5 }}>
-              <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.22em' }}>
+              <Typography variant="overline" sx={{ color: 'var(--lime, #d8f25a)', fontWeight: 700, letterSpacing: '0.22em', fontFamily: '"Instrument Sans", sans-serif' }}>
                 MAISON CURATION
               </Typography>
-              <Typography variant="h2" sx={{ color: '#FFFFFF', fontWeight: 700, my: 2 }}>
-                Dual Heritage: <span className="lumiere-red-gradient-text">Indian Artistry</span> & Global Avant-Garde
+              <Typography variant="h2" sx={{ color: '#FFFFFF', fontWeight: 400, my: 2, fontFamily: '"Fraunces", Georgia, serif' }}>
+                Dual Heritage: <span style={{ color: 'var(--lime, #d8f25a)' }}>Indian Artistry</span> & Global Avant-Garde
               </Typography>
-              <Typography variant="body1" sx={{ color: '#C4BEB4', mb: 4, lineHeight: 1.8, fontSize: '1.05rem' }}>
+              <Typography variant="body1" sx={{ color: 'var(--eve-mute, #cbb8d6)', mb: 4, lineHeight: 1.8, fontSize: '1.05rem', fontFamily: '"Instrument Sans", sans-serif' }}>
                 LUMIÈRE bridges the world’s most celebrated textile civilizations.
                 From the timeless zardozi embroidery of Sabyasachi and handloom Chanderi weaves of Raw Mango
                 to the sculptural minimalism of The Row and Parisian tailoring of Saint Laurent.
@@ -513,22 +732,22 @@ export const HomePage: React.FC = () => {
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(229, 9, 20, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E50914', flexShrink: 0 }}>
+                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(216, 242, 90, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--lime, #d8f25a)', flexShrink: 0 }}>
                     <PublicOutlined fontSize="small" />
                   </Box>
                   <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#FFF' }}>58 Curated Partner Maisons</Typography>
-                    <Typography variant="body2" sx={{ color: '#9E988F' }}>28 prestigious Indian couturiers and 30 iconic international luxury houses.</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#FFF', fontFamily: '"Instrument Sans", sans-serif' }}>70 Curated Partner Brands</Typography>
+                    <Typography variant="body2" sx={{ color: 'var(--eve-mute, #cbb8d6)', fontFamily: '"Instrument Sans", sans-serif' }}>35 prestigious Indian couturiers & labels, and 35 iconic international houses.</Typography>
                   </Box>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(229, 9, 20, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E50914', flexShrink: 0 }}>
+                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(216, 242, 90, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--lime, #d8f25a)', flexShrink: 0 }}>
                     <VerifiedUserOutlined fontSize="small" />
                   </Box>
                   <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#FFF' }}>Certified Official Domains</Typography>
-                    <Typography variant="body2" sx={{ color: '#9E988F' }}>Every external referral links exclusively to the verified root domain of each designer.</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#FFF', fontFamily: '"Instrument Sans", sans-serif' }}>Certified Official Domains</Typography>
+                    <Typography variant="body2" sx={{ color: 'var(--eve-mute, #cbb8d6)', fontFamily: '"Instrument Sans", sans-serif' }}>Every external referral links exclusively to the verified root domain of each designer.</Typography>
                   </Box>
                 </Box>
               </Box>
@@ -537,18 +756,85 @@ export const HomePage: React.FC = () => {
                 component={Link}
                 to="/brands"
                 variant="contained"
-                className="lumiere-red-btn lumiere-pill-btn"
+                className="lumiere-pill-btn"
                 endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-                sx={{ px: 4, py: 1.5 }}
+                sx={{
+                  px: 4,
+                  py: 1.6,
+                  bgcolor: 'var(--lime, #d8f25a)',
+                  color: '#1a1420',
+                  borderRadius: '999px',
+                  fontWeight: 600,
+                  fontFamily: '"Instrument Sans", sans-serif',
+                  '&:hover': {
+                    bgcolor: '#c2e043'
+                  }
+                }}
               >
                 Browse Full Brand Directory
               </Button>
             </Grid>
 
-            {/* Featured Brand Grid */}
+            {/* Featured Brand Grid Column (Multi-Brand Catalog: 8+ Verified Maisons) */}
             <Grid size={{ xs: 12, lg: 7 }}>
-              <Grid container spacing={3}>
-                {BRANDS_DATA.slice(0, 4).map((brand) => (
+              {/* Category Filter Pills (Sliding-Pill Transition & Accessible Aria-Pressed) */}
+              <Box
+                role="group"
+                aria-label="Brand category filter"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  p: 0.6,
+                  mb: 3,
+                  bgcolor: 'rgba(255, 255, 255, 0.06)',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  position: 'relative',
+                  gap: 0.5,
+                  flexWrap: 'wrap'
+                }}
+              >
+                {[
+                  { id: 'ALL', label: 'All Houses (8)' },
+                  { id: 'STREETWEAR', label: 'Streetwear & Denim' },
+                  { id: 'ACTIVEWEAR', label: 'Activewear & Sport' },
+                  { id: 'INDIAN', label: 'Indian Couture & Craft' },
+                  { id: 'INTERNATIONAL', label: 'Global Fashion' }
+                ].map((tab) => {
+                  const isActive = brandCategory === tab.id;
+                  return (
+                    <Button
+                      key={tab.id}
+                      onClick={() => setBrandCategory(tab.id as any)}
+                      aria-pressed={isActive}
+                      size="small"
+                      sx={{
+                        borderRadius: '999px',
+                        px: 2.2,
+                        py: 0.8,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        fontFamily: '"Instrument Sans", sans-serif',
+                        color: isActive ? '#1a1420' : 'rgba(255, 255, 255, 0.7)',
+                        bgcolor: isActive ? 'var(--lime, #d8f25a)' : 'transparent',
+                        boxShadow: isActive ? '0 4px 14px rgba(216, 242, 90, 0.25)' : 'none',
+                        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        '&:hover': {
+                          bgcolor: isActive ? 'var(--lime, #d8f25a)' : 'rgba(255, 255, 255, 0.1)',
+                          color: isActive ? '#1a1420' : '#FFF'
+                        }
+                      }}
+                    >
+                      {tab.label}
+                    </Button>
+                  );
+                })}
+              </Box>
+
+              <Grid container spacing={2.5}>
+                {featuredBrands.map((brand) => (
                   <Grid key={brand.id} size={{ xs: 12, sm: 6 }}>
                     <Card
                       component={Link}
@@ -557,49 +843,67 @@ export const HomePage: React.FC = () => {
                       sx={{
                         bgcolor: '#141414',
                         color: '#FFF',
-                        p: 3,
+                        p: 2.8,
+                        borderRadius: '16px',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         textDecoration: 'none',
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          borderColor: 'var(--lime, #d8f25a)',
+                          boxShadow: '0 12px 30px rgba(0, 0, 0, 0.4)'
+                        }
                       }}
                     >
                       <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, gap: 1 }}>
                           <Chip
                             label={brand.origin === 'INDIAN' ? 'INDIAN COUTURE' : 'INTERNATIONAL'}
                             size="small"
                             sx={{
-                              bgcolor: brand.origin === 'INDIAN' ? 'rgba(229, 9, 20, 0.2)' : 'rgba(255, 255, 255, 0.15)',
-                              color: brand.origin === 'INDIAN' ? '#FF5E5E' : '#FFF',
+                              bgcolor: brand.origin === 'INDIAN' ? 'rgba(58, 60, 224, 0.25)' : 'rgba(255, 255, 255, 0.15)',
+                              color: brand.origin === 'INDIAN' ? 'var(--lime, #d8f25a)' : '#FFF',
                               fontWeight: 700,
-                              fontSize: '0.65rem'
+                              fontSize: '0.62rem',
+                              fontFamily: '"Instrument Sans", sans-serif',
+                              borderRadius: '999px'
                             }}
                           />
                           <Chip
                             label={`✓ ${brand.verifiedDomain}`}
                             size="small"
                             variant="outlined"
-                            sx={{ color: '#A0988E', borderColor: 'rgba(255, 255, 255, 0.2)', fontSize: '0.62rem' }}
+                            sx={{
+                              color: '#A0988E',
+                              borderColor: 'rgba(255, 255, 255, 0.2)',
+                              fontSize: '0.62rem',
+                              fontFamily: '"Instrument Sans", sans-serif',
+                              borderRadius: '999px'
+                            }}
                           />
                         </Box>
 
-                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 0.8, fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.25rem' }}>
                           {brand.name}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#A0988E', fontSize: '0.86rem', lineHeight: 1.6, mb: 3 }}>
-                          {brand.description}
+                        <Typography variant="body2" sx={{ color: '#A0988E', fontSize: '0.82rem', lineHeight: 1.55, mb: 2.5, fontFamily: '"Instrument Sans", sans-serif' }}>
+                          {brand.signatureStyle || brand.description}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="caption" sx={{ color: '#888' }}>
+                      <Box sx={{ pt: 1.8, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" sx={{ color: '#888', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.72rem' }}>
                           Atelier: {brand.city}, {brand.country}
                         </Typography>
-                        <ArrowForwardOutlined sx={{ fontSize: 16, color: '#E50914' }} />
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'var(--lime, #d8f25a)', fontSize: '0.75rem', fontWeight: 600 }}>
+                          <span>Explore Maison</span>
+                          <ArrowForwardOutlined sx={{ fontSize: 14 }} />
+                        </Box>
                       </Box>
                     </Card>
                   </Grid>
@@ -612,17 +916,22 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
+          4B. VIVANT-INSPIRED EXPANDABLE LOOKBOOK ACCORDION
+      ========================================================================= */}
+      <ExpandableLookbookAccordion />
+
+      {/* =========================================================================
           5. FASHION DISCOVERY CAPSULE CARDS
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: '#FFFFFF' }}>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
 
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'flex-end' }, mb: 6 }}>
             <Box>
-              <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
+              <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
                 EDITORIAL ARCHIVES
               </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 700, mt: 1 }}>
+              <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
                 Signature Wardrobe Capsules
               </Typography>
             </Box>
@@ -630,7 +939,7 @@ export const HomePage: React.FC = () => {
               component={Link}
               to="/products"
               endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-              sx={{ color: '#0A0A0A', fontWeight: 600, mt: { xs: 2, md: 0 }, '&:hover': { color: '#E50914' } }}
+              sx={{ color: 'var(--ink, #1a1420)', fontWeight: 600, mt: { xs: 2, md: 0 }, '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}
             >
               View All Garment Categories
             </Button>
@@ -692,7 +1001,7 @@ export const HomePage: React.FC = () => {
       {/* =========================================================================
           6. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
       ========================================================================= */}
-      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: '#F5F3EF', borderTop: '1px solid #E8E4DC', borderBottom: '1px solid #E8E4DC' }}>
+      <Box id="runway-track" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
           <EditorialRunwayTrack
             eyebrow="CURATED SELECTION"
@@ -709,7 +1018,7 @@ export const HomePage: React.FC = () => {
               </Button>
             }
           >
-            {(liveProducts.length > 0 ? liveProducts : CLOTHING_CATALOG.slice(0, 8).map(toCatalogProduct)).map((p) => (
+            {(liveProducts.length > 0 ? liveProducts : runwaySpotlight).map((p) => (
               <Box key={p.id} sx={{ height: '100%' }}>
                 <ProductCard product={p} />
               </Box>
@@ -746,15 +1055,15 @@ export const HomePage: React.FC = () => {
             <Grid container spacing={4} sx={{ alignItems: 'center' }}>
               <Grid size={{ xs: 12, md: 8 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                  <StraightenOutlined sx={{ color: '#E50914', fontSize: 28 }} />
-                  <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
+                  <StraightenOutlined sx={{ color: 'var(--lime, #d8f25a)', fontSize: 28 }} />
+                  <Typography variant="overline" sx={{ color: 'var(--lime, #d8f25a)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
                     ATELIER SIZING BENCHMARK
                   </Typography>
                 </Box>
-                <Typography variant="h3" sx={{ color: '#FFFFFF', fontWeight: 700, mb: 1.5 }}>
+                <Typography variant="h3" sx={{ color: '#FFFFFF', fontWeight: 400, fontFamily: '"Fraunces", Georgia, serif', mb: 1.5 }}>
                   Unified International & Indian Fit Matrix
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#C4BEB4', maxWidth: 650, lineHeight: 1.7 }}>
+                <Typography variant="body1" sx={{ color: '#C4BEB4', maxWidth: 650, lineHeight: 1.7, fontFamily: '"Instrument Sans", sans-serif' }}>
                   Different couturiers adhere to distinct measurement standards.
                   LUMIÈRE’s measurement matrix provides millimeter-exact cross-references between
                   Indian kurta sizing (inches), French/Italian couture sizes (FR 36-44 / IT 38-48), and UK/US standards.
@@ -764,9 +1073,18 @@ export const HomePage: React.FC = () => {
                 <Button
                   onClick={() => setSizeDrawerOpen(true)}
                   variant="contained"
-                  className="lumiere-red-btn lumiere-pill-btn"
+                  className="lumiere-pill-btn"
                   startIcon={<StraightenOutlined />}
-                  sx={{ px: 4, py: 1.8 }}
+                  sx={{
+                    px: 4,
+                    py: 1.8,
+                    bgcolor: 'var(--lime, #d8f25a)',
+                    color: '#1a1420',
+                    borderRadius: '99px',
+                    fontWeight: 600,
+                    fontFamily: '"Instrument Sans", sans-serif',
+                    '&:hover': { bgcolor: '#c2e043' }
+                  }}
                 >
                   Open Sizing Matrix
                 </Button>
@@ -779,13 +1097,13 @@ export const HomePage: React.FC = () => {
       {/* =========================================================================
           8. HOW LUMIÈRE WORKS / VERIFIED REFERRAL MANIFESTO
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 12 }, bgcolor: '#FAFAFA' }}>
+      <Box sx={{ py: { xs: 10, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
           <Box sx={{ textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 8 }}>
-            <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700, letterSpacing: '0.2em' }}>
+            <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
               THE LUMIÈRE PROTOCOL
             </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 700, mt: 1 }}>
+            <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
               How Discovery Works
             </Typography>
           </Box>
@@ -809,14 +1127,14 @@ export const HomePage: React.FC = () => {
               }
             ].map((p, idx) => (
               <Grid key={idx} size={{ xs: 12, md: 4 }}>
-                <Card className="lumiere-card" sx={{ p: 4, height: '100%', bgcolor: '#FFFFFF', border: '1px solid #E8E4DC' }}>
-                  <Typography variant="h1" sx={{ color: '#E50914', fontSize: '2.5rem', fontWeight: 800, mb: 1, fontFamily: '"Cinzel", serif' }}>
+                <Card className="lumiere-card" sx={{ p: 4, height: '100%', bgcolor: '#FFFFFF', borderRadius: '22px', border: '1px solid var(--line, #e5dccb)' }}>
+                  <Typography variant="h1" sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: '2.5rem', fontWeight: 600, mb: 1, fontFamily: '"Fraunces", Georgia, serif' }}>
                     {p.step}
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A', mb: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600, color: 'var(--ink, #1a1420)', mb: 1.5, fontFamily: '"Fraunces", Georgia, serif' }}>
                     {p.title}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#66625B', lineHeight: 1.7 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', lineHeight: 1.7, fontFamily: '"Instrument Sans", sans-serif' }}>
                     {p.desc}
                   </Typography>
                 </Card>
@@ -836,15 +1154,15 @@ export const HomePage: React.FC = () => {
         sx={{
           '& .MuiDrawer-paper': {
             width: { xs: '100%', sm: 460 },
-            bgcolor: '#FAFAFA',
+            bgcolor: 'var(--bg, #fbf6ec)',
             p: 4
           }
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
-            <Typography variant="overline" sx={{ color: '#E50914', fontWeight: 700 }}>ATELIER SIZING</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Measurement Matrix</Typography>
+            <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>ATELIER SIZING</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 600, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>Measurement Matrix</Typography>
           </Box>
           <IconButton onClick={() => setSizeDrawerOpen(false)}>
             <CloseOutlined />

@@ -7,7 +7,9 @@ import {
   SearchOutlined, VerifiedUserOutlined, OpenInNewOutlined 
 } from '@mui/icons-material';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BRANDS_DATA } from '../../data/brandsData';
+import { ALL_VERIFIED_BRANDS, BRANDS_DATA } from '../../data/brandsData';
+
+const BRAND_LIST = ALL_VERIFIED_BRANDS || BRANDS_DATA;
 
 export const BrandDirectoryPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,7 +48,7 @@ export const BrandDirectoryPage: React.FC = () => {
   };
 
   const filteredBrands = useMemo(() => {
-    return BRANDS_DATA.filter((brand) => {
+    return BRAND_LIST.filter((brand) => {
       const matchesOrigin = originFilter === 'ALL' || brand.origin === originFilter;
       const matchesSearch = 
         !searchTerm.trim() ||
@@ -58,8 +60,8 @@ export const BrandDirectoryPage: React.FC = () => {
     });
   }, [originFilter, searchTerm]);
 
-  const indianCount = BRANDS_DATA.filter((b) => b.origin === 'INDIAN').length;
-  const intlCount = BRANDS_DATA.filter((b) => b.origin === 'INTERNATIONAL').length;
+  const indianCount = BRAND_LIST.filter((b) => b.origin === 'INDIAN').length;
+  const intlCount = BRAND_LIST.filter((b) => b.origin === 'INTERNATIONAL').length;
 
   return (
     <Box sx={{ bgcolor: '#FAFAFA', pb: 14 }}>
@@ -118,9 +120,9 @@ export const BrandDirectoryPage: React.FC = () => {
               }
             }}
           >
-            <ToggleButton value="ALL">All Houses ({BRANDS_DATA.length})</ToggleButton>
-            <ToggleButton value="INDIAN">Indian Couture ({indianCount})</ToggleButton>
-            <ToggleButton value="INTERNATIONAL">Global Luxury ({intlCount})</ToggleButton>
+            <ToggleButton value="ALL">All Houses ({BRAND_LIST.length})</ToggleButton>
+            <ToggleButton value="INDIAN">Indian Brands ({indianCount})</ToggleButton>
+            <ToggleButton value="INTERNATIONAL">Global Brands ({intlCount})</ToggleButton>
           </ToggleButtonGroup>
 
           {/* Search Input Field */}

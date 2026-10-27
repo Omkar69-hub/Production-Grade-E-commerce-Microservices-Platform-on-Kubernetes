@@ -18,7 +18,7 @@ import type { RootState, AppDispatch } from '../../store';
 import ProductCard from '../../components/product/ProductCard';
 import { formatINR, isDemoPrice } from '../../utils/currency';
 import { useComparison } from '../../context/ComparisonContext';
-import { getProductByIdOrSlug, toCatalogProduct, CLOTHING_CATALOG } from '../../data/clothingCatalogData';
+import { getProductByIdOrSlug, toCatalogProduct, ALL_CLOTHING_CATALOG } from '../../data/clothingCatalogData';
 import { getBrandBySlug } from '../../data/brandsData';
 import { verifyBrandDomain, getSafeExternalLinkAttributes } from '../../utils/domainVerifier';
 import { useWishlist } from '../../utils/wishlistStorage';
@@ -105,7 +105,7 @@ const ProductDetailPage: React.FC = () => {
   });
 
   const relatedProducts = catalogItem
-    ? CLOTHING_CATALOG
+    ? ALL_CLOTHING_CATALOG
         .filter(p => p.id !== catalogItem.id && (p.brandId === catalogItem.brandId || p.audience === catalogItem.audience))
         .slice(0, 4)
         .map(toCatalogProduct)

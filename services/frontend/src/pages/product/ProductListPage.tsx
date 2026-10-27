@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Grid, Typography, Container, Box, Pagination, Button, 
   Drawer, Divider, IconButton, FormControl, Select, MenuItem, 
-  TextField, Chip, Tabs, Tab 
+  TextField, Chip 
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { 
@@ -14,7 +14,7 @@ import {
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import ProductCard from '../../components/product/ProductCard';
-import { CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
+import { ALL_CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
 import SizingMatrixModal from '../../components/sizing/SizingMatrixModal';
 import { 
   isCategoryMatch, 
@@ -73,29 +73,29 @@ export const ProductListPage: React.FC = () => {
     });
   }, [apiData]);
 
-  // Verified Atelier Pieces from CLOTHING_CATALOG
+  // Verified Atelier & Lifestyle Repertoire from ALL_CLOTHING_CATALOG
   const verifiedProducts = useMemo(() => {
-    return CLOTHING_CATALOG.map(toCatalogProduct);
+    return ALL_CLOTHING_CATALOG.map(toCatalogProduct);
   }, []);
 
   // Supported Real Filter Options derived from actual catalog data
   const availableBrands = useMemo(() => {
-    const brands = Array.from(new Set(CLOTHING_CATALOG.map((p) => p.brandName)));
+    const brands = Array.from(new Set(ALL_CLOTHING_CATALOG.map((p) => p.brandName)));
     return brands.sort();
   }, []);
 
   const availableSubcategories = useMemo(() => {
-    const subcats = Array.from(new Set(CLOTHING_CATALOG.map((p) => p.subcategory)));
+    const subcats = Array.from(new Set(ALL_CLOTHING_CATALOG.map((p) => p.subcategory)));
     return subcats.sort();
   }, []);
 
   const availableSizes = useMemo(() => {
-    const sizes = Array.from(new Set(CLOTHING_CATALOG.flatMap((p) => p.availableSizes || [])));
+    const sizes = Array.from(new Set(ALL_CLOTHING_CATALOG.flatMap((p) => p.availableSizes || [])));
     return sizes.filter(Boolean);
   }, []);
 
   const availableColors = useMemo(() => {
-    const colors = Array.from(new Set(CLOTHING_CATALOG.flatMap((p) => p.colors || [])));
+    const colors = Array.from(new Set(ALL_CLOTHING_CATALOG.flatMap((p) => p.colors || [])));
     return colors.filter(Boolean);
   }, []);
 
@@ -134,13 +134,13 @@ export const ProductListPage: React.FC = () => {
 
       const text = `${p.name} ${p.description || ''} ${p.categoryName || ''}`.toLowerCase();
       if (genderParam === 'women') {
-        return pAudience === 'women' || text.includes('women') || text.includes('saree') || text.includes('lehenga');
+        return pAudience === 'women' || pAudience === 'unisex' || text.includes('women') || text.includes('saree') || text.includes('lehenga') || text.includes('dress') || text.includes('kurta');
       }
       if (genderParam === 'men') {
-        return pAudience === 'men' || text.includes('men') || text.includes('sherwani') || text.includes('bandhgala') || text.includes('suit');
+        return pAudience === 'men' || pAudience === 'unisex' || text.includes('men') || text.includes('sherwani') || text.includes('bandhgala') || text.includes('suit') || text.includes('shirt') || text.includes('t-shirt') || text.includes('hoodie');
       }
       if (genderParam === 'kids') {
-        return pAudience === 'kids' || text.includes('kid') || text.includes('child') || text.includes('anarkali set');
+        return pAudience === 'kids' || text.includes('kid') || text.includes('child') || text.includes('baby') || text.includes('toddler') || text.includes('romper') || text.includes('bodysuit') || text.includes('anarkali set');
       }
       return true;
     });
@@ -254,6 +254,9 @@ export const ProductListPage: React.FC = () => {
         const price = p.price;
         if (priceRangeParam === 'inquiry') {
           return price === 0;
+        }
+        if (priceRangeParam === 'under-5k') {
+          return price > 0 && price <= 5000;
         }
         if (priceRangeParam === 'under-50k') {
           return price > 0 && price < 50000;
@@ -499,6 +502,7 @@ export const ProductListPage: React.FC = () => {
             sx={{ bgcolor: '#FFFFFF' }}
           >
             <MenuItem value="">All Price Brackets</MenuItem>
+            <MenuItem value="under-5k">Accessible Essentials (Under ₹5,000)</MenuItem>
             <MenuItem value="under-50k">Under ₹50,000</MenuItem>
             <MenuItem value="50k-150k">₹50,000 – ₹1,50,000</MenuItem>
             <MenuItem value="150k-300k">₹1,50,000 – ₹3,00,000</MenuItem>
@@ -634,30 +638,89 @@ export const ProductListPage: React.FC = () => {
 
       {/* Main Discovery Container */}
       <Container maxWidth="xl" id="discovery-catalog">
-        {/* Audience Browsing Section Tabs */}
-        <Box sx={{ bgcolor: '#FFFFFF', p: 1.5, borderRadius: 2, border: '1px solid #EAE5DC', mb: 4 }}>
-          <Tabs
-            value={genderParam}
-            onChange={(_, val) => updateFilter('gender', val)}
-            textColor="primary"
-            indicatorColor="primary"
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                fontFamily: '"Cinzel", serif',
-                fontWeight: 700,
-                fontSize: { xs: '0.8rem', sm: '0.88rem' },
-                py: 1.5,
-                px: { xs: 2, sm: 3 }
-              }
-            }}
-          >
-            <Tab label="All Collections" value="all" />
-            <Tab label="Women's Haute Couture & Pret (8)" value="women" />
-            <Tab label="Men's Sartorial & Festive (4)" value="men" />
-            <Tab label="Kids' Heritage & Festive (2)" value="kids" />
-          </Tabs>
+        {/* Audience Browsing Section Sliding Pills (VIVANT Inspired Smooth Transition) */}
+        <Box 
+          role="region" 
+          aria-label="Collection category selector"
+          sx={{ 
+            bgcolor: '#FFFFFF', 
+            p: 1.2, 
+            borderRadius: '999px', 
+            border: '1px solid #EAE5DC', 
+            mb: 4,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            overflowX: 'auto',
+            boxShadow: '0 4px 18px rgba(24, 24, 22, 0.03)',
+            '&::-webkit-scrollbar': { display: 'none' },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
+          }}
+        >
+          {[
+            { label: 'All Collections', type: 'all', value: 'all' },
+            { label: 'Men', type: 'gender', value: 'men' },
+            { label: 'Women', type: 'gender', value: 'women' },
+            { label: 'Kids', type: 'gender', value: 'kids' },
+            { label: 'Gym & Activewear', type: 'category', value: 'gymwear' },
+            { label: 'Streetwear', type: 'category', value: 'streetwear' },
+            { label: 'Casualwear', type: 'category', value: 'casualwear' },
+            { label: 'Ethnicwear', type: 'category', value: 'ethnicwear' },
+          ].map((cat) => {
+            const isSelected = 
+              cat.type === 'all'
+                ? (!categoryIdParam && (!genderParam || genderParam === 'all'))
+                : cat.type === 'gender'
+                  ? (!categoryIdParam && genderParam === cat.value)
+                  : (categoryIdParam?.toLowerCase() === cat.value || 
+                     (cat.value === 'gymwear' && ['gym & activewear', 'gym-activewear', 'activewear'].includes(categoryIdParam?.toLowerCase())) ||
+                     (cat.value === 'kidswear' && ['kids', 'kid'].includes(categoryIdParam?.toLowerCase())));
+
+            return (
+              <Button
+                key={cat.label}
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  if (cat.type === 'all') {
+                    newParams.delete('categoryId');
+                    newParams.delete('category');
+                    newParams.delete('gender');
+                  } else if (cat.type === 'gender') {
+                    newParams.delete('categoryId');
+                    newParams.delete('category');
+                    newParams.set('gender', cat.value);
+                  } else {
+                    newParams.delete('gender');
+                    newParams.set('category', cat.value);
+                  }
+                  newParams.set('page', '1');
+                  navigate(`/products?${newParams.toString()}`);
+                }}
+                aria-pressed={isSelected}
+                sx={{
+                  borderRadius: '999px',
+                  px: { xs: 2.5, sm: 3.5 },
+                  py: 1.2,
+                  fontSize: { xs: '0.78rem', sm: '0.84rem' },
+                  fontWeight: 700,
+                  fontFamily: '"Instrument Sans", sans-serif',
+                  letterSpacing: '0.04em',
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                  color: isSelected ? '#FFFFFF' : '#181816',
+                  bgcolor: isSelected ? '#181816' : 'transparent',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: isSelected ? '0 4px 14px rgba(24, 24, 22, 0.25)' : 'none',
+                  '&:hover': {
+                    bgcolor: isSelected ? '#181816' : 'rgba(24, 24, 22, 0.06)',
+                  }
+                }}
+              >
+                {cat.label}
+              </Button>
+            );
+          })}
         </Box>
 
         {/* Action Controls & Active Filters Bar */}

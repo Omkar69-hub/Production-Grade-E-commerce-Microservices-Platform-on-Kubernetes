@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ProductService } from '../../services/ProductService';
 import ProductCard from '../../components/product/ProductCard';
-import { CLOTHING_CATALOG } from '../../data/clothingCatalogData';
+import { ALL_CLOTHING_CATALOG } from '../../data/clothingCatalogData';
 import { getSafeExternalLinkAttributes } from '../../utils/domainVerifier';
 import { useWishlist } from '../../utils/wishlistStorage';
 
@@ -28,7 +28,7 @@ export const WishlistPage: React.FC = () => {
   });
 
   // Resolve wishlisted items from both curated catalog and backend API (Identity bridge: id, slug, uuid)
-  const wishlistedCuratedPieces = CLOTHING_CATALOG.filter((item) =>
+  const wishlistedCuratedPieces = ALL_CLOTHING_CATALOG.filter((item) =>
     wishlistIds.includes(item.id) || 
     wishlistIds.includes(item.slug) || 
     (item.uuid && wishlistIds.includes(item.uuid))

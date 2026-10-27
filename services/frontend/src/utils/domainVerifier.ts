@@ -1,4 +1,6 @@
-import { BRANDS_DATA, type Brand } from '../data/brandsData';
+import { BRANDS_DATA, ALL_VERIFIED_BRANDS, type Brand } from '../data/brandsData';
+
+const BRAND_REGISTRY = ALL_VERIFIED_BRANDS || BRANDS_DATA;
 
 export type SecurityValidationStatus =
   | 'VERIFIED_OFFICIAL'          // Matches brand's approved official domain via secure HTTPS
@@ -26,6 +28,7 @@ export interface DomainVerificationResult {
 // Approved official e-commerce & regional subdomains commonly used by fashion houses
 const PERMITTED_STANDARD_SUBDOMAINS = new Set([
   'www',
+  'www2',
   'shop',
   'store',
   'in',
@@ -167,7 +170,7 @@ export const verifyBrandDomain = (
   let targetBrand: Brand | undefined;
   if (expectedBrandSlugOrId) {
     const query = expectedBrandSlugOrId.toLowerCase().trim();
-    targetBrand = BRANDS_DATA.find(
+    targetBrand = BRAND_REGISTRY.find(
       (b) =>
         b.slug.toLowerCase() === query ||
         b.id.toLowerCase() === query ||
@@ -249,7 +252,7 @@ export const verifyBrandDomain = (
     }
 
     // Did the URL match another brand in the directory? (Cross-brand mismatch)
-    const otherBrand = BRANDS_DATA.find((b) => checkBrandDomainMatch(b, rawHostname).isMatch);
+    const otherBrand = BRAND_REGISTRY.find((b) => checkBrandDomainMatch(b, rawHostname).isMatch);
     if (otherBrand) {
       return {
         isValid: true,
@@ -293,7 +296,7 @@ export const verifyBrandDomain = (
   }
 
   // 7. General verification across all brands when no specific brand was expected
-  for (const brand of BRANDS_DATA) {
+  for (const brand of BRAND_REGISTRY) {
     const { isMatch, isSubdomainApproved } = checkBrandDomainMatch(brand, rawHostname);
     if (isMatch) {
       if (!isSubdomainApproved) {
