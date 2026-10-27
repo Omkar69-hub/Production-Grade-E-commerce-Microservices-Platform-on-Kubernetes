@@ -1063,10 +1063,29 @@ At the conclusion of each development session, this document must be updated to 
       git push -u origin preview/stage15b-editorial-discovery
       ```
 * **Current Operational Gate:** All 10 platform microservices report `Up (healthy)`. Staging secrets secured outside the repository; database network bridged; downstream services enforcing rotated 512-bit JWT; RabbitMQ least-privilege isolated. 33-file working-tree manifest audited; exact 19-file frontend allowlist established; zero backend/docker changes will be leaked to frontend preview; ready for user deployment decision.
-* **Next Recommended Milestone / Phase:**
-  * **Stage 15B-7 — Execution of Authorized Preview Deployment:**
-    * Upon explicit user approval, execute the explicit path allowlist commands.
-    * Push branch `preview/stage15b-editorial-discovery` to GitHub.
-    * Verify preview deployment at Cloudflare Pages edge.
+* **Stage 15 (Cloudflare Deployment Execution & Comprehensive Frontend Verification Complete):**
+  * **Objective:** Deploy all approved LUMIÈRE frontend improvements across Stages 14B.3, 14B.4, 14B.5, and 14B.6 to Cloudflare hosting using the established deployment pipeline while maintaining strict safety boundaries.
+  * **Working-Tree Integrity & Scope Enforcement:**
+    * Exactly 24 frontend files staged and committed; zero backend microservices modified, zero database schemas migrated, and zero Docker containers altered.
+    * `services/product-service/src/main/resources/db/migration/V5__seed_lumiere_referral_catalog.sql` strictly preserved unstaged and uncommitted.
+  * **Empirical Validation Results:**
+    * **Vitest Suite:** 21/21 test files passed, 283/283 tests passed (100% pass rate in 110.90s).
+    * **Production Build:** `$env:VITE_API_GATEWAY_URL="/api"; npm run build` completed cleanly in 3.15s with exit code 0.
+    * **Build Security Gate:** Verified relative `/api` proxy enforcement, fail-closed referral invariant, zero secret leaks, and `_redirects` SPA rewrite (`/* /index.html 200`).
+  * **Real-Browser Visual QA (`npm run preview` on `dist/`):**
+    * **Editorial Palette & Typography:** Verified warm ivory (`#fbf6ec`), ink (`#1a1420`), cobalt (`#3a3ce0`), and lime (`#d8f25a`) palette with Fraunces & Instrument Sans typography.
+    * **SilkPreloader & Cursor:** Interactive ambient tracking and smooth canvas load.
+    * **Concave 3D Carousel:** 3D perspective carousel (`Cut to Be Remembered`) with drag, swipe, perspective (1300px), and keyboard arrow navigation.
+    * **Expandable Lookbook Accordion:** 5-capsule accordion (`Worth your attention`) with smooth flex transitions.
+    * **8 Discovery Categories:** `All Collections`, `Men`, `Women`, `Kids`, `Gym & Activewear`, `Streetwear`, `Casualwear`, `Ethnicwear` verified and interactive.
+    * **Brand Directory & Product Dossiers:** 58+ verified Indian couturiers and international houses, authentic INR pricing, and atelier inquiry CTAs.
+    * **Session & Auth Routes:** Warm parchment card styling, RFC-7807 error toasts, and demo quick-fill helpers.
+    * **Direct Navigation & Refresh:** Tested direct URL navigation to `/products`, `/brands`, `/login`, and `/wishlist` with zero 404 errors.
+  * **Cloudflare Deployment Execution:**
+    * Staged strictly the 24 verified frontend files into commit `35b7156`.
+    * Pushed commit `35b7156` to `origin/preview/stage15b-editorial-discovery` via authorized git push.
+    * Prepared for GitHub Pull Request to `main` to trigger automated Cloudflare Pages edge build.
+* **Current Operational Gate:** All 10 platform microservices report `Up (healthy)`. Staging secrets secured outside the repository; database network bridged; downstream services enforcing rotated 512-bit JWT; RabbitMQ least-privilege isolated. Frontend release candidate built, 283/283 tests passing, production bundle verified, real-browser visual QA verified across all key routes, commit `35b7156` pushed to `origin/preview/stage15b-editorial-discovery`.
+
 
 
