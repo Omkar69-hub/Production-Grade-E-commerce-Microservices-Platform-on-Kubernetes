@@ -297,29 +297,533 @@ a {
   cursor: grabbing;
 }
 
-/* Reduced Motion Override */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* =========================================================================
+   STAGE 15C.1: PROTOTYPE-MATCHED DEPARTMENT ANIMATIONS (lumiere-wear.html)
+========================================================================= */
+
+/* Prototype Color Variables */
+:root {
+  --pink: #ff4fa3;
+}
+
+/* Department Tablist Styles (Prototype Matched) */
+.dept {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+  align-items: center;
+}
+
+.dept::-webkit-scrollbar {
+  display: none;
+}
+
+.dept button {
+  flex: 0 0 auto;
+  border: 1.5px solid var(--ink, #1a1420);
+  background: none;
+  border-radius: 99px;
+  padding: 6px 18px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--ink, #1a1420);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dept button:hover {
+  background: rgba(26, 20, 32, 0.06);
+}
+
+.dept button[aria-selected="true"] {
+  background: var(--ink, #1a1420) !important;
+  color: var(--bg, #fbf6ec) !important;
+}
+
+/* Prototype Scroll Reveal In-State Reset (except gym) */
+body[data-a]:not([data-a="gym"]) .rv.in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* -------------------------------------------------------------------------
+   1. WOMEN: Soft, Flowing Style
+------------------------------------------------------------------------- */
+body[data-a="women"] .sl {
+  transition: opacity 1.4s ease, visibility 1.4s;
+}
+
+body[data-a="women"] .sl .sa {
+  transform: scale(1.14);
+  transition: transform 6s ease-out;
+}
+
+body[data-a="women"] .sl.on .sa {
+  transform: none;
+}
+
+body[data-a="women"] .sl h1,
+body[data-a="women"] .sl h1 b,
+body[data-a="women"] .sl .hero-h1 {
+  transform: translateY(24px);
+  opacity: 0;
+  filter: blur(14px);
+  transition: transform 1.2s ease 0.3s, opacity 1.2s ease 0.3s, filter 1.2s ease 0.3s;
+}
+
+body[data-a="women"] .sl.on h1,
+body[data-a="women"] .sl.on h1 b,
+body[data-a="women"] .sl.on .hero-h1 {
+  transform: none;
+  opacity: 1;
+  filter: none;
+}
+
+body[data-a="women"] .sl.on .sa svg,
+body[data-a="women"] .sl.on .sa img,
+body[data-a="women"] .sway-animated {
+  animation: sway 6s ease-in-out infinite alternate;
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(-2deg) translateY(0);
   }
-  .marquee-track {
-    animation: none !important;
-  }
-  .lumiere-card:hover, .lumiere-product-card:hover {
-    transform: none !important;
+  to {
+    transform: rotate(4deg) translateY(-16px);
   }
 }
 
-.no-motion *, .no-motion ::before, .no-motion ::after {
-  animation: none !important;
-  transition: none !important;
+body[data-a="women"] .ly {
+  clip-path: circle(0% at 50% 60%);
+  opacity: 1;
+  transform: none;
+  transition: clip-path 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.no-motion .marquee-track {
-  animation: none !important;
+
+body[data-a="women"] .ly.on {
+  clip-path: circle(120% at 50% 60%);
+  z-index: 2;
 }
-.no-motion .lumiere-card:hover, .no-motion .lumiere-product-card:hover {
-  transform: none !important;
+
+body[data-a="women"] .rv {
+  filter: blur(8px);
+  transform: translateY(24px) scale(0.96);
+  transition: opacity 1.1s, transform 1.1s, filter 1.1s;
 }
+
+body[data-a="women"] .card:hover .art,
+body[data-a="women"] .lumiere-card:hover,
+body[data-a="women"] .lumiere-product-card:hover {
+  box-shadow: 0 30px 60px #ff4fa366 !important;
+}
+
+body[data-a="women"] .mq div,
+body[data-a="women"] .marquee-track {
+  animation-duration: 46s;
+}
+
+body[data-a="women"] .br:hover {
+  background: none;
+  color: inherit;
+  padding-left: 4px;
+}
+
+body[data-a="women"] .br::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--pink);
+  transition: width 0.7s;
+}
+
+body[data-a="women"] .br:hover::after {
+  width: 100%;
+}
+
+/* -------------------------------------------------------------------------
+   2. MEN: Hard Wipes and Slams
+------------------------------------------------------------------------- */
+body[data-a="men"] .sl {
+  clip-path: inset(0 100% 0 0);
+  opacity: 1;
+  visibility: visible;
+  transition: clip-path 0.7s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+body[data-a="men"] .sl.on {
+  clip-path: inset(0 0 0 0);
+  z-index: 2;
+}
+
+body[data-a="men"] .sl h1,
+body[data-a="men"] .sl h1 b,
+body[data-a="men"] .sl .hero-h1 {
+  transform: translateX(-120%) skewX(-12deg);
+  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1) 0.35s;
+}
+
+body[data-a="men"] .sl.on h1,
+body[data-a="men"] .sl.on h1 b,
+body[data-a="men"] .sl.on .hero-h1 {
+  transform: none;
+}
+
+body[data-a="men"] .sa svg,
+body[data-a="men"] .sa img {
+  transform: translateX(60%) rotate(8deg);
+  transition: transform 0.7s cubic-bezier(0.7, 0, 0.2, 1) 0.3s;
+}
+
+body[data-a="men"] .sl.on .sa svg,
+body[data-a="men"] .sl.on .sa img {
+  transform: none;
+}
+
+body[data-a="men"] .ly {
+  clip-path: inset(100% 0 0 0);
+  opacity: 1;
+  transform: none;
+  transition: clip-path 0.6s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+body[data-a="men"] .ly.on {
+  clip-path: inset(0);
+  z-index: 2;
+}
+
+body[data-a="men"] .rv {
+  transform: translateY(44px);
+  transition: opacity 0.35s, transform 0.45s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+body[data-a="men"] .art,
+body[data-a="men"] .lumiere-card,
+body[data-a="men"] .lumiere-product-card {
+  transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+}
+
+body[data-a="men"] .card:hover .art,
+body[data-a="men"] .lumiere-card:hover,
+body[data-a="men"] .lumiere-product-card:hover {
+  transform: translate(-5px, -5px) !important;
+  box-shadow: 9px 9px 0 var(--ink) !important;
+}
+
+body[data-a="men"] .mq div,
+body[data-a="men"] .marquee-track {
+  animation-duration: 18s;
+}
+
+body[data-a="men"] .br:hover {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+}
+
+/* -------------------------------------------------------------------------
+   3. KIDS: Bouncy and Playful
+------------------------------------------------------------------------- */
+body[data-a="kids"] .sl {
+  transition: opacity 0.5s, visibility 0.5s;
+}
+
+body[data-a="kids"] .sl h1,
+body[data-a="kids"] .sl h1 b,
+body[data-a="kids"] .sl .hero-h1 {
+  transform: translateY(120%) scale(0.5) rotate(-6deg);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+}
+
+body[data-a="kids"] .sl.on h1,
+body[data-a="kids"] .sl.on h1 b,
+body[data-a="kids"] .sl.on .hero-h1 {
+  transform: none;
+}
+
+body[data-a="kids"] .sl.on .sa svg,
+body[data-a="kids"] .sl.on .sa img,
+body[data-a="kids"] .bob-animated {
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-22px) rotate(5deg);
+  }
+}
+
+body[data-a="kids"] .ly {
+  transform: scale(0.6) rotate(-6deg);
+  transition: opacity 0.5s, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body[data-a="kids"] .ly.on {
+  transform: none;
+}
+
+body[data-a="kids"] .rv {
+  transform: scale(0.6) translateY(30px);
+  transition: opacity 0.4s, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body[data-a="kids"] .card:hover .art,
+body[data-a="kids"] .lumiere-card:hover,
+body[data-a="kids"] .lumiere-product-card:hover {
+  animation: wig 0.5s ease-in-out;
+}
+
+@keyframes wig {
+  25% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+
+body[data-a="kids"] .mq div,
+body[data-a="kids"] .marquee-track {
+  animation-duration: 14s;
+}
+
+body[data-a="kids"] .br:hover {
+  background: var(--pink) !important;
+  color: #120f18 !important;
+  padding-left: 30px !important;
+  transform: rotate(-1deg);
+}
+
+/* -------------------------------------------------------------------------
+   4. ETHNIC: Ornate Reveals
+------------------------------------------------------------------------- */
+body[data-a="ethnic"] .sl {
+  clip-path: circle(0% at 50% 50%);
+  opacity: 1;
+  visibility: visible;
+  transition: clip-path 1.4s cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+body[data-a="ethnic"] .sl.on {
+  clip-path: circle(150% at 50% 50%);
+  z-index: 2;
+}
+
+body[data-a="ethnic"] .sl h1,
+body[data-a="ethnic"] .sl h1 b,
+body[data-a="ethnic"] .sl .hero-h1 {
+  transform: none;
+  opacity: 0;
+  letter-spacing: 0.35em;
+  transition: opacity 1.2s ease 0.6s, letter-spacing 1.6s ease 0.6s;
+}
+
+body[data-a="ethnic"] .sl.on h1,
+body[data-a="ethnic"] .sl.on h1 b,
+body[data-a="ethnic"] .sl.on .hero-h1 {
+  opacity: 1;
+  letter-spacing: 0.01em;
+}
+
+body[data-a="ethnic"] .sl.on .sa svg,
+body[data-a="ethnic"] .sl.on .sa img,
+body[data-a="ethnic"] .breathe-animated {
+  animation: breathe 5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    transform: rotate(2deg) scale(1.06);
+  }
+}
+
+body[data-a="ethnic"] .ly {
+  clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  opacity: 1;
+  transform: none;
+  transition: clip-path 1.1s cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+body[data-a="ethnic"] .ly.on {
+  clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%);
+  z-index: 2;
+}
+
+body[data-a="ethnic"] .rv {
+  transform: perspective(800px) rotateX(-25deg) translateY(30px);
+  transform-origin: top;
+  transition: opacity 1s, transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+body[data-a="ethnic"] .card:hover .art,
+body[data-a="ethnic"] .lumiere-card:hover,
+body[data-a="ethnic"] .lumiere-product-card:hover {
+  box-shadow: 0 0 0 3px #e7c04a, 0 0 0 8px var(--bg), 0 0 0 10px #e7c04a !important;
+}
+
+body[data-a="ethnic"] .mq div,
+body[data-a="ethnic"] .marquee-track {
+  animation-duration: 40s;
+}
+
+body[data-a="ethnic"] .br:hover {
+  background: none;
+  color: inherit;
+}
+
+body[data-a="ethnic"] .br::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: #e7c04a;
+  transform: translateX(-50%);
+  transition: width 0.9s;
+}
+
+body[data-a="ethnic"] .br:hover::after {
+  width: 100%;
+}
+
+/* -------------------------------------------------------------------------
+   5. STREETWEAR: Glitch and Stickers
+------------------------------------------------------------------------- */
+body[data-a="streetwear"] .sl {
+  transition: none;
+}
+
+body[data-a="streetwear"] .sl.on {
+  animation: glitch 0.5s steps(2, end);
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(-6px, 3px) skewX(6deg);
+    filter: hue-rotate(60deg);
+  }
+  25% {
+    transform: translate(8px, -4px);
+    filter: hue-rotate(-60deg);
+  }
+  50% {
+    transform: translate(-3px, 0) skewX(-5deg);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+body[data-a="streetwear"] .sl h1,
+body[data-a="streetwear"] .sl h1 b,
+body[data-a="streetwear"] .sl .hero-h1 {
+  transform: none;
+  transition: none;
+  text-shadow: 3px 0 var(--pink), -3px 0 var(--cobalt);
+}
+
+body[data-a="streetwear"] .sl.on h1,
+body[data-a="streetwear"] .sl.on h1 b,
+body[data-a="streetwear"] .sl.on .hero-h1 {
+  animation: flick 1.2s steps(1, end) 0.1s both;
+}
+
+@keyframes flick {
+  0%, 20%, 40% {
+    opacity: 0;
+  }
+  10%, 30%, 50%, 100% {
+    opacity: 1;
+  }
+}
+
+body[data-a="streetwear"] .sl.on .sa svg,
+body[data-a="streetwear"] .sl.on .sa img,
+body[data-a="streetwear"] .stick-animated {
+  animation: stick 3s steps(6, end) infinite alternate;
+}
+
+@keyframes stick {
+  from {
+    transform: rotate(-8deg) scale(1);
+  }
+  to {
+    transform: rotate(6deg) scale(1.04);
+  }
+}
+
+body[data-a="streetwear"] .ly {
+  transform: translateX(14%) skewX(-8deg);
+  transition: opacity 0.35s steps(3, end), transform 0.5s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+body[data-a="streetwear"] .ly.on {
+  transform: none;
+}
+
+body[data-a="streetwear"] .rv {
+  transform: translateY(20px) rotate(-3deg);
+  transition: opacity 0.3s steps(3, end), transform 0.4s steps(4, end);
+}
+
+body[data-a="streetwear"] .card:hover .art,
+body[data-a="streetwear"] .lumiere-card:hover,
+body[data-a="streetwear"] .lumiere-product-card:hover {
+  transform: rotate(-3deg) scale(1.03) !important;
+  outline: 4px solid var(--ink) !important;
+}
+
+body[data-a="streetwear"] .mq div,
+body[data-a="streetwear"] .marquee-track {
+  animation-direction: reverse;
+  animation-duration: 12s;
+}
+
+body[data-a="streetwear"] .br:hover {
+  background: var(--ink) !important;
+  color: var(--lime) !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* -------------------------------------------------------------------------
+   6. GYM: Exact Prototype Selectors and Behavior
+------------------------------------------------------------------------- */
+/* Preserved athletic focus; does not apply distorting glitch or bouncy wipes */
+body[data-a="gym"] .card:hover .art,
+body[data-a="gym"] .lumiere-card:hover,
+body[data-a="gym"] .lumiere-product-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 16px 36px rgba(26, 20, 32, 0.12), 0 0 0 2px var(--lime) !important;
+}
+
+/* prefers-reduced-motion compatibility */
+@media (prefers-reduced-motion: reduce) {
+  body[data-a] .sl,
+  body[data-a] .sl.on,
+  body[data-a] .sl h1 b,
+  body[data-a] .ly,
+  body[data-a] .ly.on,
+  body[data-a] .rv,
+  body[data-a] .card:hover .art,
+  body[data-a] .lumiere-card:hover,
+  body[data-a] .lumiere-product-card:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+  }
+}
+

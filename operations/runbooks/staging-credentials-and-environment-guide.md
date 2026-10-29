@@ -221,3 +221,218 @@ ssh -L 8025:localhost:8025 <oci-user>@<oci-vm-ip>
 - [x] Database, Redis, and RabbitMQ isolated from public host ports.
 - [x] MailHog replaced with native ARM64 Mailpit (`axllent/mailpit`).
 - [x] Proposed catalog migration V5 preserved unexecuted outside Flyway classpath.
+
+---
+
+## 8. Staging Resource Sizing & Provider Capacity Evaluation
+
+### 8.1 Stack Resource Sizing Profile (11 Containers)
+
+The staging environment orchestrates 7 Spring Boot 3 / Java 21 microservices, 3 backing infrastructure engines, and 1 developer testing utility:
+
+| Component | Architecture | Working Set Memory | Peak Boot Memory | Storage Footprint | Recommended JVM / Resource Bounds |
+|---|---|---|---|---|---|
+| **api-gateway** | Java 21 / Spring Cloud Gateway | ~220 MB | ~350 MB | < 200 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **auth-service** | Java 21 / Spring Boot 3 | ~240 MB | ~380 MB | < 200 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **product-service** | Java 21 / Spring Boot 3 | ~260 MB | ~400 MB | < 200 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **cart-service** | Java 21 / Spring Boot 3 | ~200 MB | ~320 MB | < 150 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **order-service** | Java 21 / Spring Boot 3 | ~220 MB | ~350 MB | < 150 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **payment-service** | Java 21 / Spring Boot 3 | ~210 MB | ~340 MB | < 150 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **notification-service** | Java 21 / Spring Boot 3 | ~190 MB | ~300 MB | < 150 MB | `-XX:+UseZGC -Xms128m -Xmx256m` |
+| **PostgreSQL 16** | C / Alpine | ~250 MB | ~512 MB | ~5–20 GB | `shared_buffers = 128MB`, `work_mem = 4MB` |
+| **Redis 7** | C / Alpine | ~64 MB | ~128 MB | ~1–2 GB | `maxmemory 128mb`, `maxmemory-policy allkeys-lru` |
+| **RabbitMQ 3** | Erlang / Alpine | ~280 MB | ~450 MB | ~2–5 GB | `vm_memory_high_watermark.relative = 0.4` |
+| **Mailpit** | Go / Alpine | ~30 MB | ~50 MB | < 500 MB | `MP_MAX_MESSAGES=500` |
+| **Host OS & Docker Daemon** | Ubuntu 22.04 LTS / Alpine | ~600 MB | ~1000 MB | ~15 GB | Base kernel, containerd, cloudflared |
+| **TOTAL WORKING SET** | — | **~2.8 GB** | **~4.6 GB** | **~30–50 GB** | **Target Host: 8 GB RAM Minimum** |
+
+> [!WARNING]
+> **Host Memory Constraint:** Attempting to run this 11-container staging stack on a host with ≤ 4 GB RAM (e.g. Hetzner CAX11 or CX23) will lead to container OOM kills during parallel Spring Boot service startup or Maven compilation. A host with at least **8 GB RAM** is required for reliable staging operation.
+
+### 8.2 Primary Provider: Oracle Cloud Infrastructure (OCI) Always Free
+
+* **Compute Shape:** `VM.Standard.A1.Flex` (Ampere Altra ARM64 processor).
+* **Entitlement Limits:** Up to **4 OCPUs** and **24 GB RAM**, with up to **200 GB block storage** (combined boot and block volumes) across the tenancy at **₹0 / $0 monthly cost**.
+* **Real-World Capacity Constraints & Gotchas:**
+  1. *Out of Host Capacity Errors:* Standard Always Free tenancies frequently encounter `500-InternalError: Out of host capacity` when attempting to provision A1 shapes in congested regions (e.g., Mumbai, Hyderabad, Frankfurt, Ashburn).
+  2. *Provisioning Workaround:* Upgrading to a **Pay As You Go (PAYG)** account tier removes capacity queuing restrictions while preserving the ₹0 billing tier (as long as usage stays within the 4 OCPU / 24 GB / 200 GB storage ceiling). A billing alert set at ₹50 / $1 is mandatory.
+  3. *Idle Resource Reclamation:* OCI automatically monitors Always Free compute instances. If the 95th percentile CPU utilization falls below 20%, network falls below 20%, and memory utilization falls below 20% over a rolling 7-day period, Oracle may stop or terminate the instance. Staging background microservice telemetry and synthetic heartbeat checks must maintain nominal activity.
+  4. *Public IP Policy:* One ephemeral or reserved public IPv4 address is included free of charge per instance.
+
+### 8.3 Fallback Provider: Hetzner Cloud (Paid Fallback)
+
+If OCI ARM64 capacity cannot be secured, Hetzner Cloud serves as the designated commercial fallback:
+
+| Plan | Architecture | vCPU | RAM | NVMe SSD | Outbound Traffic | Monthly Cost (excl. VAT) | Suitability Assessment |
+|---|---|---|---|---|---|---|---|
+| **CAX21** | ARM64 (Ampere Neoverse-N1) | 4 vCPU | 8 GB | 80 GB | 20 TB | **€10.49 – €10.99 / mo** (~₹950–₹1,000/mo) | **Recommended Staging Fallback.** Fully satisfies 4.6 GB peak boot RAM requirement; native ARM64 multi-arch parity. |
+| **CAX11** | ARM64 (Ampere Neoverse-N1) | 2 vCPU | 4 GB | 40 GB | 20 TB | **€6.49 / mo** (~₹580/mo) | **Too Constrained.** 4 GB RAM risks intermittent OOM kills during JVM startup. |
+| **CX33** | x86-64 (AMD EPYC / Intel) | 4 vCPU | 8 GB | 80 GB | 20 TB | **€9.49 – €10.49 / mo** (~₹850–₹950/mo) | **Valid x86 Alternative.** Compatible with multi-arch Docker images; excellent CPU burst capacity. |
+| **CX23** | x86-64 (AMD EPYC / Intel) | 2 vCPU | 4 GB | 40 GB | 20 TB | **€5.49 – €5.99 / mo** (~₹500/mo) | **Too Constrained.** 4 GB RAM insufficient for 11 containers. |
+
+* **Commercial Terms:** Hetzner Cloud is strictly a **paid** service billed hourly up to the monthly cap. Zero free tier exists. Requires credit card verification and upfront billing approval.
+
+---
+
+## 9. Automated Database & Infrastructure Backups
+
+To prevent data loss and support rapid state rollback, the staging backend implements automated backups:
+
+### 9.1 PostgreSQL Backup Automation
+A non-root cron script `/opt/lumiere/scripts/backup-postgres.sh` executes daily at 02:00 UTC:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+BACKUP_DIR="/opt/lumiere/backups/postgres"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILE="${BACKUP_DIR}/staging_postgres_${TIMESTAMP}.sql.gz"
+
+mkdir -p "${BACKUP_DIR}"
+chmod 700 "${BACKUP_DIR}"
+
+# Stream compressed SQL dump directly from container
+docker exec staging-postgres pg_dumpall -U "${DB_USER:-lumiere_staging_user}" | gzip -9 > "${BACKUP_FILE}"
+chmod 600 "${BACKUP_FILE}"
+
+# Retain rolling 7 daily backups; prune older snapshots
+find "${BACKUP_DIR}" -name "staging_postgres_*.sql.gz" -type f -mtime +7 -delete
+
+echo "[$(date -u)] PostgreSQL backup completed: ${BACKUP_FILE}"
+```
+
+### 9.2 Redis & RabbitMQ State Snapshots
+* **Redis:** Staging Redis volume `redis-staging-data` persists RDB snapshots (`/data/dump.rdb`). An automated trigger executes `redis-cli bgsave` every 6 hours via host cron.
+* **RabbitMQ:** Schema topology and exchange/queue declarations are exported weekly:
+  ```bash
+  docker exec staging-rabbitmq rabbitmqctl export_definitions /var/lib/rabbitmq/definitions.json
+  ```
+
+### 9.3 Backup Integrity Verification
+* Every Sunday at 04:00 UTC, an automated health test restores the latest `staging_postgres_*.sql.gz` into an isolated scratch PostgreSQL container to verify zero dump corruption.
+
+---
+
+## 10. Secret Handling & Zero-Leak Credential Lifecycle
+
+### 10.1 Host Credential Isolation
+* **Zero Secrets in Git:** Staging secrets are exclusively stored in `/opt/lumiere/.env.staging` on the VM host. The file is owned by `deploy:docker` with strict file permissions:
+  ```bash
+  sudo chown deploy:docker /opt/lumiere/.env.staging
+  sudo chmod 600 /opt/lumiere/.env.staging
+  ```
+* **Docker Secret for Redis Password:** Staging Redis uses a mounted file secret at `/run/secrets/redis_password` with `0400` permissions, preventing credential inspection via `docker inspect staging-redis`.
+* **Zero Secrets in Frontend Edge:** Cloudflare Pages receives only public client variables (`VITE_API_GATEWAY_URL` and `VITE_ENABLE_INTERNAL_CHECKOUT=false`). Staging database passwords, JWT secrets, and RabbitMQ credentials are never exposed to Cloudflare Pages or client JavaScript bundles.
+
+---
+
+## 11. Cloudflare Zero Trust Secure Tunnel Configuration
+
+To maintain strict host isolation, the staging VM exposes **zero public ingress ports** (ports 8080, 5432, 6379, 5672 remain bound to `127.0.0.1` or internal Docker bridge networks). Public connectivity is brokered exclusively via an outbound Cloudflare Tunnel (`cloudflared`):
+
+```mermaid
+graph LR
+    User([Browser Client]) -->|HTTPS| CFEdge[Cloudflare Edge / Pages]
+    CFEdge -->|Encrypted Tunnel / QUIC| CFEgress[Cloudflare Tunnel Daemon]
+    subgraph Staging Host
+        CFEgress -->|HTTP 127.0.0.1:8080| APIGW[API Gateway]
+        APIGW -->|Docker Bridge| Microservices[Spring Boot Microservices]
+        Microservices -->|Docker Bridge| DataTiers[(Postgres / Redis / RabbitMQ)]
+    end
+```
+
+### 11.1 Tunnel Deployment Steps
+1. **Install `cloudflared` on Staging Host:**
+   ```bash
+   curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+   echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared jammy main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+   sudo apt-get update && sudo apt-get install -y cloudflared
+   ```
+2. **Authenticate & Create Staging Tunnel:**
+   ```bash
+   cloudflared tunnel login
+   cloudflared tunnel create lumiere-staging-tunnel
+   ```
+3. **Tunnel Ingress Configuration (`/etc/cloudflared/config.yml`):**
+   ```yaml
+   tunnel: <TUNNEL_UUID>
+   credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+
+   ingress:
+     # Route API requests to loopback API Gateway
+     - hostname: api-staging.yourdomain.com
+       service: http://127.0.0.1:8080
+       originRequest:
+         connectTimeout: 10s
+         noTLSVerify: false
+     # Catch-all rule returning 404
+     - service: http_status:404
+   ```
+4. **Run as Systemd Service:**
+   ```bash
+   sudo cloudflared service install
+   sudo systemctl enable --now cloudflared
+   ```
+5. **Host Firewall Hardening:**
+   ```bash
+   sudo ufw default deny incoming
+   sudo ufw default allow outgoing
+   sudo ufw allow ssh comment "Strict SSH access"
+   sudo ufw enable
+   ```
+
+---
+
+## 12. Observability, Health Checks & Log Rotation
+
+### 12.1 Health Check Matrix
+* **Microservices:** Spring Boot Actuator endpoints enabled:
+  * Liveness: `http://localhost:8080/actuator/health/liveness`
+  * Readiness: `http://localhost:8080/actuator/health/readiness`
+* **Docker Native Healthchecks:** Every microservice in `docker-compose.staging.yml` includes an active healthcheck with `interval: 15s`, `timeout: 5s`, `retries: 5`, and `start_period: 60s`.
+* **Edge Synthetic Monitoring:** Cloudflare Health Monitor or Uptime Kuma pinging `https://api-staging.yourdomain.com/actuator/health` at 60-second intervals with email/webhook alerting.
+
+### 12.2 Docker Log Rotation Policy
+To prevent unconstrained container logs from filling the host's 40–80 GB boot disk, `/etc/docker/daemon.json` is configured with strict rotation:
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "50m",
+    "max-file": "3"
+  }
+}
+```
+
+---
+
+## 13. Staging Rollback & Disaster Recovery Procedures
+
+### 13.1 Microservice Rollback (< 60 Seconds)
+If an updated backend microservice image introduces defects in staging:
+1. Re-tag or point `docker-compose.staging.yml` to the previous stable release tag:
+   ```bash
+   export IMAGE_TAG="staging-previous"
+   docker compose --env-file /opt/lumiere/.env.staging -f docker/docker-compose.staging.yml up -d --no-deps <failed-service>
+   ```
+2. Verify container recovers to `healthy` state within 30 seconds.
+
+### 13.2 Database Migration Rollback (V5 Seed Rollback)
+If the proposed `V5__seed_lumiere_referral_catalog.sql` migration is executed and introduces integrity conflicts:
+1. Terminate product-service container to stop active pool connections:
+   ```bash
+   docker compose -f docker/docker-compose.staging.yml stop product-service
+   ```
+2. Restore pre-migration PostgreSQL snapshot:
+   ```bash
+   gunzip -c /opt/lumiere/backups/postgres/staging_postgres_pre_v5.sql.gz | docker exec -i staging-postgres psql -U lumiere_staging_user -d ecommerce_db
+   ```
+3. Restart product-service container and verify Flyway schema history table.
+
+### 13.3 Cloudflare Pages Edge Rollback (< 5 Seconds)
+If a frontend release candidate deployed to Cloudflare Pages requires immediate revocation:
+1. Navigate to **Cloudflare Dashboard** → **Workers & Pages** → **`production-grade-e-commerce-microservices-platform-on-kube`** → **Deployments**.
+2. Identify the last known-good production deployment (e.g. Commit `950f292` / Oct 12, 2026).
+3. Click `...` → **Rollback to this deployment**. Rollback takes effect globally across all edge PoPs in under 5 seconds without requiring a build or Git commit.
+

@@ -10,7 +10,8 @@ interface CapsulePanel {
   title: string;
   description: string;
   categorySlug: string;
-  imageBg: string;
+  imageUrl: string;
+  accentColor: string;
 }
 
 const CAPSULES: CapsulePanel[] = [
@@ -23,18 +24,20 @@ const CAPSULES: CapsulePanel[] = [
     title: 'Summer Handloom Silks',
     description: 'Lightweight Chanderi & Katan weaves engineered for high-summer sartorial elegance.',
     categorySlug: 'clothing',
-    imageBg: 'linear-gradient(135deg, #e8572b 0%, #1a1420 100%)',
+    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+    accentColor: '#d8f25a',
   },
   {
     id: 'c2',
     number: '02',
     tag: 'SARTORIAL SUITING',
-    badge: 'SUPER 150s MERINO',
+    badge: 'SUPER 250s MERINO',
     highlightText: 'BESPOKE',
     title: 'Heritage Bandhgalas',
     description: 'Precision cut Indian evening wear and structured double-breasted formal tailoring.',
     categorySlug: 'clothing',
-    imageBg: 'linear-gradient(135deg, #3a3ce0 0%, #1a1420 100%)',
+    imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=1200',
+    accentColor: '#8ea2ff',
   },
   {
     id: 'c3',
@@ -45,7 +48,8 @@ const CAPSULES: CapsulePanel[] = [
     title: 'Royal Zardozi Velvet',
     description: 'Hand-embroidered architectural silhouettes direct from certified couture flagships.',
     categorySlug: 'clothing',
-    imageBg: 'linear-gradient(135deg, #b31267 0%, #2b1238 100%)',
+    imageUrl: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=1200',
+    accentColor: '#f9e08a',
   },
   {
     id: 'c4',
@@ -56,7 +60,8 @@ const CAPSULES: CapsulePanel[] = [
     title: 'Riviera & Cruise Silhouettes',
     description: 'Relaxed linen-silk separates crafted for trans-seasonal luxury living.',
     categorySlug: 'clothing',
-    imageBg: 'linear-gradient(135deg, #2b7a78 0%, #1a1420 100%)',
+    imageUrl: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&q=80&w=1200',
+    accentColor: '#7fe3c5',
   },
   {
     id: 'c5',
@@ -67,7 +72,8 @@ const CAPSULES: CapsulePanel[] = [
     title: 'Gala & Evening Capes',
     description: 'Sequins and micro-beading that catch every light, paired with tailored columns.',
     categorySlug: 'clothing',
-    imageBg: 'linear-gradient(135deg, #2b1238 0%, #1a1420 100%)',
+    imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=1200',
+    accentColor: '#d8f25a',
   },
 ];
 
@@ -88,8 +94,8 @@ export const ExpandableLookbookAccordion: React.FC = () => {
 
     const handleScroll = () => {
       if (mediaQuery.matches) return;
-      // If user tapped/clicked or hovered manually within last 2 seconds, do not override
-      if (Date.now() - lastManualSelection.current < 2000) return;
+      // If user tapped/clicked or hovered manually within last 2.5 seconds, do not override
+      if (Date.now() - lastManualSelection.current < 2500) return;
       if (window.innerWidth < 768) return; // Natural layout on mobile
 
       animationFrameId = requestAnimationFrame(() => {
@@ -125,10 +131,12 @@ export const ExpandableLookbookAccordion: React.FC = () => {
       aria-label="Lumière Curated Atelier Capsules"
       style={{
         backgroundColor: 'var(--bg, #fbf6ec)',
-        paddingTop: '60px',
-        paddingBottom: '80px',
+        paddingTop: '70px',
+        paddingBottom: '90px',
         position: 'relative',
         overflow: 'hidden',
+        borderTop: '1px solid var(--line, #e5dccb)',
+        borderBottom: '1px solid var(--line, #e5dccb)',
       }}
     >
       {/* Background Watermark Outlined Text */}
@@ -156,7 +164,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
 
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 10 }}>
         {/* Section Header */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '32px', gap: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '36px', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3a3ce0' }} />
@@ -175,12 +183,12 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                 lineHeight: 1.1,
               }}
             >
-              Worth your <span style={{ fontStyle: 'italic', color: '#1a1420' }}>attention</span>
+              Worth your <span style={{ fontStyle: 'italic', color: '#3a3ce0' }}>attention</span>
             </h2>
           </div>
 
           <Link
-            to="/collection"
+            to="/products"
             style={{
               fontFamily: '"Instrument Sans", sans-serif',
               fontSize: '13px',
@@ -201,12 +209,12 @@ export const ExpandableLookbookAccordion: React.FC = () => {
           </Link>
         </div>
 
-        {/* Multi-Panel Accordion Track */}
+        {/* Multi-Panel Accordion Track with High-Fashion Photography */}
         <div
           style={{
             display: 'flex',
-            gap: '14px',
-            height: '480px',
+            gap: '16px',
+            height: '520px',
             width: '100%',
           }}
         >
@@ -219,6 +227,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                 role="button"
                 tabIndex={0}
                 aria-expanded={isActive}
+                className={`ly ${isActive ? 'on' : ''}`}
                 onClick={() => handleSelectCapsule(capsule.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -228,18 +237,47 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                 }}
                 onMouseEnter={() => handleSelectCapsule(capsule.id)}
                 style={{
-                  flex: isActive ? '3.8' : '1',
+                  flex: isActive ? '4' : '1',
                   borderRadius: '24px',
                   overflow: 'hidden',
-                  background: capsule.imageBg,
                   position: 'relative',
                   cursor: 'pointer',
-                  transition: 'flex 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
-                  border: isActive ? '1.5px solid rgba(216, 242, 90, 0.6)' : '1px solid rgba(229, 220, 203, 0.4)',
-                  boxShadow: isActive ? '0 20px 48px -12px rgba(26, 20, 32, 0.35)' : 'none',
+                  transition: 'flex 0.55s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
+                  border: isActive ? `1.5px solid ${capsule.accentColor}` : '1px solid rgba(229, 220, 203, 0.45)',
+                  boxShadow: isActive ? '0 24px 54px -12px rgba(26, 20, 32, 0.45)' : 'none',
                   minWidth: '70px',
                 }}
               >
+                {/* Full-Bleed Fashion Photography Background */}
+                <img
+                  src={capsule.imageUrl}
+                  alt={capsule.title}
+                  loading="lazy"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: isActive ? 'brightness(0.85) contrast(1.05)' : 'brightness(0.4) saturate(0.8)',
+                    transform: isActive ? 'scale(1.03)' : 'scale(1)',
+                    transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease',
+                  }}
+                />
+
+                {/* Dark Vignette Overlay for Crisp Contrast */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: isActive
+                      ? 'linear-gradient(to top, rgba(26, 20, 32, 0.95) 0%, rgba(26, 20, 32, 0.45) 50%, rgba(26, 20, 32, 0.7) 100%)'
+                      : 'rgba(26, 20, 32, 0.65)',
+                    backdropFilter: isActive ? 'blur(1px)' : 'none',
+                    transition: 'background 0.4s ease',
+                  }}
+                />
+
                 {/* Active Expanded View */}
                 {isActive ? (
                   <div
@@ -251,8 +289,6 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                       justifyContent: 'space-between',
                       position: 'relative',
                       zIndex: 2,
-                      backgroundColor: 'rgba(26, 20, 32, 0.35)',
-                      backdropFilter: 'blur(4px)',
                     }}
                   >
                     {/* Top Row */}
@@ -264,10 +300,11 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                           fontWeight: 700,
                           letterSpacing: '0.14em',
                           textTransform: 'uppercase',
-                          color: '#ffffff',
-                          backgroundColor: '#e8572b',
+                          color: '#1a1420',
+                          backgroundColor: capsule.accentColor,
                           padding: '6px 14px',
                           borderRadius: '999px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                         }}
                       >
                         {capsule.badge}
@@ -276,9 +313,9 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                       <span
                         style={{
                           fontFamily: '"Fraunces", Georgia, serif',
-                          fontSize: '32px',
+                          fontSize: '36px',
                           fontWeight: 700,
-                          color: 'rgba(251, 246, 236, 0.5)',
+                          color: 'rgba(251, 246, 236, 0.7)',
                         }}
                       >
                         {capsule.number}
@@ -290,12 +327,13 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                       <div
                         style={{
                           fontFamily: '"Fraunces", Georgia, serif',
-                          fontSize: 'clamp(44px, 6vw, 76px)',
+                          fontSize: 'clamp(44px, 5.5vw, 76px)',
                           fontWeight: 900,
-                          color: '#d8f25a',
+                          color: capsule.accentColor,
                           lineHeight: 1,
                           letterSpacing: '-0.03em',
                           marginBottom: '8px',
+                          textShadow: '0 4px 18px rgba(0,0,0,0.5)',
                         }}
                       >
                         {capsule.highlightText}
@@ -315,10 +353,10 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                         style={{
                           fontFamily: '"Instrument Sans", sans-serif',
                           fontSize: '14px',
-                          color: 'rgba(251, 246, 236, 0.85)',
-                          maxWidth: '440px',
+                          color: 'rgba(251, 246, 236, 0.9)',
+                          maxWidth: '460px',
                           margin: 0,
-                          lineHeight: 1.5,
+                          lineHeight: 1.6,
                         }}
                       >
                         {capsule.description}
@@ -328,7 +366,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                     {/* Bottom CTA */}
                     <div>
                       <Link
-                        to="/collection"
+                        to="/products"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -343,6 +381,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                           padding: '12px 24px',
                           borderRadius: '999px',
                           textDecoration: 'none',
+                          boxShadow: '0 6px 20px rgba(216, 242, 90, 0.35)',
                           transition: 'transform 0.2s ease',
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
@@ -362,16 +401,16 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      backgroundColor: 'rgba(26, 20, 32, 0.65)',
-                      transition: 'background-color 0.2s ease',
+                      position: 'relative',
+                      zIndex: 2,
                     }}
                   >
                     <span
                       style={{
                         fontFamily: '"Fraunces", Georgia, serif',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         fontWeight: 600,
-                        color: 'rgba(251, 246, 236, 0.6)',
+                        color: 'rgba(251, 246, 236, 0.75)',
                       }}
                     >
                       {capsule.number}
@@ -386,7 +425,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                         fontWeight: 700,
                         letterSpacing: '0.16em',
                         textTransform: 'uppercase',
-                        color: 'rgba(251, 246, 236, 0.7)',
+                        color: 'rgba(251, 246, 236, 0.85)',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -395,10 +434,11 @@ export const ExpandableLookbookAccordion: React.FC = () => {
 
                     <span
                       style={{
-                        width: '6px',
-                        height: '6px',
+                        width: '7px',
+                        height: '7px',
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(216, 242, 90, 0.7)',
+                        backgroundColor: capsule.accentColor,
+                        boxShadow: `0 0 10px ${capsule.accentColor}`,
                       }}
                     />
                   </div>
@@ -417,7 +457,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            marginTop: '28px',
+            marginTop: '32px',
             flexWrap: 'wrap',
           }}
         >
@@ -438,7 +478,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                   color: isActive ? '#d8f25a' : '#1a1420',
                   border: isActive ? '1px solid #1a1420' : '1px solid rgba(229, 220, 203, 0.8)',
                   borderRadius: '999px',
-                  padding: '6px 16px',
+                  padding: '7px 18px',
                   cursor: 'pointer',
                   fontFamily: '"Instrument Sans", sans-serif',
                   fontSize: '11px',

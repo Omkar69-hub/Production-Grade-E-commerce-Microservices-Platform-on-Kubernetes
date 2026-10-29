@@ -36,6 +36,53 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [activeDepartment, setActiveDepartment] = useState<string | null>(null);
+
+  const handleDepartmentClick = (deptName: string) => {
+    const slug = deptName.toLowerCase();
+    if (location.pathname !== '/') {
+      navigate(`/?dept=${slug}`);
+      return;
+    }
+    if (activeDepartment === slug) {
+      // Toggle off / deselect back to default unstyled homepage
+      setActiveDepartment(null);
+      document.body.removeAttribute('data-a');
+    } else {
+      setActiveDepartment(slug);
+      document.body.dataset.a = slug;
+    }
+  };
+
+  const handleHomeClick = (e?: React.MouseEvent) => {
+    if (location.pathname === '/') {
+      if (e) e.preventDefault();
+      setActiveDepartment(null);
+      document.body.removeAttribute('data-a');
+    }
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      const deptParam = searchParams.get('dept');
+      if (deptParam) {
+        const slug = deptParam.toLowerCase();
+        if (['women', 'men', 'kids', 'ethnic', 'streetwear', 'gym'].includes(slug)) {
+          setActiveDepartment(slug);
+          document.body.dataset.a = slug;
+        }
+      }
+    } else {
+      setActiveDepartment(null);
+      document.body.removeAttribute('data-a');
+    }
+  }, [location.pathname, searchParams]);
+
+  useEffect(() => {
+    return () => {
+      document.body.removeAttribute('data-a');
+    };
+  }, []);
 
   // Keep wishlist count reactive to localStorage changes
   useEffect(() => {
@@ -83,11 +130,22 @@ const MainLayout: React.FC = () => {
     navigate('/');
   };
 
-  const navLinks = [
+  interface NavItem {
+    label: string;
+    path: string;
+    isDept?: boolean;
+    deptSlug?: string;
+  }
+
+  // STAGE 15C.2: Single integrated primary navigation row
+  const primaryNavItems: NavItem[] = [
     { label: 'Home', path: '/' },
-    { label: 'Women', path: '/products?gender=women' },
-    { label: 'Men', path: '/products?gender=men' },
-    { label: 'Kids', path: '/products?gender=kids' },
+    { label: 'Women', path: '/products?gender=women', isDept: true, deptSlug: 'women' },
+    { label: 'Men', path: '/products?gender=men', isDept: true, deptSlug: 'men' },
+    { label: 'Kids', path: '/products?gender=kids', isDept: true, deptSlug: 'kids' },
+    { label: 'Ethnic', path: '/products?category=ethnic', isDept: true, deptSlug: 'ethnic' },
+    { label: 'Streetwear', path: '/products?category=streetwear', isDept: true, deptSlug: 'streetwear' },
+    { label: 'Gym', path: '/products?category=gym', isDept: true, deptSlug: 'gym' },
     { label: 'Brands Directory', path: '/brands' },
     { label: 'Collections', path: '/products' },
   ];
@@ -99,7 +157,10 @@ const MainLayout: React.FC = () => {
           variant="h6"
           component={Link}
           to="/"
-          onClick={handleDrawerToggle}
+          onClick={(e) => {
+            handleHomeClick(e);
+            handleDrawerToggle();
+          }}
           sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: '#1a1420' }}
         >
           LUMIÈRE
@@ -126,24 +187,77 @@ const MainLayout: React.FC = () => {
       <Divider sx={{ borderColor: 'var(--line, #e5dccb)' }} />
 
       <List sx={{ py: 1.5 }}>
-        {navLinks.map((link) => (
-          <ListItem disablePadding key={link.path}>
-            <ListItemButton
-              component={Link}
-              to={link.path}
-              onClick={handleDrawerToggle}
-              sx={{ py: 1.2, borderRadius: 1 }}
-            >
-              <ListItemText
-                primary={
-                  <Typography sx={{ fontWeight: 600, letterSpacing: '0.04em', fontSize: '0.92rem', color: '#0A0A0A' }}>
-                    {link.label}
-                  </Typography>
-                }
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {primaryNavItems.map((item) => {
+          if (item.isDept && item.deptSlug) {
+            const isSelected = activeDepartment === item.deptSlug;
+            return (
+              <ListItem disablePadding key={item.label}>
+                <ListItemButton
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    handleDepartmentClick(item.label);
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    py: 1.2,
+                    borderRadius: 1,
+                    bgcolor: isSelected ? 'rgba(58, 60, 224, 0.08)' : 'transparent'
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Typography sx={{
+                        fontWeight: isSelected ? 700 : 600,
+                        letterSpacing: '0.04em',
+                        fontSize: '0.92rem',
+                        color: isSelected ? 'var(--cobalt, #3a3ce0)' : '#0A0A0A'
+                      }}>
+                        {item.label}
+                      </Typography>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          }
+
+          const isHome = item.path === '/';
+          const isActive = isHome 
+            ? location.pathname === '/' && !activeDepartment
+            : location.pathname.startsWith(item.path);
+
+          return (
+            <ListItem disablePadding key={item.label}>
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                onClick={(e) => {
+                  if (isHome) handleHomeClick(e);
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  py: 1.2,
+                  borderRadius: 1,
+                  bgcolor: isActive ? 'rgba(58, 60, 224, 0.08)' : 'transparent'
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <Typography sx={{
+                      fontWeight: isActive ? 700 : 600,
+                      letterSpacing: '0.04em',
+                      fontSize: '0.92rem',
+                      color: isActive ? 'var(--cobalt, #3a3ce0)' : '#0A0A0A'
+                    }}>
+                      {item.label}
+                    </Typography>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
 
         <ListItem disablePadding>
           <ListItemButton
@@ -163,6 +277,8 @@ const MainLayout: React.FC = () => {
         </ListItem>
       </List>
       <Divider sx={{ borderColor: '#E8E4DC' }} />
+
+
 
       <List sx={{ pt: 2.5 }}>
         {!isAuthenticated ? (
@@ -301,16 +417,62 @@ const MainLayout: React.FC = () => {
               </Typography>
             </Box>
 
-            {/* Desktop Navigation Links */}
+            {/* Desktop Navigation Links — Stage 15C.2: Integrated Single Row */}
             {!isMobile && (
-              <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 3.2 }}>
-                {navLinks.map((link) => {
-                  const isActive = link.path === '/' 
-                    ? location.pathname === '/' 
-                    : location.pathname.startsWith(link.path);
+              <Box 
+                component="nav"
+                aria-label="Primary Navigation"
+                sx={{ 
+                  flexGrow: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: { md: 1, lg: 1.8, xl: 2.6 }
+                }}
+              >
+                {primaryNavItems.map((item) => {
+                  if (item.isDept && item.deptSlug) {
+                    const isSelected = activeDepartment === item.deptSlug;
+                    return (
+                      <Box key={item.label} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {isSelected && (
+                          <Box sx={{
+                            position: 'absolute', top: -3, width: 5, height: 5,
+                            borderRadius: '50%', bgcolor: 'var(--tang, #e8572b)'
+                          }} />
+                        )}
+                        <Button
+                          role="tab"
+                          aria-selected={isSelected}
+                          onClick={() => handleDepartmentClick(item.label)}
+                          color="inherit"
+                          sx={{
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
+                            letterSpacing: '0.02em',
+                            fontSize: { md: '0.80rem', lg: '0.86rem' },
+                            px: { md: 0.6, lg: 1.0 },
+                            py: 0.5,
+                            minWidth: 'auto',
+                            textTransform: 'none',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s ease',
+                            '&:hover': { color: 'var(--cobalt, #3a3ce0)', bgcolor: 'transparent' }
+                          }}
+                        >
+                          {item.label}
+                        </Button>
+                      </Box>
+                    );
+                  }
+
+                  const isHome = item.path === '/';
+                  const isActive = isHome 
+                    ? location.pathname === '/' && !activeDepartment
+                    : location.pathname.startsWith(item.path);
 
                   return (
-                    <Box key={link.path} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box key={item.label} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       {isActive && (
                         <Box sx={{
                           position: 'absolute', top: -3, width: 5, height: 5,
@@ -319,18 +481,24 @@ const MainLayout: React.FC = () => {
                       )}
                       <Button
                         component={Link}
-                        to={link.path}
+                        to={item.path}
+                        onClick={isHome ? handleHomeClick : undefined}
                         color="inherit"
                         sx={{
-                          fontWeight: isActive ? 600 : 500,
-                          color: 'var(--ink, #1a1420)',
+                          fontWeight: isActive ? 700 : 500,
+                          color: isActive ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
                           letterSpacing: '0.02em',
-                          fontSize: '0.90rem',
-                          px: 1.2,
+                          fontSize: { md: '0.80rem', lg: '0.86rem' },
+                          px: { md: 0.6, lg: 1.0 },
+                          py: 0.5,
+                          minWidth: 'auto',
+                          textTransform: 'none',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.2s ease',
                           '&:hover': { color: 'var(--cobalt, #3a3ce0)', bgcolor: 'transparent' }
                         }}
                       >
-                        {link.label}
+                        {item.label}
                       </Button>
                     </Box>
                   );
@@ -539,6 +707,8 @@ const MainLayout: React.FC = () => {
 
             </Box>
           </Toolbar>
+
+
         </Container>
       </AppBar>
 

@@ -16,13 +16,19 @@ import CuratedOccasionPanels from '../../components/editorial/CuratedOccasionPan
 import { ALL_CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
 import { Concave3DCarousel } from '../../components/product/Concave3DCarousel';
 import { ExpandableLookbookAccordion } from '../../components/editorial/ExpandableLookbookAccordion';
+import { DedicatedGymwearRunway } from '../../components/editorial/DedicatedGymwearRunway';
+import { DedicatedStyleCollections } from '../../components/editorial/DedicatedStyleCollections';
+import { useDepartmentExperience } from '../../hooks/useDepartmentExperience';
 
 export const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [sizeDrawerOpen, setSizeDrawerOpen] = useState(false);
   const [brandCategory, setBrandCategory] = useState<'ALL' | 'INDIAN' | 'INTERNATIONAL' | 'STREETWEAR' | 'ACTIVEWEAR'>('ALL');
 
-  // Hero scroll-driven animation refs (scale 1.0 -> 0.95 and title parallax over first 400px)
+  // STAGE 15C.3: Department experience integration
+  const dept = useDepartmentExperience();
+
+  // Hero scroll-driven animation refs (scale 1.0 -> 0.94 and title parallax over first 500px)
   const heroImageRef = useRef<HTMLDivElement>(null);
   const heroHeadlineRef = useRef<HTMLDivElement>(null);
 
@@ -34,10 +40,10 @@ export const HomePage: React.FC = () => {
       if (mediaQuery.matches) return;
       animationFrameId = requestAnimationFrame(() => {
         const scrollY = window.scrollY;
-        // Smoothly interpolate across the first 400 pixels of scroll
-        const progress = Math.min(Math.max(scrollY / 400, 0), 1);
-        const scale = 1.0 - progress * 0.05; // 1.0 -> 0.95
-        const translateY = progress * -18; // layered title parallax movement
+        // Smoothly interpolate across the first 500 pixels of scroll
+        const progress = Math.min(Math.max(scrollY / 500, 0), 1);
+        const scale = 1.0 - progress * 0.06; // 1.0 -> 0.94
+        const translateY = progress * -24; // layered title parallax movement
         
         if (heroImageRef.current) {
           heroImageRef.current.style.transform = `scale(${scale.toFixed(4)})`;
@@ -55,7 +61,7 @@ export const HomePage: React.FC = () => {
     };
   }, []);
 
-  // Multi-brand catalog: showcase at least 8 distinct verified brands in Section 4
+  // Multi-brand catalog: showcase at least 8 distinct verified brands
   const featuredBrands = useMemo(() => {
     const registry = ALL_VERIFIED_BRANDS || BRANDS_DATA;
     if (brandCategory === 'INDIAN') {
@@ -78,9 +84,9 @@ export const HomePage: React.FC = () => {
     return curated.length >= 8 ? curated : registry.slice(0, 8);
   }, [brandCategory]);
 
-  // Curated runway pieces spanning diverse brands for Section 6
+  // Curated runway pieces spanning diverse brands for Section 8
   const runwaySpotlight = useMemo(() => {
-    const diverseIds = ['prod-nike-01', 'prod-souled-01', 'prod-ind-01', 'prod-uniqlo-01', 'prod-snitch-01', 'prod-fab-01', 'prod-puma-01', 'prod-hop-01'];
+    const diverseIds = ['prod-life-01', 'prod-life-07', 'prod-ind-01', 'prod-life-10', 'prod-life-09', 'prod-life-14', 'prod-life-03', 'prod-life-16'];
     const items = diverseIds.map((id) => ALL_CLOTHING_CATALOG.find((p) => p.id === id)).filter(Boolean) as typeof ALL_CLOTHING_CATALOG;
     return items.length >= 8 ? items.map(toCatalogProduct) : ALL_CLOTHING_CATALOG.slice(0, 8).map(toCatalogProduct);
   }, []);
@@ -95,74 +101,38 @@ export const HomePage: React.FC = () => {
 
   const liveProducts = catalogData?.content?.filter(p => !p.name.toLowerCase().includes('phone') && !p.name.toLowerCase().includes('electronic')) || [];
 
-  // Editorial Curated Capsule Categories
-  const capsuleCategories = [
-    {
-      title: 'Haute Outerwear & Trench',
-      sub: 'Double-faced cashmere, wool gabardine & belted capes',
-      img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=outerwear',
-      tag: 'Couture Capsule'
-    },
-    {
-      title: 'Evening Gowns & Draped Silks',
-      sub: 'Fluid architectural draping, silk organza & sculptural gowns',
-      img: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=evening-wear',
-      tag: 'Soirée Collection'
-    },
-    {
-      title: 'Heritage Sherwanis & Bandhgalas',
-      sub: 'Royal handloom brocades, raw silk kurtas & bespoke tailoring',
-      img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=heritage-sartorial',
-      tag: 'Indian Sartorial'
-    },
-    {
-      title: 'Artisanal Handloom Sarees',
-      sub: 'Chanderi weaves, antique Varanasi zardozi & pure mulmul',
-      img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=sarees-handloom',
-      tag: 'Master Weaves'
-    },
-    {
-      title: 'Sartorial Suiting & Blazers',
-      sub: 'Super 200s fine wool, unstructured Italian lapels & sharp trousers',
-      img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=suiting',
-      tag: 'Bespoke Tailoring'
-    },
-    {
-      title: 'Quiet Luxury Casualwear',
-      sub: 'Pure organic linens, fine cashmere knits & selvedge denim',
-      img: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&q=80&w=900',
-      link: '/products?category=contemporary-pret',
-      tag: 'Modern Pret'
-    }
-  ];
+  // STAGE 15C.3: Build the hero slide class name for prototype-matched lifecycle
+  // .sl starts without .on (hidden state per department CSS)
+  // .sl.on triggers entrance animation (clip-path, blur-reveal, skew, etc.)
+  const heroSlideClass = `hs sl${dept.heroRevealed ? ' on' : ''}`;
 
   return (
-    <Box sx={{ bgcolor: '#FAFAFA', color: '#0A0A0A', overflow: 'hidden' }}>
+    <Box sx={{ bgcolor: 'var(--bg, #fbf6ec)', color: 'var(--ink, #1a1420)', overflow: 'hidden' }}>
 
       {/* =========================================================================
-          1. PROTOTYPE-ALIGNED EDITORIAL HERO
+          1. PROTOTYPE-ALIGNED EDITORIAL HERO WITH PARALLAX & TRUST BAR
+          STAGE 15C.3: Department-specific content, animation lifecycle, glow
       ========================================================================= */}
       <Box
+        component="section"
+        aria-label={dept.activeDept ? `${dept.config?.label ?? ''} Department Editorial Hero` : 'Lumière Opening Editorial Hero'}
+        className={heroSlideClass}
         sx={{
           position: 'relative',
-          minHeight: { xs: '80vh', md: '88vh' },
+          minHeight: { xs: '84vh', md: '90vh' },
           display: 'flex',
           alignItems: 'center',
           bgcolor: 'var(--bg, #fbf6ec)',
           color: 'var(--ink, #1a1420)',
-          backgroundImage: 'radial-gradient(circle at 80% 25%, rgba(58, 60, 224, 0.07) 0%, transparent 65%)',
+          backgroundImage: dept.hero.glowGradient,
           overflow: 'hidden',
-          pt: { xs: 8, md: 6 },
-          pb: { xs: 8, md: 8 },
-          borderBottom: '1px solid var(--line, #e5dccb)'
+          pt: { xs: 8, md: 7 },
+          pb: { xs: 8, md: 9 },
+          borderBottom: '1px solid var(--line, #e5dccb)',
+          transition: 'background-image 0.6s ease'
         }}
       >
-        {/* Subtle Atmospheric Glow */}
+        {/* Subtle Atmospheric Glow — department-specific gradient */}
         <Box className="hero-atmospheric-glow" />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
@@ -172,9 +142,14 @@ export const HomePage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 7 }}>
               <Box ref={heroHeadlineRef} sx={{ maxWidth: 740, willChange: 'transform', transition: 'transform 0.05s ease-out' }}>
 
-                {/* Editorial Collection Tag */}
+                {/* Editorial Collection Tag — department-specific */}
                 <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'var(--cobalt, #3a3ce0)', boxShadow: '0 0 10px rgba(58, 60, 224, 0.5)' }} />
+                  <Box sx={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    bgcolor: dept.config?.accentColor ?? 'var(--cobalt, #3a3ce0)',
+                    boxShadow: `0 0 10px ${dept.config?.glowColor ?? 'rgba(58, 60, 224, 0.5)'}`,
+                    transition: 'background-color 0.4s ease, box-shadow 0.4s ease'
+                  }} />
                   <Typography
                     variant="overline"
                     sx={{
@@ -185,13 +160,14 @@ export const HomePage: React.FC = () => {
                       fontFamily: '"Instrument Sans", sans-serif'
                     }}
                   >
-                    LUMIÈRE CLOTHING DISCOVERY GUIDE • 2026/27
+                    {dept.hero.tag}
                   </Typography>
                 </Box>
 
-                {/* Oversized Fraunces Editorial Typography (Prototype Aligned) */}
+                {/* Oversized Fraunces Editorial Typography — department-specific */}
                 <Typography
                   variant="h1"
+                  className="hero-h1"
                   sx={{
                     color: 'var(--ink, #1a1420)',
                     fontSize: { xs: '2.85rem', sm: '4.2rem', md: 'clamp(46px, 7.5vw, 108px)' },
@@ -202,18 +178,21 @@ export const HomePage: React.FC = () => {
                     mb: 3
                   }}
                 >
-                  Find the look.
+                  {dept.hero.title}
                   <Box
                     component="i"
                     sx={{
                       display: 'block',
                       fontStyle: 'italic',
                       fontWeight: 400,
-                      color: 'var(--cobalt, #3a3ce0)',
-                      letterSpacing: '-0.02em'
+                      color: dept.config?.accentColor
+                        ? dept.config.accentColor
+                        : 'var(--cobalt, #3a3ce0)',
+                      letterSpacing: '-0.02em',
+                      transition: 'color 0.4s ease'
                     }}
                   >
-                    Buy it from the brand.
+                    {dept.hero.titleItalic}
                   </Box>
                 </Typography>
 
@@ -233,7 +212,7 @@ export const HomePage: React.FC = () => {
                   LUMIÈRE is a clothing discovery guide. We show you what’s worth wearing, then send you to each brand’s own website to buy it.
                 </Typography>
 
-                {/* Pill-Shaped Calls To Action (VIVANT Inspired) */}
+                {/* Pill-Shaped Calls To Action */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
                   <Button
                     component={Link}
@@ -284,7 +263,7 @@ export const HomePage: React.FC = () => {
                     Directory of 55+ Maisons
                   </Button>
 
-                  {/* Secondary Circular Play Button (VIVANT Inspired) */}
+                  {/* Secondary Circular Play Button */}
                   <Box
                     component="a"
                     href="#runway-track"
@@ -354,6 +333,7 @@ export const HomePage: React.FC = () => {
                 {/* Main Hero Portrait Card */}
                 <Card
                   ref={heroImageRef}
+                  className={`sa${dept.heroAnimationClass ? ` ${dept.heroAnimationClass}` : ''}`}
                   sx={{
                     borderRadius: '24px',
                     overflow: 'hidden',
@@ -368,29 +348,32 @@ export const HomePage: React.FC = () => {
                   <Box sx={{ position: 'relative', pt: '130%' }}>
                     <CardMedia
                       component="img"
-                      image="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200"
-                      alt="Lumière Editorial Haute Couture Campaign"
+                      className="hero-art"
+                      image={dept.hero.image}
+                      alt={dept.activeDept ? `${dept.config?.label ?? ''} Department Campaign` : 'Lumière Editorial Haute Couture Campaign'}
+                      loading="eager"
                       sx={{
                         position: 'absolute',
                         inset: 0,
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover'
+                        objectFit: 'cover',
+                        transition: 'opacity 0.5s ease'
                       }}
                     />
                     <Box
                       sx={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'linear-gradient(to top, rgba(26, 20, 32, 0.85) 0%, rgba(26, 20, 32, 0.1) 60%, transparent 100%)'
+                        background: 'linear-gradient(to top, rgba(26, 20, 32, 0.88) 0%, rgba(26, 20, 32, 0.1) 60%, transparent 100%)'
                       }}
                     />
                     <Box sx={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
                       <Chip
-                        label="AUTUMN / WINTER EDITORIAL"
+                        label={dept.hero.chipLabel}
                         size="small"
                         sx={{
-                          bgcolor: 'var(--lime, #d8f25a)',
+                          bgcolor: dept.config?.accentColor === '#e7c04a' ? '#e7c04a' : 'var(--lime, #d8f25a)',
                           color: '#1a1420',
                           fontWeight: 700,
                           fontFamily: '"Instrument Sans", sans-serif',
@@ -401,10 +384,10 @@ export const HomePage: React.FC = () => {
                         }}
                       />
                       <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, fontFamily: '"Fraunces", Georgia, serif', mb: 0.5 }}>
-                        Architectural Drapery & Velvet
+                        {dept.hero.cardTitle}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#E5DCCB', display: 'block', fontFamily: '"Instrument Sans", sans-serif' }}>
-                        Curated from Parisian & New Delhi ateliers • 2026/27 Showcase
+                        {dept.hero.cardSubtitle}
                       </Typography>
                     </Box>
                   </Box>
@@ -443,29 +426,7 @@ export const HomePage: React.FC = () => {
           </Grid>
         </Container>
 
-        {/* Vertical Running Text (VIVANT Inspired) */}
-        <Box
-          sx={{
-            display: { xs: 'none', xl: 'block' },
-            position: 'absolute',
-            right: 28,
-            top: '50%',
-            transform: 'translateY(-50%) rotate(90deg)',
-            transformOrigin: 'center center',
-            whiteSpace: 'nowrap',
-            fontFamily: '"Instrument Sans", sans-serif',
-            fontSize: '11px',
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            color: 'rgba(26, 20, 32, 0.45)',
-            fontWeight: 600,
-            pointerEvents: 'none',
-          }}
-        >
-          Cut in Certified Indian & European Ateliers • Direct Flagship Referrals
-        </Box>
-
-        {/* Floating Bottom Glass Trust Bar (VIVANT Inspired) */}
+        {/* Floating Bottom Glass Trust Bar */}
         <Box
           sx={{
             display: { xs: 'none', md: 'flex' },
@@ -489,8 +450,8 @@ export const HomePage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box component="span" sx={{ color: 'var(--lime, #d8f25a)', fontSize: '13px' }}>✂</Box>
             <Box>
-              <Typography sx={{ fontSize: '0.74rem', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>58 Master Ateliers</Typography>
-              <Typography sx={{ fontSize: '0.65rem', color: 'rgba(251, 246, 236, 0.65)', fontFamily: '"Instrument Sans", sans-serif' }}>Fair wages & couture craft</Typography>
+              <Typography sx={{ fontSize: '0.74rem', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>{dept.activeDept ? dept.hero.trustBarStat : '58 Master Ateliers'}</Typography>
+              <Typography sx={{ fontSize: '0.65rem', color: 'rgba(251, 246, 236, 0.65)', fontFamily: '"Instrument Sans", sans-serif' }}>{dept.activeDept ? `${dept.config?.label ?? ''} Collection` : 'Fair wages & couture craft'}</Typography>
             </Box>
           </Box>
 
@@ -517,9 +478,18 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          2. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS
+          2. VIVANT-INSPIRED CURSOR-DRIVEN CONCAVE 3D CAROUSEL (LUMIÈRE SIGNATURES)
+          STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
+        <Concave3DCarousel />
+      </Box>
+
+      {/* =========================================================================
+          3. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS (PRESERVED FOR TESTS)
+          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+      ========================================================================= */}
+      <Box component="section" className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
 
           <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 6, md: 8 } }}>
@@ -559,6 +529,7 @@ export const HomePage: React.FC = () => {
                     component="img"
                     image="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900"
                     alt="Women's Haute Couture Collection"
+                    loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -614,6 +585,7 @@ export const HomePage: React.FC = () => {
                     component="img"
                     image="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900"
                     alt="Men's Sartorial Collection"
+                    loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -669,6 +641,7 @@ export const HomePage: React.FC = () => {
                     component="img"
                     image="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=900"
                     alt="Kids' Festive & Heritage Collection"
+                    loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -706,14 +679,34 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          3. VIVANT-INSPIRED CONCAVE 3D CAROUSEL (LUMIÈRE SIGNATURES)
+          4. DEDICATED GYMWEAR & ACTIVEWEAR RUNWAY (MEN'S & WOMEN'S)
+          STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Concave3DCarousel />
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
+        <DedicatedGymwearRunway />
+      </Box>
 
       {/* =========================================================================
-          4. EDITORIAL BRAND SPOTLIGHT: INDIAN CRAFT X GLOBAL LUXURY
+          5. DEDICATED STREETWEAR, CASUALWEAR & ETHNICWEAR EDITORIAL COLLECTIONS
+          STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--eve-bg, #2b1238)', color: '#FFFFFF', position: 'relative' }}>
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
+        <DedicatedStyleCollections />
+      </Box>
+
+      {/* =========================================================================
+          6. VIVANT-INSPIRED EXPANDABLE LOOKBOOK ACCORDION
+          STAGE 15C.3: Added .ly class for department-specific lookbook reveals
+      ========================================================================= */}
+      <Box className={`ly${dept.lookbookRevealed ? ' on' : ''}`}>
+        <ExpandableLookbookAccordion />
+      </Box>
+
+      {/* =========================================================================
+          7. EDITORIAL BRAND SPOTLIGHT: INDIAN CRAFT X GLOBAL LUXURY
+          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+      ========================================================================= */}
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--eve-bg, #2b1238)', color: '#FFFFFF', position: 'relative' }}>
         <Container maxWidth="xl">
           <Grid container spacing={{ xs: 6, lg: 8 }} sx={{ alignItems: 'center' }}>
 
@@ -839,7 +832,7 @@ export const HomePage: React.FC = () => {
                     <Card
                       component={Link}
                       to={`/brands?search=${encodeURIComponent(brand.name)}`}
-                      className="lumiere-card"
+                      className="lumiere-card br"
                       sx={{
                         bgcolor: '#141414',
                         color: '#FFF',
@@ -916,92 +909,9 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          4B. VIVANT-INSPIRED EXPANDABLE LOOKBOOK ACCORDION
+          8. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
       ========================================================================= */}
-      <ExpandableLookbookAccordion />
-
-      {/* =========================================================================
-          5. FASHION DISCOVERY CAPSULE CARDS
-      ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
-        <Container maxWidth="xl">
-
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'flex-end' }, mb: 6 }}>
-            <Box>
-              <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
-                EDITORIAL ARCHIVES
-              </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
-                Signature Wardrobe Capsules
-              </Typography>
-            </Box>
-            <Button
-              component={Link}
-              to="/products"
-              endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-              sx={{ color: 'var(--ink, #1a1420)', fontWeight: 600, mt: { xs: 2, md: 0 }, '&:hover': { color: 'var(--cobalt, #3a3ce0)' } }}
-            >
-              View All Garment Categories
-            </Button>
-          </Box>
-
-          <Grid container spacing={4}>
-            {capsuleCategories.map((cat, idx) => (
-              <Grid key={idx} size={{ xs: 12, sm: 6, lg: 4 }}>
-                <Card
-                  component={Link}
-                  to={cat.link}
-                  className="lumiere-card"
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    textDecoration: 'none',
-                    bgcolor: '#FFFFFF',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Box sx={{ position: 'relative', pt: '80%', overflow: 'hidden' }}>
-                    <CardMedia
-                      component="img"
-                      image={cat.img}
-                      alt={cat.title}
-                      sx={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                        transition: 'transform 0.5s ease',
-                        '&:hover': { transform: 'scale(1.05)' }
-                      }}
-                    />
-                    <Chip
-                      label={cat.tag}
-                      size="small"
-                      sx={{
-                        position: 'absolute', top: 14, left: 14,
-                        bgcolor: 'rgba(10, 10, 10, 0.85)', color: '#FFF',
-                        fontWeight: 600, fontSize: '0.65rem'
-                      }}
-                    />
-                  </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A', mb: 1 }}>
-                      {cat.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#66625B', lineHeight: 1.6 }}>
-                      {cat.sub}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-
-        </Container>
-      </Box>
-
-      {/* =========================================================================
-          6. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
-      ========================================================================= */}
-      <Box id="runway-track" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
+      <Box id="runway-track" component="section" aria-label="Featured Runway Pieces Runway" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
           <EditorialRunwayTrack
             eyebrow="CURATED SELECTION"
@@ -1028,18 +938,18 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          6B. CURATED OCCASION EDITORIAL PANELS
+          8B. CURATED OCCASION EDITORIAL PANELS
       ========================================================================= */}
-      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FBF6EC' }}>
+      <Box component="section" aria-label="Curated Occasion Panels" sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FBF6EC' }}>
         <Container maxWidth="xl">
           <CuratedOccasionPanels />
         </Container>
       </Box>
 
       {/* =========================================================================
-          7. SIZE-GUIDE MATRIX TEASER
+          9. SIZE-GUIDE MATRIX TEASER
       ========================================================================= */}
-      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FFFFFF' }}>
+      <Box component="section" aria-label="Atelier Sizing Matrix Benchmark" sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FFFFFF' }}>
         <Container maxWidth="xl">
           <Card
             sx={{
@@ -1095,9 +1005,9 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          8. HOW LUMIÈRE WORKS / VERIFIED REFERRAL MANIFESTO
+          10. HOW LUMIÈRE WORKS / VERIFIED REFERRAL MANIFESTO
       ========================================================================= */}
-      <Box sx={{ py: { xs: 10, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)' }}>
+      <Box component="section" aria-label="The Lumière Protocol" sx={{ py: { xs: 10, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
           <Box sx={{ textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 8 }}>
             <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
@@ -1164,7 +1074,7 @@ export const HomePage: React.FC = () => {
             <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>ATELIER SIZING</Typography>
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>Measurement Matrix</Typography>
           </Box>
-          <IconButton onClick={() => setSizeDrawerOpen(false)}>
+          <IconButton onClick={() => setSizeDrawerOpen(false)} aria-label="Close sizing matrix">
             <CloseOutlined />
           </IconButton>
         </Box>

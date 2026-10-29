@@ -1,47 +1,194 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ALL_CLOTHING_CATALOG } from '../../data/clothingCatalogData';
+import { ALL_CLOTHING_CATALOG, type VerifiedClothingProduct } from '../../data/clothingCatalogData';
 
 const SIGNATURE_GRADIENTS = [
-  'linear-gradient(180deg, rgba(58, 60, 224, 0.85) 0%, rgba(26, 20, 32, 0.95) 100%)',
-  'linear-gradient(180deg, rgba(232, 87, 43, 0.85) 0%, rgba(26, 20, 32, 0.95) 100%)',
-  'linear-gradient(180deg, rgba(179, 18, 103, 0.85) 0%, rgba(26, 20, 32, 0.95) 100%)',
-  'linear-gradient(180deg, rgba(43, 18, 56, 0.9) 0%, rgba(26, 20, 32, 0.98) 100%)',
-  'linear-gradient(180deg, rgba(26, 120, 95, 0.85) 0%, rgba(26, 20, 32, 0.95) 100%)',
-  'linear-gradient(180deg, rgba(200, 150, 40, 0.85) 0%, rgba(26, 20, 32, 0.95) 100%)',
+  'linear-gradient(180deg, rgba(58, 60, 224, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(232, 87, 43, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(179, 18, 103, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(43, 18, 56, 0.92) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(26, 120, 95, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(200, 150, 40, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(30, 40, 160, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
+  'linear-gradient(180deg, rgba(180, 50, 80, 0.90) 0%, rgba(26, 20, 32, 0.98) 100%)',
 ];
 
 export const Concave3DCarousel: React.FC = () => {
   // Diverse multi-category showcase spanning couture, activewear, streetwear, casuals, and kidswear
   const spotlightIds = [
-    'prod-ind-01',    // Sabyasachi (Bridal Haute Couture)
-    'prod-nike-01',   // Nike (Gymwear & Activewear)
-    'prod-souled-01', // The Souled Store (Graphic Streetwear)
-    'prod-uniqlo-01', // Uniqlo (Minimalist Everyday Casuals)
-    'prod-snitch-01', // Snitch (Men's Streetwear & Cargos)
-    'prod-fab-01',    // Fabindia (Hand-Block Ethnicwear)
-    'prod-puma-01',   // Puma (Performance Activewear)
-    'prod-hop-01',    // Hopscotch (Playful Kidswear)
+    'prod-ind-01',   // Sabyasachi (Bridal Haute Couture)
+    'prod-life-01',  // Nike (Dri-FIT ADV Performance Compression Top)
+    'prod-life-07',  // The Souled Store (Graphic Streetwear Oversized Tee)
+    'prod-life-10',  // Uniqlo (AIRism Minimalist Everyday Casuals)
+    'prod-life-09',  // Snitch (Cuban Collar Streetwear & Cargos)
+    'prod-life-14',  // Fabindia (Artisanal Hand-Block Ethnicwear)
+    'prod-life-03',  // Puma (dryCELL Seamless Activewear Tights)
+    'prod-life-16',  // Hopscotch (Playful Tailored Kidswear)
   ];
+
   const resolved = spotlightIds
     .map((id) => ALL_CLOTHING_CATALOG.find((p) => p.id === id))
-    .filter((p): p is typeof ALL_CLOTHING_CATALOG[number] => Boolean(p));
+    .filter((p): p is VerifiedClothingProduct => Boolean(p));
   const items = resolved.length >= 8 ? resolved : ALL_CLOTHING_CATALOG.slice(0, 8);
+
   const [activeIndex, setActiveIndex] = useState(3); // Start centered in 8-item arc
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartX = useRef(0);
-  const currentTranslateX = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handlePrev = useCallback(() => {
-    setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
+  // Animation physics refs
+  const currentOffsetRef = useRef<number>(3);
+  const targetOffsetRef = useRef<number>(3);
+  const dragStartX = useRef<number>(0);
+  const dragStartOffset = useRef<number>(3);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isPointerOverRef = useRef<boolean>(false);
+  const rafIdRef = useRef<number | null>(null);
+
+  // Directly update card transforms with high-efficiency 3D perspective
+  const applyTransforms = useCallback((offset: number) => {
+    const total = items.length;
+    cardRefs.current.forEach((cardEl, idx) => {
+      if (!cardEl) return;
+      const dist = idx - offset;
+      const absDist = Math.abs(dist);
+
+      // Arc curvature mathematics
+      const translateX = dist * 255;
+      const translateZ = -absDist * 72; // recessed concave curve
+      const rotateY = -dist * 13.5; // facing inward toward viewer
+      const scale = Math.max(0.86, 1.06 - absDist * 0.12);
+      const opacity = absDist > 3.2 ? 0 : Math.max(0, 1 - absDist * 0.22);
+      const isCenter = absDist < 0.5;
+
+      cardEl.style.transform = `translateX(${translateX.toFixed(2)}px) translateZ(${translateZ.toFixed(2)}px) rotateY(${rotateY.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      cardEl.style.opacity = opacity.toFixed(3);
+      cardEl.style.zIndex = `${Math.round(30 - absDist * 5)}`;
+      cardEl.style.pointerEvents = absDist > 2.2 ? 'none' : 'auto';
+
+      if (isCenter) {
+        cardEl.style.borderColor = 'rgba(216, 242, 90, 0.85)';
+        cardEl.style.boxShadow = '0 28px 65px -12px rgba(26, 20, 32, 0.4), 0 0 24px rgba(58, 60, 224, 0.28)';
+      } else {
+        cardEl.style.borderColor = 'rgba(229, 220, 203, 0.35)';
+        cardEl.style.boxShadow = '0 12px 30px -8px rgba(26, 20, 32, 0.2)';
+      }
+    });
+
+    const nearestIndex = Math.max(0, Math.min(total - 1, Math.round(offset)));
+    setActiveIndex((prev) => (prev !== nearestIndex ? nearestIndex : prev));
   }, [items.length]);
+
+  // Main animation frame loop with smooth lerp interpolation
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    const animate = () => {
+      if (mediaQuery.matches) {
+        // Reduced motion: immediate snap
+        currentOffsetRef.current = targetOffsetRef.current;
+        applyTransforms(currentOffsetRef.current);
+        return;
+      }
+
+      const diff = targetOffsetRef.current - currentOffsetRef.current;
+      if (Math.abs(diff) > 0.001) {
+        currentOffsetRef.current += diff * 0.12; // Eased interpolation factor
+        applyTransforms(currentOffsetRef.current);
+      }
+      rafIdRef.current = requestAnimationFrame(animate);
+    };
+
+    rafIdRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [applyTransforms]);
+
+  // Initial layout pass
+  useEffect(() => {
+    applyTransforms(currentOffsetRef.current);
+  }, [applyTransforms]);
+
+  // Pointer move handler: Cursor moving left moves track left; moving right moves track right
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!containerRef.current || isDragging) return;
+    isPointerOverRef.current = true;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const clientX = e.clientX;
+    const normX = (clientX - rect.left) / rect.width; // 0 (left) to 1 (right)
+    const centeredX = (normX - 0.5) * 2; // -1 to +1
+
+    // Deadzone in the center (10% radius) settles without jitter
+    if (Math.abs(centeredX) < 0.10) {
+      return;
+    }
+
+    const sign = centeredX > 0 ? 1 : -1;
+    const rawMagnitude = (Math.abs(centeredX) - 0.10) / 0.90; // 0 to 1
+    // Gentle non-linear acceleration near edges
+    const accelerated = Math.pow(rawMagnitude, 1.35);
+
+    // Bounded target offset: 0 to items.length - 1
+    const totalSpan = items.length - 1;
+    const centerPoint = totalSpan / 2;
+    const target = centerPoint + sign * accelerated * centerPoint;
+    targetOffsetRef.current = Math.max(0, Math.min(totalSpan, target));
+  };
+
+  // Pointer leave handler: Smoothly settles to nearest card and retains predictable state
+  const handlePointerLeave = () => {
+    isPointerOverRef.current = false;
+    // Settle to nearest integer position without snapping violently
+    targetOffsetRef.current = Math.max(0, Math.min(items.length - 1, Math.round(currentOffsetRef.current)));
+  };
+
+  // Drag and Swipe handlers for direct tactile control
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    dragStartX.current = e.clientX;
+    dragStartOffset.current = currentOffsetRef.current;
+    if (e.currentTarget.setPointerCapture) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  };
+
+  const handleDragPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) {
+      handlePointerMove(e);
+      return;
+    }
+    const deltaX = e.clientX - dragStartX.current;
+    // Convert pixel delta into continuous carousel offset (approx 260px per card)
+    const offsetDelta = -deltaX / 260;
+    const boundedTarget = Math.max(-0.2, Math.min(items.length - 0.8, dragStartOffset.current + offsetDelta));
+    targetOffsetRef.current = boundedTarget;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (e.currentTarget.releasePointerCapture) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore safely
+      }
+    }
+    // Settle to nearest card index
+    targetOffsetRef.current = Math.max(0, Math.min(items.length - 1, Math.round(currentOffsetRef.current)));
+  };
+
+  // Discrete navigation: Prev / Next buttons
+  const handlePrev = useCallback(() => {
+    targetOffsetRef.current = Math.max(0, Math.round(targetOffsetRef.current) - 1);
+  }, []);
 
   const handleNext = useCallback(() => {
-    setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+    targetOffsetRef.current = Math.min(items.length - 1, Math.round(targetOffsetRef.current) + 1);
   }, [items.length]);
 
-  // Keyboard navigation
+  // Accessible keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
@@ -50,48 +197,6 @@ export const Concave3DCarousel: React.FC = () => {
       e.preventDefault();
       handleNext();
     }
-  };
-
-  // Drag / Swipe handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragStartX.current = e.clientX;
-    currentTranslateX.current = 0;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const diff = e.clientX - dragStartX.current;
-    currentTranslateX.current = diff;
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    if (currentTranslateX.current < -40) {
-      handleNext();
-    } else if (currentTranslateX.current > 40) {
-      handlePrev();
-    }
-    currentTranslateX.current = 0;
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    dragStartX.current = e.touches[0].clientX;
-    currentTranslateX.current = 0;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    currentTranslateX.current = e.touches[0].clientX - dragStartX.current;
-  };
-
-  const handleTouchEnd = () => {
-    if (currentTranslateX.current < -40) {
-      handleNext();
-    } else if (currentTranslateX.current > 40) {
-      handlePrev();
-    }
-    currentTranslateX.current = 0;
   };
 
   return (
@@ -161,7 +266,7 @@ export const Concave3DCarousel: React.FC = () => {
           {/* Navigation Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Link
-              to="/collection"
+              to="/products"
               style={{
                 fontFamily: '"Instrument Sans", sans-serif',
                 fontSize: '13px',
@@ -186,27 +291,30 @@ export const Concave3DCarousel: React.FC = () => {
                 type="button"
                 onClick={handlePrev}
                 aria-label="Previous signature garment"
+                disabled={activeIndex <= 0}
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
                   border: '1px solid var(--line, #e5dccb)',
                   backgroundColor: '#ffffff',
-                  color: '#1a1420',
+                  color: activeIndex <= 0 ? 'rgba(26, 20, 32, 0.3)' : '#1a1420',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
+                  cursor: activeIndex <= 0 ? 'default' : 'pointer',
                   fontSize: '16px',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1a1420';
-                  e.currentTarget.style.color = '#ffffff';
+                  if (activeIndex > 0) {
+                    e.currentTarget.style.backgroundColor = '#1a1420';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#ffffff';
-                  e.currentTarget.style.color = '#1a1420';
+                  e.currentTarget.style.color = activeIndex <= 0 ? 'rgba(26, 20, 32, 0.3)' : '#1a1420';
                 }}
               >
                 ←
@@ -215,27 +323,30 @@ export const Concave3DCarousel: React.FC = () => {
                 type="button"
                 onClick={handleNext}
                 aria-label="Next signature garment"
+                disabled={activeIndex >= items.length - 1}
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
                   border: '1px solid var(--line, #e5dccb)',
                   backgroundColor: '#ffffff',
-                  color: '#1a1420',
+                  color: activeIndex >= items.length - 1 ? 'rgba(26, 20, 32, 0.3)' : '#1a1420',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
+                  cursor: activeIndex >= items.length - 1 ? 'default' : 'pointer',
                   fontSize: '16px',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1a1420';
-                  e.currentTarget.style.color = '#ffffff';
+                  if (activeIndex < items.length - 1) {
+                    e.currentTarget.style.backgroundColor = '#1a1420';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#ffffff';
-                  e.currentTarget.style.color = '#1a1420';
+                  e.currentTarget.style.color = activeIndex >= items.length - 1 ? 'rgba(26, 20, 32, 0.3)' : '#1a1420';
                 }}
               >
                 →
@@ -244,16 +355,15 @@ export const Concave3DCarousel: React.FC = () => {
           </div>
         </div>
 
-        {/* Concave 3D Perspective Stage */}
+        {/* Cursor-Driven Concave 3D Perspective Stage */}
         <div
           ref={containerRef}
           data-cursor="drag"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handleDragPointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
           style={{
             position: 'relative',
             height: '520px',
@@ -268,18 +378,13 @@ export const Concave3DCarousel: React.FC = () => {
           }}
         >
           {items.map((item, idx) => {
-            const offset = idx - activeIndex;
-            // Arc curvature calculation
-            const translateX = offset * 250; // horizontal separation
-            const translateZ = -Math.abs(offset) * 70; // recessed curve inwards (concave)
-            const rotateY = -offset * 14; // face inwards toward center
-            const opacity = Math.abs(offset) > 3 ? 0 : 1 - Math.abs(offset) * 0.18;
-            const isCenter = offset === 0;
             const gradient = SIGNATURE_GRADIENTS[idx % SIGNATURE_GRADIENTS.length];
+            const isCenter = idx === activeIndex;
 
             return (
               <div
                 key={item.id}
+                ref={(el) => { cardRefs.current[idx] = el; }}
                 style={{
                   position: 'absolute',
                   width: '280px',
@@ -287,15 +392,12 @@ export const Concave3DCarousel: React.FC = () => {
                   borderRadius: '26px',
                   overflow: 'hidden',
                   background: gradient,
-                  border: isCenter ? '2px solid rgba(216, 242, 90, 0.7)' : '1px solid rgba(229, 220, 203, 0.35)',
+                  border: isCenter ? '2px solid rgba(216, 242, 90, 0.85)' : '1px solid rgba(229, 220, 203, 0.35)',
                   boxShadow: isCenter
-                    ? '0 24px 60px -12px rgba(26, 20, 32, 0.35), 0 0 20px rgba(58, 60, 224, 0.2)'
-                    : '0 12px 30px -8px rgba(26, 20, 32, 0.18)',
-                  transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${isCenter ? 1.04 : 0.94})`,
-                  transition: isDragging ? 'none' : 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease',
-                  opacity,
-                  pointerEvents: Math.abs(offset) > 2 ? 'none' : 'auto',
-                  zIndex: 20 - Math.abs(offset),
+                    ? '0 28px 65px -12px rgba(26, 20, 32, 0.4), 0 0 24px rgba(58, 60, 224, 0.28)'
+                    : '0 12px 30px -8px rgba(26, 20, 32, 0.2)',
+                  willChange: 'transform, opacity',
+                  transition: isDragging ? 'none' : 'border-color 0.3s ease, box-shadow 0.3s ease',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -311,10 +413,11 @@ export const Concave3DCarousel: React.FC = () => {
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
                       color: '#d8f25a',
-                      backgroundColor: 'rgba(26, 20, 32, 0.65)',
+                      backgroundColor: 'rgba(26, 20, 32, 0.75)',
                       padding: '4px 10px',
                       borderRadius: '999px',
                       backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(216, 242, 90, 0.3)',
                     }}
                   >
                     {item.brandName}
@@ -330,6 +433,7 @@ export const Concave3DCarousel: React.FC = () => {
                       justifyContent: 'center',
                       color: '#ffffff',
                       fontSize: '13px',
+                      backdropFilter: 'blur(4px)',
                     }}
                   >
                     ↗
@@ -341,15 +445,15 @@ export const Concave3DCarousel: React.FC = () => {
                   <img
                     src={item.imageUrl}
                     alt={item.name}
+                    loading="lazy"
                     style={{
                       maxHeight: '260px',
                       maxWidth: '100%',
                       objectFit: 'contain',
-                      filter: 'drop-shadow(0 16px 24px rgba(0,0,0,0.35))',
+                      filter: 'drop-shadow(0 16px 24px rgba(0,0,0,0.45))',
                       transition: 'transform 0.3s ease',
                     }}
                     onError={(e) => {
-                      // Fallback SVG if remote image fails
                       (e.currentTarget as HTMLElement).style.display = 'none';
                     }}
                   />
@@ -359,9 +463,9 @@ export const Concave3DCarousel: React.FC = () => {
                 <div
                   style={{
                     padding: '20px',
-                    backgroundColor: 'rgba(26, 20, 32, 0.88)',
+                    backgroundColor: 'rgba(26, 20, 32, 0.92)',
                     backdropFilter: 'blur(12px)',
-                    borderTop: '1px solid rgba(251, 246, 236, 0.1)',
+                    borderTop: '1px solid rgba(251, 246, 236, 0.12)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -381,7 +485,7 @@ export const Concave3DCarousel: React.FC = () => {
                       style={{
                         fontFamily: '"Instrument Sans", sans-serif',
                         fontSize: '10px',
-                        color: 'rgba(251, 246, 236, 0.65)',
+                        color: 'rgba(251, 246, 236, 0.7)',
                         letterSpacing: '0.04em',
                       }}
                     >
@@ -430,10 +534,16 @@ export const Concave3DCarousel: React.FC = () => {
                         padding: '6px 14px',
                         borderRadius: '999px',
                         textDecoration: 'none',
-                        transition: 'background-color 0.2s ease',
+                        transition: 'background-color 0.2s ease, transform 0.2s ease',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#d8f25a')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fbf6ec')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#d8f25a';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#fbf6ec';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
                     >
                       View Creation ↗
                     </Link>
@@ -444,7 +554,7 @@ export const Concave3DCarousel: React.FC = () => {
           })}
         </div>
 
-        {/* Navigation Indicator Hint */}
+        {/* Cursor & Navigation Indicator Hint */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <p
             style={{
@@ -457,7 +567,7 @@ export const Concave3DCarousel: React.FC = () => {
               margin: 0,
             }}
           >
-            ← DRAG, SWIPE OR USE ARROW KEYS TO EXPLORE →
+            ← MOVE CURSOR LEFT / RIGHT TO PAN • DRAG, SWIPE OR USE ARROW KEYS →
           </p>
         </div>
       </div>
