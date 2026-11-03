@@ -7,6 +7,12 @@ import { env } from '../config/env';
 
 // Lazy Loaded Pages
 const HomePage = lazy(() => import('../pages/home/HomePage'));
+const WomenPage = lazy(() => import('../pages/departments/WomenPage'));
+const MenPage = lazy(() => import('../pages/departments/MenPage'));
+const KidsPage = lazy(() => import('../pages/departments/KidsPage'));
+const StreetwearPage = lazy(() => import('../pages/departments/StreetwearPage'));
+const EthnicPage = lazy(() => import('../pages/departments/EthnicPage'));
+const GymPage = lazy(() => import('../pages/departments/GymPage'));
 const BrandDirectoryPage = lazy(() => import('../pages/brands/BrandDirectoryPage'));
 const BrandDetailPage = lazy(() => import('../pages/brands/BrandDetailPage'));
 const WishlistPage = lazy(() => import('../pages/wishlist/WishlistPage'));
@@ -43,6 +49,12 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<MainLayout />}>
           {/* Public Routes */}
           <Route index element={<HomePage />} />
+          <Route path="women" element={<WomenPage />} />
+          <Route path="men" element={<MenPage />} />
+          <Route path="kids" element={<KidsPage />} />
+          <Route path="streetwear" element={<StreetwearPage />} />
+          <Route path="ethnic" element={<EthnicPage />} />
+          <Route path="gym" element={<GymPage />} />
           <Route path="products" element={<ProductListPage />} />
           <Route path="collection" element={<ProductListPage />} />
           <Route path="products/:id" element={<ProductDetailPage />} />

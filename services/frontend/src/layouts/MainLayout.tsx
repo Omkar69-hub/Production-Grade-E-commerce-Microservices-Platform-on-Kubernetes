@@ -40,10 +40,7 @@ const MainLayout: React.FC = () => {
 
   const handleDepartmentClick = (deptName: string) => {
     const slug = deptName.toLowerCase();
-    if (location.pathname !== '/') {
-      navigate(`/?dept=${slug}`);
-      return;
-    }
+    const targetPath = `/${slug}`;
     if (activeDepartment === slug) {
       // Toggle off / deselect back to default unstyled homepage
       setActiveDepartment(null);
@@ -52,28 +49,36 @@ const MainLayout: React.FC = () => {
     } else {
       setActiveDepartment(slug);
       document.body.dataset.a = slug;
-      navigate(`/?dept=${slug}`, { replace: true });
+      navigate(targetPath);
     }
   };
 
   const handleHomeClick = (e?: React.MouseEvent) => {
+    setActiveDepartment(null);
+    document.body.removeAttribute('data-a');
     if (location.pathname === '/') {
       if (e) e.preventDefault();
-      setActiveDepartment(null);
-      document.body.removeAttribute('data-a');
       navigate('/', { replace: true });
+    } else {
+      navigate('/');
     }
   };
 
   useEffect(() => {
-    if (location.pathname === '/') {
-      const deptParam = searchParams.get('dept');
-      if (deptParam) {
-        const slug = deptParam.toLowerCase();
-        if (['women', 'men', 'kids', 'ethnic', 'streetwear', 'gym'].includes(slug)) {
-          setActiveDepartment(slug);
-          document.body.dataset.a = slug;
-        }
+    const deptRoutes = ['women', 'men', 'kids', 'ethnic', 'streetwear', 'gym'];
+    const currentSlug = location.pathname.replace(/^\//, '').toLowerCase();
+
+    if (deptRoutes.includes(currentSlug)) {
+      setActiveDepartment(currentSlug);
+      document.body.dataset.a = currentSlug;
+    } else if (location.pathname === '/') {
+      const deptParam = searchParams.get('dept')?.toLowerCase();
+      if (deptParam && deptRoutes.includes(deptParam)) {
+        setActiveDepartment(deptParam);
+        document.body.dataset.a = deptParam;
+      } else {
+        setActiveDepartment(null);
+        document.body.removeAttribute('data-a');
       }
     } else {
       setActiveDepartment(null);
@@ -153,15 +158,15 @@ const MainLayout: React.FC = () => {
     deptSlug?: string;
   }
 
-  // STAGE 15C.2: Single integrated primary navigation row
+  // STAGE 15C.2 / Modularized Independent Department Pages
   const primaryNavItems: NavItem[] = [
     { label: 'Home', path: '/' },
-    { label: 'Women', path: '/products?gender=women', isDept: true, deptSlug: 'women' },
-    { label: 'Men', path: '/products?gender=men', isDept: true, deptSlug: 'men' },
-    { label: 'Kids', path: '/products?gender=kids', isDept: true, deptSlug: 'kids' },
-    { label: 'Ethnic', path: '/products?category=ethnic', isDept: true, deptSlug: 'ethnic' },
-    { label: 'Streetwear', path: '/products?category=streetwear', isDept: true, deptSlug: 'streetwear' },
-    { label: 'Gym', path: '/products?category=gym', isDept: true, deptSlug: 'gym' },
+    { label: 'Women', path: '/women', isDept: true, deptSlug: 'women' },
+    { label: 'Men', path: '/men', isDept: true, deptSlug: 'men' },
+    { label: 'Kids', path: '/kids', isDept: true, deptSlug: 'kids' },
+    { label: 'Ethnic', path: '/ethnic', isDept: true, deptSlug: 'ethnic' },
+    { label: 'Streetwear', path: '/streetwear', isDept: true, deptSlug: 'streetwear' },
+    { label: 'Gym', path: '/gym', isDept: true, deptSlug: 'gym' },
     { label: 'Brands Directory', path: '/brands' },
     { label: 'Collections', path: '/products' },
   ];
@@ -177,7 +182,7 @@ const MainLayout: React.FC = () => {
             handleHomeClick(e);
             handleDrawerToggle();
           }}
-          sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: '#1a1420', display: 'flex', alignItems: 'center' }}
+          sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: 'var(--ink, #1a1420)', display: 'flex', alignItems: 'center' }}
         >
           LUMIÈRE
           {activeDepartment && (
@@ -209,8 +214,8 @@ const MainLayout: React.FC = () => {
       {/* Mobile Search */}
       <Box component="form" onSubmit={handleSearch} sx={{ my: 2.5 }}>
         <Box sx={{
-          display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF',
-          borderRadius: '30px', px: 2, py: 1, border: '1px solid var(--line, #e5dccb)'
+          display: 'flex', alignItems: 'center', bgcolor: 'var(--header-search-bg, #FFFFFF)',
+          borderRadius: '30px', px: 2, py: 1, border: '1px solid var(--header-line, var(--line, #e5dccb))'
         }}>
           <SearchIcon sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 20, mr: 1 }} />
           <InputBase
@@ -218,7 +223,11 @@ const MainLayout: React.FC = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             fullWidth
-            sx={{ fontSize: '0.88rem' }}
+            sx={{
+              fontSize: '0.88rem',
+              color: 'var(--header-search-ink, var(--ink, #1a1420))',
+              '& input': { color: 'var(--header-search-ink, var(--ink, #1a1420))' }
+            }}
           />
         </Box>
       </Box>
@@ -231,6 +240,8 @@ const MainLayout: React.FC = () => {
             return (
               <ListItem disablePadding key={item.label}>
                 <ListItemButton
+                  component={Link}
+                  to={item.path}
                   role="tab"
                   aria-selected={isSelected}
                   onClick={() => {
@@ -249,7 +260,7 @@ const MainLayout: React.FC = () => {
                         fontWeight: isSelected ? 700 : 600,
                         letterSpacing: '0.04em',
                         fontSize: '0.92rem',
-                        color: isSelected ? 'var(--cobalt, #3a3ce0)' : '#0A0A0A'
+                        color: isSelected ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)'
                       }}>
                         {item.label}
                       </Typography>
@@ -286,7 +297,7 @@ const MainLayout: React.FC = () => {
                       fontWeight: isActive ? 700 : 600,
                       letterSpacing: '0.04em',
                       fontSize: '0.92rem',
-                      color: isActive ? 'var(--cobalt, #3a3ce0)' : '#0A0A0A'
+                      color: isActive ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)'
                     }}>
                       {item.label}
                     </Typography>
@@ -314,7 +325,7 @@ const MainLayout: React.FC = () => {
           </ListItemButton>
         </ListItem>
       </List>
-      <Divider sx={{ borderColor: '#E8E4DC' }} />
+      <Divider sx={{ borderColor: 'var(--line, #e5dccb)' }} />
 
 
 
@@ -327,7 +338,11 @@ const MainLayout: React.FC = () => {
                 to="/login"
                 onClick={handleDrawerToggle}
                 className="lumiere-pill-btn"
-                sx={{ bgcolor: '#0A0A0A', color: '#FFFFFF', '&:hover': { bgcolor: '#222' } }}
+                sx={{
+                  bgcolor: 'var(--ink, #1a1420)',
+                  color: 'var(--bg, #fbf6ec)',
+                  '&:hover': { bgcolor: 'var(--cobalt, #3a3ce0)', color: '#FFFFFF' }
+                }}
               >
                 <ListItemText primary={<Typography sx={{ textAlign: 'center', fontWeight: 600 }}>Sign In</Typography>} />
               </ListItemButton>
@@ -338,9 +353,12 @@ const MainLayout: React.FC = () => {
                 to="/register"
                 onClick={handleDrawerToggle}
                 className="lumiere-pill-btn"
-                sx={{ border: '1.5px solid #0A0A0A' }}
+                sx={{
+                  border: '1.5px solid var(--ink, #1a1420)',
+                  '&:hover': { borderColor: 'var(--cobalt, #3a3ce0)' }
+                }}
               >
-                <ListItemText primary={<Typography sx={{ textAlign: 'center', fontWeight: 600, color: '#0A0A0A' }}>Create Account</Typography>} />
+                <ListItemText primary={<Typography sx={{ textAlign: 'center', fontWeight: 600, color: 'var(--ink, #1a1420)' }}>Create Account</Typography>} />
               </ListItemButton>
             </ListItem>
           </>
@@ -387,12 +405,12 @@ const MainLayout: React.FC = () => {
 
       {/* Editorial Announcement Bar */}
       <Box sx={{
-        bgcolor: 'var(--ink, #1a1420)', color: 'var(--bg, #fbf6ec)', py: 0.9, px: 2,
-        textAlign: 'center', borderBottom: '1px solid var(--line, #e5dccb)'
+        bgcolor: 'var(--announcement-bg, #1a1420)', color: 'var(--announcement-ink, #fbf6ec)', py: 0.9, px: 2,
+        textAlign: 'center', borderBottom: '1px solid var(--header-line, var(--line, #e5dccb))'
       }}>
         <Typography variant="body2" sx={{
           fontFamily: '"Fraunces", Georgia, serif', letterSpacing: '0.08em',
-          fontSize: { xs: '0.72rem', sm: '0.80rem' }, color: 'var(--bg, #fbf6ec)',
+          fontSize: { xs: '0.72rem', sm: '0.80rem' }, color: 'var(--announcement-ink, #fbf6ec)',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: { xs: 0.8, sm: 1.5 }, flexWrap: 'wrap'
         }}>
           <Box component="span" sx={{ color: 'var(--lime, #d8f25a)' }}>✦</Box>
@@ -409,10 +427,11 @@ const MainLayout: React.FC = () => {
       </Box>
 
       {/* Main Sticky Header */}
-      <AppBar position="sticky" elevation={0} sx={{
-        bgcolor: 'rgba(251, 246, 236, 0.96)',
+      <AppBar position="sticky" elevation={0} className="lumiere-header" sx={{
+        bgcolor: 'var(--header-bg, rgba(251, 246, 236, 0.96))',
         backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--line, #e5dccb)',
+        borderBottom: '1px solid var(--header-line, var(--line, #e5dccb))',
+        color: 'var(--header-ink, var(--ink, #1a1420))',
         overflow: 'hidden'
       }}>
         <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 2, md: 3 } }}>
@@ -423,7 +442,7 @@ const MainLayout: React.FC = () => {
                 edge="start"
                 onClick={handleDrawerToggle}
                 aria-label="open navigation drawer"
-                sx={{ mr: 0.5, color: 'var(--ink, #1a1420)' }}
+                sx={{ mr: 0.5, color: 'var(--header-ink, var(--ink, #1a1420))' }}
               >
                 <MenuIcon />
               </IconButton>
@@ -435,11 +454,12 @@ const MainLayout: React.FC = () => {
                 variant="h5"
                 component={Link}
                 to="/"
+                className="lumiere-header-logo"
                 sx={{
                   fontFamily: '"Fraunces", Georgia, serif',
                   fontWeight: 600,
                   letterSpacing: '0.02em',
-                  color: 'var(--ink, #1a1420)',
+                  color: 'var(--header-ink, var(--ink, #1a1420))',
                   textDecoration: 'none',
                   fontSize: { xs: '1.45rem', md: '1.85rem' },
                   display: 'flex',
@@ -513,13 +533,16 @@ const MainLayout: React.FC = () => {
                           }} />
                         )}
                         <Button
+                          component={Link}
+                          to={item.path}
                           role="tab"
                           aria-selected={isSelected}
                           onClick={() => handleDepartmentClick(item.label)}
                           color="inherit"
+                          className={`lumiere-header-nav-link ${isSelected ? 'active' : ''}`}
                           sx={{
                             fontWeight: isSelected ? 700 : 500,
-                            color: isSelected ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
+                            color: isSelected ? 'var(--cobalt, #3a3ce0)' : 'var(--header-ink, var(--ink, #1a1420))',
                             letterSpacing: '0.02em',
                             fontSize: { md: '0.74rem', lg: '0.82rem', xl: '0.86rem' },
                             px: { md: 0.4, lg: 0.8, xl: 1.0 },
@@ -555,9 +578,10 @@ const MainLayout: React.FC = () => {
                         to={item.path}
                         onClick={isHome ? handleHomeClick : undefined}
                         color="inherit"
+                        className={`lumiere-header-nav-link ${isActive ? 'active' : ''}`}
                         sx={{
                           fontWeight: isActive ? 700 : 500,
-                          color: isActive ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
+                          color: isActive ? 'var(--cobalt, #3a3ce0)' : 'var(--header-ink, var(--ink, #1a1420))',
                           letterSpacing: '0.02em',
                           fontSize: { md: '0.74rem', lg: '0.82rem', xl: '0.86rem' },
                           px: { md: 0.4, lg: 0.8, xl: 1.0 },
@@ -579,19 +603,24 @@ const MainLayout: React.FC = () => {
 
             {/* Desktop Search Bar */}
             {!isMobile && (
-              <Box component="form" onSubmit={handleSearch} sx={{
-                display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF',
+              <Box component="form" onSubmit={handleSearch} className="lumiere-header-search" sx={{
+                display: 'flex', alignItems: 'center', bgcolor: 'var(--header-search-bg, #FFFFFF)',
                 borderRadius: '30px', px: 2, py: 0.6, width: { md: 130, lg: 190, xl: 240 },
-                border: '1px solid var(--line, #e5dccb)',
+                border: '1px solid var(--header-line, var(--line, #e5dccb))',
                 transition: 'all 0.25s ease',
-                '&:focus-within': { borderColor: 'var(--cobalt, #3a3ce0)', bgcolor: '#FFFFFF', boxShadow: '0 0 0 3px rgba(58, 60, 224, 0.12)' }
+                '&:focus-within': { borderColor: 'var(--cobalt, #3a3ce0)', bgcolor: 'var(--header-search-bg, #FFFFFF)', boxShadow: '0 0 0 3px rgba(58, 60, 224, 0.12)' }
               }}>
                 <SearchIcon sx={{ color: 'var(--cobalt, #3a3ce0)', fontSize: 18, mr: 1 }} />
                 <InputBase
                   placeholder="Search collections..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  sx={{ flex: 1, fontSize: '0.84rem' }}
+                  sx={{
+                    flex: 1,
+                    fontSize: '0.84rem',
+                    color: 'var(--header-search-ink, var(--ink, #1a1420))',
+                    '& input': { color: 'var(--header-search-ink, var(--ink, #1a1420))' }
+                  }}
                 />
               </Box>
             )}
@@ -623,10 +652,11 @@ const MainLayout: React.FC = () => {
                   to="/wishlist"
                   aria-label="Curated Wishlist"
                   id="wl"
+                  className="lumiere-header-pill"
                   sx={{
-                    border: '1px solid var(--ink, #1a1420)',
+                    border: '1px solid var(--header-ink, var(--ink, #1a1420))',
                     bgcolor: 'transparent',
-                    color: 'var(--ink, #1a1420)',
+                    color: 'var(--header-ink, var(--ink, #1a1420))',
                     borderRadius: '99px',
                     px: 2,
                     py: 0.7,
@@ -639,9 +669,9 @@ const MainLayout: React.FC = () => {
                     gap: 0.8,
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: 'var(--ink, #1a1420)',
-                      color: 'var(--bg, #fbf6ec)',
-                      borderColor: 'var(--ink, #1a1420)'
+                      bgcolor: 'var(--header-ink, var(--ink, #1a1420))',
+                      color: 'var(--header-bg, var(--bg, #fbf6ec))',
+                      borderColor: 'var(--header-ink, var(--ink, #1a1420))'
                     }
                   }}
                 >
@@ -651,8 +681,8 @@ const MainLayout: React.FC = () => {
                     component="span"
                     id="wc"
                     sx={{
-                      bgcolor: wishlistCount > 0 ? 'var(--tang, #e8572b)' : 'var(--line, #e5dccb)',
-                      color: wishlistCount > 0 ? '#FFFFFF' : 'var(--ink, #1a1420)',
+                      bgcolor: wishlistCount > 0 ? 'var(--tang, #e8572b)' : 'var(--header-line, var(--line, #e5dccb))',
+                      color: wishlistCount > 0 ? '#FFFFFF' : 'var(--header-ink, var(--ink, #1a1420))',
                       borderRadius: '99px',
                       px: 0.8,
                       py: 0.1,
@@ -763,11 +793,11 @@ const MainLayout: React.FC = () => {
                   to="/login"
                   variant="outlined"
                   size="small"
-                  className="lumiere-pill-btn"
+                  className="lumiere-pill-btn lumiere-header-pill"
                   sx={{
                     display: { xs: 'none', sm: 'inline-flex' },
-                    borderColor: 'var(--ink, #1a1420)',
-                    color: 'var(--ink, #1a1420)',
+                    borderColor: 'var(--header-ink, var(--ink, #1a1420))',
+                    color: 'var(--header-ink, var(--ink, #1a1420))',
                     px: 2.2,
                     py: 0.8,
                     fontSize: '0.8rem',
@@ -794,7 +824,7 @@ const MainLayout: React.FC = () => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', lg: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 300 },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 300, bgcolor: 'var(--bg, #fbf6ec)' },
         }}
       >
         {drawer}

@@ -56,6 +56,12 @@ describe('Stage 15C.1: Prototype-Matched Department Animations & Lifecycle', () 
                 <Routes>
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/women" element={<div data-testid="dept-women">Women</div>} />
+                    <Route path="/men" element={<div data-testid="dept-men">Men</div>} />
+                    <Route path="/kids" element={<div data-testid="dept-kids">Kids</div>} />
+                    <Route path="/ethnic" element={<div data-testid="dept-ethnic">Ethnic</div>} />
+                    <Route path="/streetwear" element={<div data-testid="dept-streetwear">Streetwear</div>} />
+                    <Route path="/gym" element={<div data-testid="dept-gym">Gym</div>} />
                     <Route path="/brands" element={<div data-testid="brands-page">Brands Directory</div>} />
                   </Route>
                 </Routes>

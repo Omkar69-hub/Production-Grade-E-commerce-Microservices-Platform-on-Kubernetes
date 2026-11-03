@@ -58,6 +58,12 @@ describe('Stage 15C.2: Integrated Navigation & Official Brand Logo Directory', (
                 <Routes>
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/women" element={<div data-testid="dept-women">Women</div>} />
+                    <Route path="/men" element={<div data-testid="dept-men">Men</div>} />
+                    <Route path="/kids" element={<div data-testid="dept-kids">Kids</div>} />
+                    <Route path="/ethnic" element={<div data-testid="dept-ethnic">Ethnic</div>} />
+                    <Route path="/streetwear" element={<div data-testid="dept-streetwear">Streetwear</div>} />
+                    <Route path="/gym" element={<div data-testid="dept-gym">Gym</div>} />
                     <Route path="/brands" element={<BrandDirectoryPage />} />
                     <Route path="/products" element={<div data-testid="products-page">Collections</div>} />
                   </Route>

@@ -12,14 +12,20 @@ import { ALL_VERIFIED_BRANDS, BRANDS_DATA } from '../../data/brandsData';
 import { useProducts } from '../../hooks/useProducts';
 import ProductCard from '../../components/product/ProductCard';
 import EditorialRunwayTrack from '../../components/editorial/EditorialRunwayTrack';
-import CuratedOccasionPanels from '../../components/editorial/CuratedOccasionPanels';
 import { ALL_CLOTHING_CATALOG, toCatalogProduct } from '../../data/clothingCatalogData';
-import { Concave3DCarousel } from '../../components/product/Concave3DCarousel';
-import { ExpandableLookbookAccordion } from '../../components/editorial/ExpandableLookbookAccordion';
-import { DedicatedGymwearRunway } from '../../components/editorial/DedicatedGymwearRunway';
-import { DedicatedStyleCollections } from '../../components/editorial/DedicatedStyleCollections';
 import { useDepartmentExperience } from '../../hooks/useDepartmentExperience';
 import { PrototypeIllustration } from '../../utils/prototypeIllustrations';
+
+// Video Reference Recreated Sections
+import TheLumiereSignatures from '../../components/editorial/TheLumiereSignatures';
+import NewArrivalsTrack from '../../components/editorial/NewArrivalsTrack';
+import EveningEditSection from '../../components/editorial/EveningEditSection';
+import SummerSpecialsSection from '../../components/editorial/SummerSpecialsSection';
+import InteractiveLookConfigurator from '../../components/editorial/InteractiveLookConfigurator';
+import { ExpandableLookbookAccordion } from '../../components/editorial/ExpandableLookbookAccordion';
+import PoolsideLookbookSection from '../../components/editorial/PoolsideLookbookSection';
+import LatestTrendsStackSection from '../../components/editorial/LatestTrendsStackSection';
+import MonumentalFooterHero from '../../components/editorial/MonumentalFooterHero';
 
 export const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -133,8 +139,6 @@ export const HomePage: React.FC = () => {
   const liveProducts = catalogData?.content?.filter(p => !p.name.toLowerCase().includes('phone') && !p.name.toLowerCase().includes('electronic')) || [];
 
   // STAGE 15C.3: Build the hero slide class name for prototype-matched lifecycle
-  // .sl starts without .on (hidden state per department CSS)
-  // .sl.on triggers entrance animation (clip-path, blur-reveal, skew, etc.)
   const heroSlideClass = `hs sl${dept.heroRevealed ? ' on' : ''}`;
 
   return (
@@ -163,7 +167,7 @@ export const HomePage: React.FC = () => {
           transition: 'background-image 0.6s ease'
         }}
       >
-        {/* Subtle Atmospheric Glow — department-specific gradient */}
+        {/* Subtle Atmospheric Glow */}
         <Box className="hero-atmospheric-glow" />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
@@ -173,7 +177,7 @@ export const HomePage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 7 }}>
               <Box ref={heroHeadlineRef} sx={{ maxWidth: 740, willChange: 'transform', transition: 'transform 0.05s ease-out' }}>
 
-                {/* Editorial Collection Tag — department-specific */}
+                {/* Editorial Collection Tag */}
                 <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
                   <Box sx={{
                     width: 8, height: 8, borderRadius: '50%',
@@ -195,7 +199,7 @@ export const HomePage: React.FC = () => {
                   </Typography>
                 </Box>
 
-                {/* Oversized Editorial Typography — Anton for department mode, Fraunces for baseline */}
+                {/* Oversized Editorial Typography */}
                 <Typography
                   variant="h1"
                   component="h1"
@@ -370,7 +374,7 @@ export const HomePage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 5 }}>
               <Box sx={{ position: 'relative', maxWidth: 500, mx: 'auto' }}>
 
-                {/* Main Hero Visual Card with Prototype Silhouette Illustration Support */}
+                {/* Main Hero Visual Card with Silhouette Illustration Support */}
                 <Card
                   ref={heroImageRef}
                   className={`sa${dept.heroAnimationClass ? ` ${dept.heroAnimationClass}` : ''}`}
@@ -577,53 +581,64 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          2. VIVANT-INSPIRED CURSOR-DRIVEN CONCAVE 3D CAROUSEL (LUMIÈRE SIGNATURES)
-          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+          SECTION 1 (REFERENCE RECREATION): THE LUMIÈRE SIGNATURES (ARCHED CAROUSEL)
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
-        <Concave3DCarousel />
-      </Box>
+      <TheLumiereSignatures />
 
       {/* =========================================================================
-          3. THREE VISUAL ENTRY POINTS: MEN, WOMEN & KIDS (PRESERVED FOR TESTS)
-          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+          SECTION 2 (USER MANDATED FIX): THREE EDITORIAL PORTFOLIO CARDS
+          - Balanced asymmetric proportions & reduced heights
+          - Captions, titles and tags permanently visible without hiding on hover
       ========================================================================= */}
-      <Box component="section" className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--bg, #fbf6ec)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
+      <Box
+        component="section"
+        className={`rv${dept.heroRevealed ? ' in' : ''}`}
+        sx={{
+          py: { xs: 8, md: 12 },
+          bgcolor: 'var(--bg, #fbf6ec)',
+          borderBottom: '1px solid var(--line, #e5dccb)'
+        }}
+      >
         <Container maxWidth="xl">
-
-          <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 6, md: 8 } }}>
+          <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 5, md: 7 } }}>
             <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
               DISTINCT CURATIONS
             </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, mb: 2, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
+            <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, mb: 1.8, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
               Choose Your Atelier Universe
             </Typography>
-            <Typography variant="body1" sx={{ color: 'var(--mute, #6b6173)', fontSize: '1.05rem', fontFamily: '"Instrument Sans", sans-serif' }}>
+            <Typography variant="body1" sx={{ color: 'var(--mute, #6b6173)', fontSize: '1.02rem', fontFamily: '"Instrument Sans", sans-serif', lineHeight: 1.6 }}>
               Explore dedicated fashion portfolios tailored to women’s couture, men’s bespoke sartorial suiting, and exquisite young heritage wear.
             </Typography>
           </Box>
 
-          <Grid container spacing={4}>
+          <Grid container spacing={3.5} sx={{ alignItems: 'flex-start' }}>
 
-            {/* 1. WOMEN'S COLLECTION */}
+            {/* 1. WOMEN'S COLLECTION (PORTFOLIO I) - Balanced 96% Proportion */}
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 component={Link}
                 to="/products?gender=women"
                 className="lumiere-card"
                 sx={{
-                  height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
-                  borderRadius: '22px',
+                  borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
-                  cursor: 'pointer'
+                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
+                  }
                 }}
               >
-                <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
+                <Box sx={{ position: 'relative', pt: '96%', overflow: 'hidden', bgcolor: '#F5EFEB' }}>
                   <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900"
@@ -631,55 +646,61 @@ export const HomePage: React.FC = () => {
                     loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                      '&:hover': { transform: 'scale(1.06)' }
+                      transition: 'transform 0.5s ease',
+                      '&:hover': { transform: 'scale(1.04)' }
                     }}
                   />
-                  <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
                     <Chip
                       label="FEMME ATELIER"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
-                <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
+                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
                     PORTFOLIO I
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
                     Women’s Couture & Pret
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
                     Fluid silk lehengas, structured double-breasted blazers, hand-embroidered anarkalis, and evening gowns.
                   </Typography>
                   <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Women's</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 16 }} />
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Women's</Typography>
+                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
 
-            {/* 2. MEN'S COLLECTION */}
+            {/* 2. MEN'S COLLECTION (PORTFOLIO II) - Asymmetric Sleek 80% Proportion */}
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 component={Link}
                 to="/products?gender=men"
                 className="lumiere-card"
                 sx={{
-                  height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
-                  borderRadius: '22px',
+                  borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
-                  cursor: 'pointer'
+                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
+                  }
                 }}
               >
-                <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
+                <Box sx={{ position: 'relative', pt: '80%', overflow: 'hidden', bgcolor: '#EFEBE4' }}>
                   <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900"
@@ -687,55 +708,61 @@ export const HomePage: React.FC = () => {
                     loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                      '&:hover': { transform: 'scale(1.06)' }
+                      transition: 'transform 0.5s ease',
+                      '&:hover': { transform: 'scale(1.04)' }
                     }}
                   />
-                  <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
                     <Chip
                       label="HOMME SARTORIAL"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
-                <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
+                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
                     PORTFOLIO II
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
                     Men’s Sartorial & Festive
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
                     Bespoke wool suiting, royal jacquard sherwanis, bandhgalas, raw silk kurtas, and luxury linen overshirts.
                   </Typography>
                   <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Men's</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 16 }} />
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Men's</Typography>
+                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
 
-            {/* 3. KIDS' COLLECTION */}
+            {/* 3. KIDS' COLLECTION (PORTFOLIO III) - Balanced Compact 88% Proportion */}
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 component={Link}
                 to="/products?gender=kids"
                 className="lumiere-card"
                 sx={{
-                  height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
                   bgcolor: '#FFFFFF',
-                  borderRadius: '22px',
+                  borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
-                  cursor: 'pointer'
+                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
+                  }
                 }}
               >
-                <Box sx={{ position: 'relative', pt: '125%', overflow: 'hidden' }}>
+                <Box sx={{ position: 'relative', pt: '88%', overflow: 'hidden', bgcolor: '#F2EDE4' }}>
                   <CardMedia
                     component="img"
                     image="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=900"
@@ -743,31 +770,31 @@ export const HomePage: React.FC = () => {
                     loading="lazy"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                      '&:hover': { transform: 'scale(1.06)' }
+                      transition: 'transform 0.5s ease',
+                      '&:hover': { transform: 'scale(1.04)' }
                     }}
                   />
-                  <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
                     <Chip
                       label="ENFANT HERITAGE"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
-                <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, fontFamily: '"Instrument Sans", sans-serif' }}>
+                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
                     PORTFOLIO III
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, my: 1, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
                     Kids’ Festive & Heritage
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 3, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif' }}>
+                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
                     Pure organic cotton kurta sets, festive lehengas for young girls, miniature sherwanis, and celebration wear.
                   </Typography>
                   <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif' }}>Explore Kids'</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 16 }} />
+                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Kids'</Typography>
+                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
                   </Box>
                 </CardContent>
               </Card>
@@ -778,34 +805,46 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          4. DEDICATED GYMWEAR & ACTIVEWEAR RUNWAY (MEN'S & WOMEN'S)
-          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+          SECTION 3 (REFERENCE RECREATION): FRESH OFF THE CUTTING TABLE / NEW ARRIVALS
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
-        <DedicatedGymwearRunway />
-      </Box>
+      <NewArrivalsTrack />
 
       {/* =========================================================================
-          5. DEDICATED STREETWEAR, CASUALWEAR & ETHNICWEAR EDITORIAL COLLECTIONS
-          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+          SECTION 4 (REFERENCE RECREATION): AFTER DARK / THE EVENING EDIT
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
-        <DedicatedStyleCollections initialCollection={dept.activeDept === 'streetwear' ? 'STREETWEAR' : dept.activeDept === 'ethnic' ? 'ETHNICWEAR' : 'STREETWEAR'} />
-      </Box>
+      <EveningEditSection />
 
       {/* =========================================================================
-          6. VIVANT-INSPIRED EXPANDABLE LOOKBOOK ACCORDION
-          STAGE 15C.3: Added .ly class for department-specific lookbook reveals
+          SECTION 5 (REFERENCE RECREATION): SUMMER SPECIALS & TRENDING TODAY
+      ========================================================================= */}
+      <SummerSpecialsSection />
+
+      {/* =========================================================================
+          SECTION 6 (REFERENCE RECREATION): INTERACTIVE LOOKBOOK CONFIGURATOR
+      ========================================================================= */}
+      <InteractiveLookConfigurator />
+
+      {/* =========================================================================
+          SECTION 7 (REFERENCE RECREATION): WORTH YOUR ATTENTION (CURRENT OFFERS)
       ========================================================================= */}
       <Box className={`ly${dept.lookbookRevealed ? ' on' : ''}`}>
         <ExpandableLookbookAccordion activeDept={dept.activeDept} departmentLooks={dept.config?.looks} />
       </Box>
 
       {/* =========================================================================
-          7. EDITORIAL BRAND SPOTLIGHT: INDIAN CRAFT X GLOBAL LUXURY
-          STAGE 15C.3: Added .rv class for department-specific scroll reveal
+          SECTION 8 (REFERENCE RECREATION): POOLSIDE SS/26 LOOKBOOK
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--eve-bg, #2b1238)', color: '#FFFFFF', position: 'relative' }}>
+      <PoolsideLookbookSection />
+
+      {/* =========================================================================
+          SECTION 9 (REFERENCE RECREATION): LATEST TRENDS & STORIES BEHIND THE SEAMS
+      ========================================================================= */}
+      <LatestTrendsStackSection />
+
+      {/* =========================================================================
+          MAISON CURATION: 70 CURATED PARTNER BRANDS & VERIFIED DOMAINS
+      ========================================================================= */}
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--eve-bg, #2b1238)', color: '#FFFFFF', position: 'relative' }}>
         <Container maxWidth="xl">
           <Grid container spacing={{ xs: 6, lg: 8 }} sx={{ alignItems: 'center' }}>
 
@@ -820,7 +859,7 @@ export const HomePage: React.FC = () => {
                   <>Dual Heritage: <span style={{ color: 'var(--lime, #d8f25a)' }}>Indian Artistry</span> & Global Avant-Garde</>
                 )}
               </Typography>
-              <Typography variant="body1" sx={{ color: 'var(--eve-mute, #cbb8d6)', mb: 4, lineHeight: 1.8, fontSize: '1.05rem', fontFamily: '"Instrument Sans", sans-serif' }}>
+              <Typography variant="body1" sx={{ color: 'var(--eve-mute, #cbb8d6)', mb: 4, lineHeight: 1.8, fontSize: '1.02rem', fontFamily: '"Instrument Sans", sans-serif' }}>
                 {dept.activeDept && dept.config ? (
                   `LUMIÈRE curates verified official destinations for ${dept.config.label} wear. Every brand card directs you directly to the authenticated designer website.`
                 ) : (
@@ -828,7 +867,7 @@ export const HomePage: React.FC = () => {
                 )}
               </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 5 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                   <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(216, 242, 90, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--lime, #d8f25a)', flexShrink: 0 }}>
                     <PublicOutlined fontSize="small" />
@@ -873,9 +912,8 @@ export const HomePage: React.FC = () => {
               </Button>
             </Grid>
 
-            {/* Featured Brand Grid Column (Multi-Brand Catalog: 8+ Verified Maisons) */}
+            {/* Featured Brand Grid Column */}
             <Grid size={{ xs: 12, lg: 7 }}>
-              {/* Category Filter Pills (Sliding-Pill Transition & Accessible Aria-Pressed) */}
               <Box
                 role="group"
                 aria-label="Brand category filter"
@@ -931,7 +969,7 @@ export const HomePage: React.FC = () => {
                 })}
               </Box>
 
-              <Grid container spacing={2.5}>
+              <Grid container spacing={2}>
                 {featuredBrands.map((brand) => (
                   <Grid key={brand.id} size={{ xs: 12, sm: 6 }}>
                     <Card
@@ -941,7 +979,7 @@ export const HomePage: React.FC = () => {
                       sx={{
                         bgcolor: '#141414',
                         color: '#FFF',
-                        p: 2.8,
+                        p: 2.5,
                         borderRadius: '16px',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         textDecoration: 'none',
@@ -959,7 +997,7 @@ export const HomePage: React.FC = () => {
                       }}
                     >
                       <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.2, gap: 1 }}>
                           <Chip
                             label={brand.origin === 'INDIAN' ? 'INDIAN COUTURE' : 'INTERNATIONAL'}
                             size="small"
@@ -986,21 +1024,21 @@ export const HomePage: React.FC = () => {
                           />
                         </Box>
 
-                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 0.8, fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.25rem' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 0.6, fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.2rem' }}>
                           {brand.name}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#A0988E', fontSize: '0.82rem', lineHeight: 1.55, mb: 2.5, fontFamily: '"Instrument Sans", sans-serif' }}>
+                        <Typography variant="body2" sx={{ color: '#A0988E', fontSize: '0.8rem', lineHeight: 1.5, mb: 2, fontFamily: '"Instrument Sans", sans-serif' }}>
                           {brand.signatureStyle || brand.description}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ pt: 1.8, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="caption" sx={{ color: '#888', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.72rem' }}>
+                      <Box sx={{ pt: 1.5, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" sx={{ color: '#888', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.7rem' }}>
                           Atelier: {brand.city}, {brand.country}
                         </Typography>
-                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'var(--lime, #d8f25a)', fontSize: '0.75rem', fontWeight: 600 }}>
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'var(--lime, #d8f25a)', fontSize: '0.72rem', fontWeight: 600 }}>
                           <span>Explore Maison</span>
-                          <ArrowForwardOutlined sx={{ fontSize: 14 }} />
+                          <ArrowForwardOutlined sx={{ fontSize: 13 }} />
                         </Box>
                       </Box>
                     </Card>
@@ -1014,7 +1052,7 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          8. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
+          EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
       ========================================================================= */}
       <Box id="runway-track" component="section" aria-label="Featured Runway Pieces Runway" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)', overflow: 'hidden' }}>
         <Container maxWidth="xl">
@@ -1043,16 +1081,7 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          8B. CURATED OCCASION EDITORIAL PANELS
-      ========================================================================= */}
-      <Box component="section" aria-label="Curated Occasion Panels" sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FBF6EC' }}>
-        <Container maxWidth="xl">
-          <CuratedOccasionPanels />
-        </Container>
-      </Box>
-
-      {/* =========================================================================
-          9. SIZE-GUIDE MATRIX TEASER
+          SIZE-GUIDE MATRIX TEASER
       ========================================================================= */}
       <Box component="section" aria-label="Atelier Sizing Matrix Benchmark" sx={{ py: { xs: 8, md: 10 }, bgcolor: '#FFFFFF' }}>
         <Container maxWidth="xl">
@@ -1110,11 +1139,11 @@ export const HomePage: React.FC = () => {
       </Box>
 
       {/* =========================================================================
-          10. HOW LUMIÈRE WORKS / VERIFIED REFERRAL MANIFESTO
+          THE LUMIÈRE PROTOCOL / VERIFIED REFERRAL MANIFESTO
       ========================================================================= */}
-      <Box component="section" aria-label="The Lumière Protocol" sx={{ py: { xs: 10, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)' }}>
+      <Box component="section" aria-label="The Lumière Protocol" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)' }}>
         <Container maxWidth="xl">
-          <Box sx={{ textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 8 }}>
+          <Box sx={{ textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 7 }}>
             <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
               THE LUMIÈRE PROTOCOL
             </Typography>
@@ -1123,7 +1152,7 @@ export const HomePage: React.FC = () => {
             </Typography>
           </Box>
 
-          <Grid container spacing={4}>
+          <Grid container spacing={3.5}>
             {[
               {
                 step: '01',
@@ -1158,6 +1187,11 @@ export const HomePage: React.FC = () => {
           </Grid>
         </Container>
       </Box>
+
+      {/* =========================================================================
+          SECTION 10 (REFERENCE RECREATION): MONUMENTAL TERRACE FOOTER HERO
+      ========================================================================= */}
+      <MonumentalFooterHero />
 
       {/* =========================================================================
           INTERACTIVE SIZE GUIDE DRAWER

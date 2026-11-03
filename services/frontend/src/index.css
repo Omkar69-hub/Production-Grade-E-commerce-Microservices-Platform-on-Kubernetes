@@ -12,6 +12,15 @@
   --eve-bg: #2b1238;         /* Midnight aubergine surface */
   --eve-mute: #cbb8d6;       /* Soft lavender slate */
 
+  /* Header & Navigation High-Contrast Tokens */
+  --header-bg: rgba(251, 246, 236, 0.96);
+  --header-ink: #1a1420;
+  --header-line: #e5dccb;
+  --header-search-bg: #FFFFFF;
+  --header-search-ink: #1a1420;
+  --announcement-bg: #1a1420;
+  --announcement-ink: #fbf6ec;
+
   /* Semantic Lumière Tokens */
   --lumiere-bg: var(--bg);
   --lumiere-ink: var(--ink);
@@ -45,6 +54,14 @@
     --ink: #f4eee4;
     --mute: #a79cb0;
     --line: #35293d;
+
+    --header-bg: rgba(23, 17, 27, 0.96);
+    --header-ink: #f4eee4;
+    --header-line: #35293d;
+    --header-search-bg: rgba(255, 255, 255, 0.08);
+    --header-search-ink: #f4eee4;
+    --announcement-bg: #120f18;
+    --announcement-ink: #f4eee4;
   }
 }
 
@@ -53,6 +70,14 @@
   --ink: #f4eee4;
   --mute: #a79cb0;
   --line: #35293d;
+
+  --header-bg: rgba(23, 17, 27, 0.96);
+  --header-ink: #f4eee4;
+  --header-line: #35293d;
+  --header-search-bg: rgba(255, 255, 255, 0.08);
+  --header-search-ink: #f4eee4;
+  --announcement-bg: #120f18;
+  --announcement-ink: #f4eee4;
 }
 
 html, body {
@@ -147,6 +172,47 @@ h1, h2, h3, .lumiere-display {
   font-weight: 600 !important;
   letter-spacing: 0.04em !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Header & Navigation Visibility Guarantees */
+.lumiere-header {
+  background-color: var(--header-bg, rgba(251, 246, 236, 0.96)) !important;
+  border-bottom: 1px solid var(--header-line, #e5dccb) !important;
+  color: var(--header-ink, #1a1420) !important;
+}
+
+.lumiere-header-logo {
+  color: var(--header-ink, #1a1420) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.lumiere-header-nav-link {
+  color: var(--header-ink, #1a1420) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.lumiere-header-nav-link.active,
+.lumiere-header-nav-link[aria-selected="true"] {
+  color: var(--cobalt, #3a3ce0) !important;
+}
+
+.lumiere-header-nav-link:hover {
+  color: var(--cobalt, #3a3ce0) !important;
+}
+
+.lumiere-header-pill {
+  color: var(--header-ink, #1a1420) !important;
+  border-color: var(--header-ink, #1a1420) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.lumiere-header-search {
+  background-color: var(--header-search-bg, #FFFFFF) !important;
+  border-color: var(--header-line, #e5dccb) !important;
+  color: var(--header-search-ink, #1a1420) !important;
 }
 
 /* Custom Sleek Scrollbar */

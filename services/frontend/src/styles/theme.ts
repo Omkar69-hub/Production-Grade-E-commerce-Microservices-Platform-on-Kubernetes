@@ -177,10 +177,10 @@ export const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(251, 246, 236, 0.96)',
+          backgroundColor: 'var(--header-bg, rgba(251, 246, 236, 0.96))',
           backdropFilter: 'blur(20px)',
-          color: lumierePalette.ink,
-          boxShadow: `0 1px 0 ${lumierePalette.line}`,
+          color: 'var(--header-ink, #1a1420)',
+          boxShadow: '0 1px 0 var(--header-line, #e5dccb)',
         },
       },
     },
