@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import type { DepartmentLook } from '../../data/departmentConfig';
 
 interface CapsulePanel {
   id: string;
@@ -12,6 +13,11 @@ interface CapsulePanel {
   categorySlug: string;
   imageUrl: string;
   accentColor: string;
+}
+
+export interface ExpandableLookbookAccordionProps {
+  activeDept?: string | null;
+  departmentLooks?: DepartmentLook[];
 }
 
 const CAPSULES: CapsulePanel[] = [
@@ -77,10 +83,38 @@ const CAPSULES: CapsulePanel[] = [
   },
 ];
 
-export const ExpandableLookbookAccordion: React.FC = () => {
-  const [activeId, setActiveId] = useState<string>('c1');
+export const ExpandableLookbookAccordion: React.FC<ExpandableLookbookAccordionProps> = ({
+  activeDept,
+  departmentLooks,
+}) => {
+  const activeCapsules: CapsulePanel[] = useMemo(() => {
+    if (departmentLooks && departmentLooks.length > 0) {
+      return departmentLooks.map((look, idx) => ({
+        id: `look-${idx + 1}`,
+        number: `0${idx + 1}`,
+        tag: look.brand.toUpperCase(),
+        badge: `${(activeDept || 'LUMIÈRE').toUpperCase()} EDITORIAL`,
+        highlightText: look.brand.toUpperCase(),
+        title: look.name,
+        description: `${look.sub} • Curated from ${look.brand} official collections.`,
+        categorySlug: activeDept || 'clothing',
+        imageUrl: look.imageUrl,
+        accentColor: look.fill || '#d8f25a',
+      }));
+    }
+    return CAPSULES;
+  }, [departmentLooks, activeDept]);
+
+  const [activeId, setActiveId] = useState<string>(activeCapsules[0]?.id || 'c1');
   const sectionRef = useRef<HTMLElement>(null);
   const lastManualSelection = useRef<number>(0);
+
+  // Synchronize activeId whenever the department's looks change
+  useEffect(() => {
+    if (activeCapsules.length > 0) {
+      setActiveId(activeCapsules[0].id);
+    }
+  }, [activeCapsules]);
 
   const handleSelectCapsule = useCallback((id: string) => {
     lastManualSelection.current = Date.now();
@@ -108,8 +142,8 @@ export const ExpandableLookbookAccordion: React.FC = () => {
           const totalDistance = rect.height + vh * 0.4;
           const currentProgress = (vh * 0.7 - rect.top) / totalDistance;
           const clamped = Math.min(Math.max(currentProgress, 0), 1);
-          const targetIndex = Math.min(Math.floor(clamped * CAPSULES.length), CAPSULES.length - 1);
-          const targetCapsule = CAPSULES[targetIndex];
+          const targetIndex = Math.min(Math.floor(clamped * activeCapsules.length), activeCapsules.length - 1);
+          const targetCapsule = activeCapsules[targetIndex];
           if (targetCapsule && targetCapsule.id !== activeId) {
             setActiveId(targetCapsule.id);
           }
@@ -122,7 +156,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [activeId]);
+  }, [activeId, activeCapsules]);
 
   return (
     <section
@@ -169,7 +203,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3a3ce0' }} />
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#1a1420', fontFamily: '"Instrument Sans", sans-serif' }}>
-                CURRENT OFFERS & ATELIER CAPSULES
+                {activeDept ? `${activeDept.toUpperCase()} LOOKBOOK CURATION` : 'CURRENT OFFERS & ATELIER CAPSULES'}
               </span>
             </div>
             <h2
@@ -218,7 +252,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
             width: '100%',
           }}
         >
-          {CAPSULES.map((capsule) => {
+          {activeCapsules.map((capsule) => {
             const isActive = capsule.id === activeId;
 
             return (
@@ -312,10 +346,11 @@ export const ExpandableLookbookAccordion: React.FC = () => {
 
                       <span
                         style={{
-                          fontFamily: '"Fraunces", Georgia, serif',
+                          fontFamily: 'Anton, "Fraunces", Georgia, serif',
                           fontSize: '36px',
                           fontWeight: 700,
                           color: 'rgba(251, 246, 236, 0.7)',
+                          letterSpacing: '0.04em',
                         }}
                       >
                         {capsule.number}
@@ -326,12 +361,13 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                     <div style={{ margin: 'auto 0' }}>
                       <div
                         style={{
-                          fontFamily: '"Fraunces", Georgia, serif',
+                          fontFamily: 'Anton, "Fraunces", Georgia, serif',
                           fontSize: 'clamp(44px, 5.5vw, 76px)',
                           fontWeight: 900,
                           color: capsule.accentColor,
                           lineHeight: 1,
-                          letterSpacing: '-0.03em',
+                          letterSpacing: '-0.02em',
+                          textTransform: 'uppercase',
                           marginBottom: '8px',
                           textShadow: '0 4px 18px rgba(0,0,0,0.5)',
                         }}
@@ -340,10 +376,12 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                       </div>
                       <h3
                         style={{
-                          fontFamily: '"Fraunces", Georgia, serif',
+                          fontFamily: 'Anton, "Fraunces", Georgia, serif',
                           fontSize: 'clamp(24px, 3vw, 36px)',
                           fontWeight: 600,
                           color: '#fbf6ec',
+                          letterSpacing: '0.02em',
+                          textTransform: 'uppercase',
                           margin: '0 0 10px 0',
                         }}
                       >
@@ -407,10 +445,11 @@ export const ExpandableLookbookAccordion: React.FC = () => {
                   >
                     <span
                       style={{
-                        fontFamily: '"Fraunces", Georgia, serif',
+                        fontFamily: 'Anton, "Fraunces", Georgia, serif',
                         fontSize: '16px',
                         fontWeight: 600,
                         color: 'rgba(251, 246, 236, 0.75)',
+                        letterSpacing: '0.04em',
                       }}
                     >
                       {capsule.number}
@@ -461,7 +500,7 @@ export const ExpandableLookbookAccordion: React.FC = () => {
             flexWrap: 'wrap',
           }}
         >
-          {CAPSULES.map((capsule) => {
+          {activeCapsules.map((capsule) => {
             const isActive = capsule.id === activeId;
             return (
               <button

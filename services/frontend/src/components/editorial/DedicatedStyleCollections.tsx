@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, Grid, Card, CardMedia, CardContent, Chip } from '@mui/material';
 import { ArrowForwardOutlined, StyleOutlined, WeekendOutlined, AutoFixHighOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
-export const DedicatedStyleCollections: React.FC = () => {
-  const [activeCollection, setActiveCollection] = useState<'STREETWEAR' | 'CASUALWEAR' | 'ETHNICWEAR'>('STREETWEAR');
+export interface DedicatedStyleCollectionsProps {
+  initialCollection?: 'STREETWEAR' | 'CASUALWEAR' | 'ETHNICWEAR';
+}
+
+export const DedicatedStyleCollections: React.FC<DedicatedStyleCollectionsProps> = ({
+  initialCollection = 'STREETWEAR',
+}) => {
+  const [activeCollection, setActiveCollection] = useState<'STREETWEAR' | 'CASUALWEAR' | 'ETHNICWEAR'>(initialCollection);
+
+  useEffect(() => {
+    if (initialCollection) {
+      setActiveCollection(initialCollection);
+    }
+  }, [initialCollection]);
 
   return (
     <Box

@@ -19,6 +19,7 @@ import { ExpandableLookbookAccordion } from '../../components/editorial/Expandab
 import { DedicatedGymwearRunway } from '../../components/editorial/DedicatedGymwearRunway';
 import { DedicatedStyleCollections } from '../../components/editorial/DedicatedStyleCollections';
 import { useDepartmentExperience } from '../../hooks/useDepartmentExperience';
+import { PrototypeIllustration } from '../../utils/prototypeIllustrations';
 
 export const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -44,7 +45,7 @@ export const HomePage: React.FC = () => {
         const progress = Math.min(Math.max(scrollY / 500, 0), 1);
         const scale = 1.0 - progress * 0.06; // 1.0 -> 0.94
         const translateY = progress * -24; // layered title parallax movement
-        
+
         if (heroImageRef.current) {
           heroImageRef.current.style.transform = `scale(${scale.toFixed(4)})`;
         }
@@ -61,9 +62,19 @@ export const HomePage: React.FC = () => {
     };
   }, []);
 
-  // Multi-brand catalog: showcase at least 8 distinct verified brands
+  // Multi-brand catalog: showcase at least 8 distinct verified brands or department curation
   const featuredBrands = useMemo(() => {
     const registry = ALL_VERIFIED_BRANDS || BRANDS_DATA;
+    if (dept.activeDept && dept.config?.brands && dept.config.brands.length > 0) {
+      const deptBrandNames = dept.config.brands.map((b) => b.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const deptMatches = registry.filter((b) => {
+        const cleanName = b.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cleanSlug = b.slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return deptBrandNames.some((dn) => cleanName === dn || cleanSlug.includes(dn) || cleanName.includes(dn));
+      });
+      if (deptMatches.length > 0) return deptMatches;
+    }
+
     if (brandCategory === 'INDIAN') {
       return registry.filter((b) => b.origin === 'INDIAN').slice(0, 8);
     }
@@ -82,14 +93,34 @@ export const HomePage: React.FC = () => {
     const spotlightSlugs = ['sabyasachi', 'nike', 'the-souled-store', 'uniqlo', 'snitch', 'fabindia', 'the-row', 'hopscotch'];
     const curated = spotlightSlugs.map((s) => registry.find((b) => b.slug === s)).filter(Boolean) as typeof registry;
     return curated.length >= 8 ? curated : registry.slice(0, 8);
-  }, [brandCategory]);
+  }, [brandCategory, dept.activeDept, dept.config]);
 
-  // Curated runway pieces spanning diverse brands for Section 8
+  // Curated runway pieces spanning diverse brands for Section 8 (department-matched)
   const runwaySpotlight = useMemo(() => {
+    if (dept.activeDept) {
+      const slug = dept.activeDept.toLowerCase();
+      let matched: typeof ALL_CLOTHING_CATALOG = [];
+      if (slug === 'women') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.audience === 'Women' || p.subcategory.toLowerCase().includes('dress'));
+      } else if (slug === 'men') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.audience === 'Men' || p.subcategory.toLowerCase().includes('suit') || p.subcategory.toLowerCase().includes('shirt'));
+      } else if (slug === 'kids') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.audience === 'Kids' || p.brandName.toLowerCase().includes('hopscotch') || p.brandName.toLowerCase().includes('carter'));
+      } else if (slug === 'ethnic') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.subcategory.toLowerCase().includes('kurta') || p.subcategory.toLowerCase().includes('saree') || p.subcategory.toLowerCase().includes('lehenga') || p.description.toLowerCase().includes('zardozi') || p.brandName.toLowerCase().includes('sabyasachi') || p.brandName.toLowerCase().includes('fabindia') || p.brandName.toLowerCase().includes('raw mango'));
+      } else if (slug === 'streetwear') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.subcategory.toLowerCase().includes('tee') || p.subcategory.toLowerCase().includes('cargo') || p.subcategory.toLowerCase().includes('hoodie') || p.brandName.toLowerCase().includes('snitch') || p.brandName.toLowerCase().includes('bewakoof') || p.brandName.toLowerCase().includes('souled store'));
+      } else if (slug === 'gym') {
+        matched = ALL_CLOTHING_CATALOG.filter((p) => p.subcategory.toLowerCase().includes('compression') || p.subcategory.toLowerCase().includes('jogger') || p.subcategory.toLowerCase().includes('legging') || p.brandName.toLowerCase().includes('nike') || p.brandName.toLowerCase().includes('puma') || p.brandName.toLowerCase().includes('adidas') || p.brandName.toLowerCase().includes('hrx'));
+      }
+      if (matched.length > 0) {
+        return matched.slice(0, 8).map(toCatalogProduct);
+      }
+    }
     const diverseIds = ['prod-life-01', 'prod-life-07', 'prod-ind-01', 'prod-life-10', 'prod-life-09', 'prod-life-14', 'prod-life-03', 'prod-life-16'];
     const items = diverseIds.map((id) => ALL_CLOTHING_CATALOG.find((p) => p.id === id)).filter(Boolean) as typeof ALL_CLOTHING_CATALOG;
     return items.length >= 8 ? items.map(toCatalogProduct) : ALL_CLOTHING_CATALOG.slice(0, 8).map(toCatalogProduct);
-  }, []);
+  }, [dept.activeDept]);
 
   // Call React Hooks unconditionally at the top level
   const { data: catalogData } = useProducts({ size: 4 });
@@ -164,36 +195,45 @@ export const HomePage: React.FC = () => {
                   </Typography>
                 </Box>
 
-                {/* Oversized Fraunces Editorial Typography — department-specific */}
+                {/* Oversized Editorial Typography — Anton for department mode, Fraunces for baseline */}
                 <Typography
                   variant="h1"
+                  component="h1"
                   className="hero-h1"
                   sx={{
                     color: 'var(--ink, #1a1420)',
-                    fontSize: { xs: '2.85rem', sm: '4.2rem', md: 'clamp(46px, 7.5vw, 108px)' },
-                    lineHeight: { xs: 1.08, md: 0.96 },
+                    fontSize: dept.activeDept
+                      ? { xs: '3.4rem', sm: '5.2rem', md: 'clamp(58px, 9vw, 126px)' }
+                      : { xs: '2.85rem', sm: '4.2rem', md: 'clamp(46px, 7.5vw, 108px)' },
+                    lineHeight: dept.activeDept ? 0.92 : { xs: 1.08, md: 0.96 },
                     fontWeight: 400,
-                    letterSpacing: '-0.035em',
-                    fontFamily: '"Fraunces", Georgia, serif',
+                    letterSpacing: dept.activeDept ? '-0.02em' : '-0.035em',
+                    fontFamily: dept.activeDept ? 'Anton, Impact, sans-serif' : '"Fraunces", Georgia, serif',
+                    textTransform: dept.activeDept ? 'uppercase' : 'none',
                     mb: 3
                   }}
                 >
-                  {dept.hero.title}
-                  <Box
-                    component="i"
-                    sx={{
-                      display: 'block',
-                      fontStyle: 'italic',
-                      fontWeight: 400,
-                      color: dept.config?.accentColor
-                        ? dept.config.accentColor
-                        : 'var(--cobalt, #3a3ce0)',
-                      letterSpacing: '-0.02em',
-                      transition: 'color 0.4s ease'
-                    }}
-                  >
-                    {dept.hero.titleItalic}
-                  </Box>
+                  <span style={{ display: 'block', overflow: 'hidden' }}>
+                    <b style={{ display: 'block' }}>{dept.hero.title}</b>
+                  </span>
+                  <span style={{ display: 'block', overflow: 'hidden' }}>
+                    <b
+                      className={dept.activeDept ? 'hl' : ''}
+                      style={{
+                        display: 'block',
+                        fontStyle: dept.activeDept ? 'normal' : 'italic',
+                        color: dept.config?.accentColor
+                          ? dept.config.accentColor
+                          : dept.activeDept
+                            ? 'var(--lime, #d8f25a)'
+                            : 'var(--cobalt, #3a3ce0)',
+                        letterSpacing: dept.activeDept ? '-0.02em' : '-0.02em',
+                        transition: 'color 0.4s ease'
+                      }}
+                    >
+                      {dept.hero.titleItalic}
+                    </b>
+                  </span>
                 </Typography>
 
                 {/* Refined Editorial Subtitle */}
@@ -209,14 +249,14 @@ export const HomePage: React.FC = () => {
                     fontFamily: '"Instrument Sans", sans-serif'
                   }}
                 >
-                  LUMIÈRE is a clothing discovery guide. We show you what’s worth wearing, then send you to each brand’s own website to buy it.
+                  {dept.hero.subtitle}
                 </Typography>
 
                 {/* Pill-Shaped Calls To Action */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
                   <Button
                     component={Link}
-                    to="/products"
+                    to="#runway-track"
                     variant="contained"
                     size="large"
                     className="lumiere-pill-btn"
@@ -237,7 +277,7 @@ export const HomePage: React.FC = () => {
                       }
                     }}
                   >
-                    Explore Collections
+                    {dept.activeDept && dept.config?.tabs?.[0] ? `Shop ${dept.config.tabs[0].toLowerCase()} →` : 'Explore Collections'}
                   </Button>
 
                   <Button
@@ -330,7 +370,7 @@ export const HomePage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 5 }}>
               <Box sx={{ position: 'relative', maxWidth: 500, mx: 'auto' }}>
 
-                {/* Main Hero Portrait Card */}
+                {/* Main Hero Visual Card with Prototype Silhouette Illustration Support */}
                 <Card
                   ref={heroImageRef}
                   className={`sa${dept.heroAnimationClass ? ` ${dept.heroAnimationClass}` : ''}`}
@@ -339,36 +379,69 @@ export const HomePage: React.FC = () => {
                     overflow: 'hidden',
                     boxShadow: '0 24px 60px rgba(26, 20, 32, 0.12)',
                     border: '1px solid var(--line, #e5dccb)',
-                    bgcolor: '#FFFFFF',
+                    bgcolor: dept.activeDept ? '#120f18' : '#FFFFFF',
                     willChange: 'transform',
                     transformOrigin: 'center center',
-                    transition: 'transform 0.05s ease-out'
+                    transition: 'transform 0.05s ease-out, background-color 0.4s ease'
                   }}
                 >
-                  <Box sx={{ position: 'relative', pt: '130%' }}>
-                    <CardMedia
-                      component="img"
-                      className="hero-art"
-                      image={dept.hero.image}
-                      alt={dept.activeDept ? `${dept.config?.label ?? ''} Department Campaign` : 'Lumière Editorial Haute Couture Campaign'}
-                      loading="eager"
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        transition: 'opacity 0.5s ease'
-                      }}
-                    />
+                  <Box sx={{ position: 'relative', pt: '130%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {dept.activeDept ? (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          p: { xs: 2, md: 3 },
+                          background: 'radial-gradient(circle at 50% 50%, rgba(216, 242, 90, 0.08) 0%, transparent 70%)'
+                        }}
+                      >
+                        <PrototypeIllustration
+                          slot="hero1"
+                          shape={
+                            dept.activeDept === 'women' ? 'dress' :
+                              dept.activeDept === 'men' ? 'jacket' :
+                                dept.activeDept === 'kids' ? 'tee' :
+                                  dept.activeDept === 'ethnic' ? 'kurta' :
+                                    dept.activeDept === 'streetwear' ? 'hood' : 'leg'
+                          }
+                          gender={dept.activeDept === 'men' ? 'm' : dept.activeDept === 'kids' ? 'k' : 'w'}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            maxHeight: '440px',
+                            filter: 'drop-shadow(0 20px 40px rgba(0,0,0,.45))'
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <CardMedia
+                        component="img"
+                        className="hero-art"
+                        image={dept.hero.image}
+                        alt="Lumière Editorial Haute Couture Campaign"
+                        loading="eager"
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'opacity 0.5s ease'
+                        }}
+                      />
+                    )}
                     <Box
                       sx={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'linear-gradient(to top, rgba(26, 20, 32, 0.88) 0%, rgba(26, 20, 32, 0.1) 60%, transparent 100%)'
+                        background: 'linear-gradient(to top, rgba(26, 20, 32, 0.88) 0%, rgba(26, 20, 32, 0.1) 60%, transparent 100%)',
+                        pointerEvents: 'none'
                       }}
                     />
-                    <Box sx={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
+                    <Box sx={{ position: 'absolute', bottom: 24, left: 24, right: 24, zIndex: 3 }}>
                       <Chip
                         label={dept.hero.chipLabel}
                         size="small"
@@ -383,7 +456,7 @@ export const HomePage: React.FC = () => {
                           borderRadius: '99px'
                         }}
                       />
-                      <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, fontFamily: '"Fraunces", Georgia, serif', mb: 0.5 }}>
+                      <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, fontFamily: 'Anton, "Fraunces", Georgia, serif', mb: 0.5, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                         {dept.hero.cardTitle}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#E5DCCB', display: 'block', fontFamily: '"Instrument Sans", sans-serif' }}>
@@ -396,7 +469,7 @@ export const HomePage: React.FC = () => {
                 {/* Floating Asymmetrical Accent Card (Preserved for Tests) */}
                 <Box
                   sx={{
-                    display: { xs: 'none', sm: 'block' },
+                    display: dept.activeDept ? 'none' : { xs: 'none', sm: 'block' },
                     position: 'absolute',
                     top: -24,
                     left: -32,
@@ -477,11 +550,37 @@ export const HomePage: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Prototype Department Marquee Ticker (Active Department Only) */}
+      {dept.activeDept && (
+        <Box
+          className="mq"
+          sx={{
+            py: 1.4,
+            bgcolor: 'var(--lime, #d8f25a)',
+            color: '#120f18',
+            borderTop: '1px solid var(--line, #e5dccb)',
+            borderBottom: '1px solid var(--line, #e5dccb)',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            fontFamily: 'Anton, Impact, sans-serif',
+            fontSize: '0.92rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase'
+          }}
+        >
+          <Box className="t" sx={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+            <span>
+              ★ {dept.config?.mq || 'DIRECT ATELIER REFERRALS • 100% VERIFIED AUTHENTIC'} ● 14-DAY HASSLE-FREE RETURNS ● ETHICAL ATELIERS ONLY ★ {dept.config?.mq || 'DIRECT ATELIER REFERRALS • 100% VERIFIED AUTHENTIC'} ● SAME DAY DISPATCH IN METROS ● ZERO MIDDLEMEN
+            </span>
+          </Box>
+        </Box>
+      )}
+
       {/* =========================================================================
           2. VIVANT-INSPIRED CURSOR-DRIVEN CONCAVE 3D CAROUSEL (LUMIÈRE SIGNATURES)
           STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
         <Concave3DCarousel />
       </Box>
 
@@ -682,7 +781,7 @@ export const HomePage: React.FC = () => {
           4. DEDICATED GYMWEAR & ACTIVEWEAR RUNWAY (MEN'S & WOMEN'S)
           STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
         <DedicatedGymwearRunway />
       </Box>
 
@@ -690,8 +789,8 @@ export const HomePage: React.FC = () => {
           5. DEDICATED STREETWEAR, CASUALWEAR & ETHNICWEAR EDITORIAL COLLECTIONS
           STAGE 15C.3: Added .rv class for department-specific scroll reveal
       ========================================================================= */}
-      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`}>
-        <DedicatedStyleCollections />
+      <Box className={`rv${dept.heroRevealed ? ' in' : ''}`} sx={{ overflow: 'hidden', width: '100%', maxWidth: '100%' }}>
+        <DedicatedStyleCollections initialCollection={dept.activeDept === 'streetwear' ? 'STREETWEAR' : dept.activeDept === 'ethnic' ? 'ETHNICWEAR' : 'STREETWEAR'} />
       </Box>
 
       {/* =========================================================================
@@ -699,7 +798,7 @@ export const HomePage: React.FC = () => {
           STAGE 15C.3: Added .ly class for department-specific lookbook reveals
       ========================================================================= */}
       <Box className={`ly${dept.lookbookRevealed ? ' on' : ''}`}>
-        <ExpandableLookbookAccordion />
+        <ExpandableLookbookAccordion activeDept={dept.activeDept} departmentLooks={dept.config?.looks} />
       </Box>
 
       {/* =========================================================================
@@ -712,15 +811,21 @@ export const HomePage: React.FC = () => {
 
             <Grid size={{ xs: 12, lg: 5 }}>
               <Typography variant="overline" sx={{ color: 'var(--lime, #d8f25a)', fontWeight: 700, letterSpacing: '0.22em', fontFamily: '"Instrument Sans", sans-serif' }}>
-                MAISON CURATION
+                {dept.activeDept ? `${dept.config?.label.toUpperCase()} BRAND DIRECTORY` : 'MAISON CURATION'}
               </Typography>
               <Typography variant="h2" sx={{ color: '#FFFFFF', fontWeight: 400, my: 2, fontFamily: '"Fraunces", Georgia, serif' }}>
-                Dual Heritage: <span style={{ color: 'var(--lime, #d8f25a)' }}>Indian Artistry</span> & Global Avant-Garde
+                {dept.activeDept && dept.config?.brH ? (
+                  <span>{dept.config.label}&apos;s brands <span style={{ color: 'var(--lime, #d8f25a)', fontStyle: 'italic' }}>we send you to</span></span>
+                ) : (
+                  <>Dual Heritage: <span style={{ color: 'var(--lime, #d8f25a)' }}>Indian Artistry</span> & Global Avant-Garde</>
+                )}
               </Typography>
               <Typography variant="body1" sx={{ color: 'var(--eve-mute, #cbb8d6)', mb: 4, lineHeight: 1.8, fontSize: '1.05rem', fontFamily: '"Instrument Sans", sans-serif' }}>
-                LUMIÈRE bridges the world’s most celebrated textile civilizations.
-                From the timeless zardozi embroidery of Sabyasachi and handloom Chanderi weaves of Raw Mango
-                to the sculptural minimalism of The Row and Parisian tailoring of Saint Laurent.
+                {dept.activeDept && dept.config ? (
+                  `LUMIÈRE curates verified official destinations for ${dept.config.label} wear. Every brand card directs you directly to the authenticated designer website.`
+                ) : (
+                  'LUMIÈRE bridges the world’s most celebrated textile civilizations. From the timeless zardozi embroidery of Sabyasachi and handloom Chanderi weaves of Raw Mango to the sculptural minimalism of The Row and Parisian tailoring of Saint Laurent.'
+                )}
               </Typography>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 5 }}>
@@ -911,17 +1016,17 @@ export const HomePage: React.FC = () => {
       {/* =========================================================================
           8. EDITORIAL RUNWAY: FEATURED RUNWAY PIECES
       ========================================================================= */}
-      <Box id="runway-track" component="section" aria-label="Featured Runway Pieces Runway" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)' }}>
+      <Box id="runway-track" component="section" aria-label="Featured Runway Pieces Runway" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'var(--bg, #fbf6ec)', borderTop: '1px solid var(--line, #e5dccb)', borderBottom: '1px solid var(--line, #e5dccb)', overflow: 'hidden' }}>
         <Container maxWidth="xl">
           <EditorialRunwayTrack
-            eyebrow="CURATED SELECTION"
-            title="Featured Runway Pieces"
-            subtitle="Hand-selected signature creations showcasing the pinnacle of modern tailoring and textile craft."
-            ariaLabel="Featured runway pieces track"
+            eyebrow={dept.activeDept ? `${dept.config?.label.toUpperCase()} RUNWAY` : 'CURATED SELECTION'}
+            title={dept.activeDept && dept.config?.newH ? dept.config.newH : 'Featured Runway Pieces'}
+            subtitle={dept.activeDept ? `Explore new seasonal ${dept.config?.label.toLowerCase()} arrivals and signature wardrobe pieces.` : 'Hand-selected signature creations showcasing the pinnacle of modern tailoring and textile craft.'}
+            ariaLabel={dept.activeDept ? `${dept.config?.label} Runway Pieces` : 'Featured runway pieces track'}
             action={
               <Button
                 component={Link}
-                to="/products"
+                to={dept.activeDept ? `/products?category=${dept.activeDept}` : '/products'}
                 sx={{ color: '#1a1420', fontWeight: 600, fontFamily: '"Instrument Sans", sans-serif' }}
               >
                 View Full Catalog

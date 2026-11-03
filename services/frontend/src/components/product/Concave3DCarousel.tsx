@@ -208,6 +208,10 @@ export const Concave3DCarousel: React.FC = () => {
       onKeyDown={handleKeyDown}
       className="relative w-full overflow-hidden select-none"
       style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
         backgroundColor: 'var(--bg, #fbf6ec)',
         paddingTop: '80px',
         paddingBottom: '90px',

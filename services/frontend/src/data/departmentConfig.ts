@@ -8,6 +8,23 @@
  * editorial metadata, and animation timing for entrance sequences.
  */
 
+export interface DepartmentLook {
+  name: string;
+  sub: string;
+  brand: string;
+  bg: string;
+  fill: string;
+  shape: string;
+  imageUrl: string;
+}
+
+export interface DepartmentCollection {
+  title: string;
+  text: string;
+  shapes: string[];
+  bgs: string[];
+}
+
 export interface DepartmentConfig {
   /** Department slug (matches data-a attribute value) */
   slug: string;
@@ -41,16 +58,30 @@ export interface DepartmentConfig {
   heroAnimationClass: string;
   /** Trust bar stat text */
   trustBarStat: string;
+  /** Prototype DEP marquee text */
+  mq: string;
+  /** Prototype DEP new in heading */
+  newH: string;
+  /** Prototype DEP brands heading */
+  brH: string;
+  /** Prototype DEP audience/category tabs */
+  tabs: string[];
+  /** Prototype DEP curated brands list */
+  brands: string[];
+  /** Prototype DEP lookbook items */
+  looks: DepartmentLook[];
+  /** Prototype DEP curated collections */
+  cols: DepartmentCollection[];
 }
 
 export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
   women: {
     slug: 'women',
     label: 'Women',
-    heroTitle: 'Feminine grace.',
-    heroTitleItalic: 'Couture reimagined.',
+    heroTitle: 'Wear',
+    heroTitleItalic: 'the day',
     heroSubtitle:
-      'Flowing silhouettes, hand-embroidered sarees, structured evening gowns, and soft silk lehengas — curated from India\'s premier ateliers and Parisian couture houses.',
+      'Dresses, tailoring and everyday basics from brands worth knowing.',
     heroTag: 'LUMIÈRE WOMEN\'S ATELIER • AUTUMN/WINTER 2026',
     heroChipLabel: 'FEMME COUTURE',
     heroCardTitle: 'Ethereal Silk & Velvet',
@@ -64,14 +95,71 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 80,
     heroAnimationClass: 'sway-animated',
     trustBarStat: 'Bridal & Evening Couture',
+    mq: 'Women’s fashion from brands worth knowing',
+    newH: 'New in for her',
+    brH: 'Women’s brands we send you to',
+    tabs: ['Dresses', 'Tailoring', 'Everyday'],
+    brands: ['Reformation', 'COS', 'Zara', 'H&M', 'W', 'ONLY'],
+    looks: [
+      {
+        name: 'Office edit',
+        sub: 'Tailoring and smart basics',
+        brand: 'COS',
+        bg: '#3a3ce0',
+        fill: '#d8f25a',
+        shape: 'jacket',
+        imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Weekend dress',
+        sub: 'Easy dresses',
+        brand: 'Reformation',
+        bg: '#ff4fa3',
+        fill: '#fff1b8',
+        shape: 'dress',
+        imageUrl: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Soft knits',
+        sub: 'Layers for cooler days',
+        brand: 'H&M',
+        bg: '#d8f25a',
+        fill: '#120f18',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Night out',
+        sub: 'Satin and shine',
+        brand: 'Zara',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'dress',
+        imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Occasion',
+        text: 'Dresses for weddings, parties and dinners.',
+        shapes: ['dress', 'dress', 'jacket'],
+        bgs: ['#ff4fa3', '#cfc2ff', '#ffb199'],
+      },
+      {
+        title: 'Work',
+        text: 'Tailoring that moves with you.',
+        shapes: ['jacket', 'leg', 'tee'],
+        bgs: ['#3a3ce0', '#120f18', '#d8f25a'],
+      },
+    ],
   },
   men: {
     slug: 'men',
     label: 'Men',
-    heroTitle: 'Sharp tailoring.',
-    heroTitleItalic: 'Built to command.',
+    heroTitle: 'Sharp',
+    heroTitleItalic: 'every day',
     heroSubtitle:
-      'Bespoke wool suiting, royal jacquard sherwanis, bandhgalas, raw silk kurtas, and luxury linen overshirts — precision-cut for the modern gentleman.',
+      'Shirts, denim and tailoring for work and weekends.',
     heroTag: 'LUMIÈRE MEN\'S SARTORIAL • AUTUMN/WINTER 2026',
     heroChipLabel: 'HOMME SARTORIAL',
     heroCardTitle: 'Structured Precision',
@@ -85,14 +173,71 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 50,
     heroAnimationClass: '',
     trustBarStat: 'Sartorial & Festive Wear',
+    mq: 'Men’s fashion from brands worth knowing',
+    newH: 'New in for him',
+    brH: 'Men’s brands we send you to',
+    tabs: ['Shirts & tees', 'Denim', 'Tailoring'],
+    brands: ['Levi’s', 'Uniqlo', 'Massimo Dutti', 'Zara', 'U.S. Polo Assn.', 'Calvin Klein'],
+    looks: [
+      {
+        name: 'Smart casual',
+        sub: 'Shirts and chinos',
+        brand: 'Massimo Dutti',
+        bg: '#3a3ce0',
+        fill: '#d8f25a',
+        shape: 'jacket',
+        imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Denim day',
+        sub: 'Jeans and jackets',
+        brand: 'Levi’s',
+        bg: '#ff5a1f',
+        fill: '#ffffff',
+        shape: 'leg',
+        imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Plain basics',
+        sub: 'Tees and knits',
+        brand: 'Uniqlo',
+        bg: '#d8f25a',
+        fill: '#120f18',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Polo club',
+        sub: 'Polos and chinos',
+        brand: 'U.S. Polo Assn.',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Smart',
+        text: 'Shirts and blazers for the office and dinners.',
+        shapes: ['jacket', 'tee', 'leg'],
+        bgs: ['#3a3ce0', '#d8f25a', '#120f18'],
+      },
+      {
+        title: 'Casual',
+        text: 'Denim and easy layers for weekends.',
+        shapes: ['leg', 'jacket', 'tee'],
+        bgs: ['#ff5a1f', '#7a3cff', '#d8f25a'],
+      },
+    ],
   },
   kids: {
     slug: 'kids',
     label: 'Kids',
-    heroTitle: 'Little legends.',
-    heroTitleItalic: 'Born to shine.',
+    heroTitle: 'Play',
+    heroTitleItalic: 'in colour',
     heroSubtitle:
-      'Pure organic cotton kurta sets, festive lehengas for young girls, miniature sherwanis, fun printed tees, and celebration wear — crafted for comfort and joy.',
+      'Comfy outfits, party looks and school-day basics.',
     heroTag: 'LUMIÈRE KIDS\' HERITAGE • CELEBRATION COLLECTION',
     heroChipLabel: 'ENFANT HERITAGE',
     heroCardTitle: 'Joyful Heritage',
@@ -106,14 +251,71 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 60,
     heroAnimationClass: 'bob-animated',
     trustBarStat: 'Festive & Everyday Wear',
+    mq: 'Kidswear from brands parents know',
+    newH: 'New in for kids',
+    brH: 'Kids’ brands we send you to',
+    tabs: ['Girls', 'Boys', 'Baby'],
+    brands: ['Hopscotch', 'Carter’s', 'H&M', 'Adidas', 'Puma'],
+    looks: [
+      {
+        name: 'Party time',
+        sub: 'Dresses and sets',
+        brand: 'Hopscotch',
+        bg: '#ff4fa3',
+        fill: '#fff1b8',
+        shape: 'dress',
+        imageUrl: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'School days',
+        sub: 'Everyday basics',
+        brand: 'H&M',
+        bg: '#d8f25a',
+        fill: '#120f18',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Baby basics',
+        sub: 'Bodysuits and sleepwear',
+        brand: 'Carter’s',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'crop',
+        imageUrl: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Sport day',
+        sub: 'Tees and shorts',
+        brand: 'Adidas',
+        bg: '#ff5a1f',
+        fill: '#ffffff',
+        shape: 'short',
+        imageUrl: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Occasion',
+        text: 'Party dresses and festive sets.',
+        shapes: ['dress', 'dress', 'tee'],
+        bgs: ['#ff4fa3', '#ffd84d', '#7a3cff'],
+      },
+      {
+        title: 'Everyday',
+        text: 'Comfy basics for school and play.',
+        shapes: ['tee', 'short', 'hood'],
+        bgs: ['#d8f25a', '#3a3ce0', '#ff5a1f'],
+      },
+    ],
   },
   ethnic: {
     slug: 'ethnic',
     label: 'Ethnic',
-    heroTitle: 'Timeless craft.',
-    heroTitleItalic: 'Heritage woven in gold.',
+    heroTitle: 'Rooted',
+    heroTitleItalic: 'in craft',
     heroSubtitle:
-      'Zardozi embroidery, Chanderi weaves, Banarasi brocades, handloom silk sarees, and royal anarkalis — preserving centuries of textile artistry.',
+      'Kurtas, sarees and festive wear from Indian labels.',
     heroTag: 'LUMIÈRE ETHNIC COUTURE • ARTISANAL HERITAGE',
     heroChipLabel: 'ETHNIC HERITAGE',
     heroCardTitle: 'Zardozi & Brocade',
@@ -127,14 +329,71 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 100,
     heroAnimationClass: 'breathe-animated',
     trustBarStat: 'Heritage & Bridal Couture',
+    mq: 'Indian ethnic wear from labels with a craft story',
+    newH: 'New in ethnic wear',
+    brH: 'Ethnic wear labels we send you to',
+    tabs: ['Kurtas', 'Sarees', 'Festive'],
+    brands: ['Fabindia', 'Anita Dongre', 'Raw Mango', 'Sabyasachi', 'Biba', 'W'],
+    looks: [
+      {
+        name: 'Everyday kurta',
+        sub: 'Handloom cotton',
+        brand: 'Fabindia',
+        bg: '#ff5a1f',
+        fill: '#ffffff',
+        shape: 'kurta',
+        imageUrl: 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Festive',
+        sub: 'Gota patti and embroidery',
+        brand: 'Anita Dongre',
+        bg: '#ff4fa3',
+        fill: '#fff1b8',
+        shape: 'dress',
+        imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Saree',
+        sub: 'Handwoven textiles',
+        brand: 'Raw Mango',
+        bg: '#3a3ce0',
+        fill: '#d8f25a',
+        shape: 'dress',
+        imageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Couture',
+        sub: 'Wedding wear',
+        brand: 'Sabyasachi',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'jacket',
+        imageUrl: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Everyday',
+        text: 'Handloom cottons and block prints.',
+        shapes: ['kurta', 'kurta', 'dress'],
+        bgs: ['#ff5a1f', '#bfe3a6', '#f9e08a'],
+      },
+      {
+        title: 'Wedding',
+        text: 'Festive and bridal wear.',
+        shapes: ['dress', 'jacket', 'dress'],
+        bgs: ['#7a3cff', '#ff4fa3', '#3a3ce0'],
+      },
+    ],
   },
   streetwear: {
     slug: 'streetwear',
     label: 'Streetwear',
-    heroTitle: 'Break the rules.',
-    heroTitleItalic: 'Wear the culture.',
+    heroTitle: 'Loud',
+    heroTitleItalic: 'fits',
     heroSubtitle:
-      'Oversized graphic tees, distressed denim, cargo joggers, statement sneakers, and bold layering pieces — for those who define the street.',
+      'Oversized tees, cargos and hoodies.',
     heroTag: 'LUMIÈRE STREETWEAR LAB • DROP CULTURE 2026',
     heroChipLabel: 'STREET CULTURE',
     heroCardTitle: 'Raw Denim & Graphics',
@@ -148,14 +407,71 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 30,
     heroAnimationClass: 'stick-animated',
     trustBarStat: 'Streetwear & Drop Culture',
+    mq: 'Streetwear and casual fits',
+    newH: 'New in streetwear',
+    brH: 'Streetwear brands we send you to',
+    tabs: ['Tees', 'Bottoms', 'Outerwear'],
+    brands: ['Bewakoof', 'The Souled Store', 'Snitch', 'Superdry', 'Levi’s', 'H&M'],
+    looks: [
+      {
+        name: 'Oversized',
+        sub: 'Tees and hoodies',
+        brand: 'Bewakoof',
+        bg: '#3a3ce0',
+        fill: '#d8f25a',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Print drop',
+        sub: 'Graphic tees',
+        brand: 'The Souled Store',
+        bg: '#ff5a1f',
+        fill: '#ffffff',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Cargo',
+        sub: 'Pants and co-ords',
+        brand: 'Snitch',
+        bg: '#d8f25a',
+        fill: '#120f18',
+        shape: 'leg',
+        imageUrl: 'https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Layers',
+        sub: 'Jackets and denim',
+        brand: 'Superdry',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'jacket',
+        imageUrl: 'https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Oversized',
+        text: 'Big tees and hoodies.',
+        shapes: ['tee', 'hood', 'tee'],
+        bgs: ['#3a3ce0', '#d8f25a', '#ff5a1f'],
+      },
+      {
+        title: 'Denim',
+        text: 'Jeans and jackets.',
+        shapes: ['leg', 'jacket', 'leg'],
+        bgs: ['#120f18', '#3a3ce0', '#ffb199'],
+      },
+    ],
   },
   gym: {
     slug: 'gym',
     label: 'Gym',
-    heroTitle: 'Train harder.',
-    heroTitleItalic: 'Perform better.',
+    heroTitle: 'Move',
+    heroTitleItalic: 'in colour',
     heroSubtitle:
-      'High-performance compression tights, moisture-wicking training tees, breathable running gear, and ergonomic gym accessories — engineered for peak performance.',
+      'Studio-ready sets from gym brands worth knowing.',
     heroTag: 'LUMIÈRE ACTIVEWEAR • PERFORMANCE COLLECTION',
     heroChipLabel: 'ATHLETIC PERFORMANCE',
     heroCardTitle: 'Performance Engineered',
@@ -169,6 +485,78 @@ export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
     entranceDelay: 50,
     heroAnimationClass: '',
     trustBarStat: 'Performance & Training Gear',
+    mq: 'Gym wear for women, men and kids',
+    newH: 'New in for training',
+    brH: 'Gym brands we send you to',
+    tabs: ['Women', 'Men', 'Kids'],
+    brands: ['Nike', 'Adidas', 'Puma', 'HRX', 'NIVIA', 'Coitonic', 'Technosport'],
+    looks: [
+      {
+        name: 'Studio flow',
+        sub: 'Women · yoga and pilates',
+        brand: 'HRX',
+        bg: '#ff4fa3',
+        fill: '#fff1b8',
+        shape: 'crop',
+        imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Heavy day',
+        sub: 'Men · lifting',
+        brand: 'Nike',
+        bg: '#3a3ce0',
+        fill: '#d8f25a',
+        shape: 'tee',
+        imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Run club',
+        sub: 'Women · road and track',
+        brand: 'Puma',
+        bg: '#d8f25a',
+        fill: '#120f18',
+        shape: 'leg',
+        imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Gym to street',
+        sub: 'Men · hoodies and joggers',
+        brand: 'Adidas',
+        bg: '#ff5a1f',
+        fill: '#ffffff',
+        shape: 'hood',
+        imageUrl: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&q=80&w=900',
+      },
+      {
+        name: 'Mini athletes',
+        sub: 'Kids · sport days',
+        brand: 'Adidas',
+        bg: '#7a3cff',
+        fill: '#ffd84d',
+        shape: 'short',
+        imageUrl: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=900',
+      },
+    ],
+    cols: [
+      {
+        title: 'Studio',
+        text: 'Yoga, pilates and low-impact sessions in soft, stretchy sets.',
+        shapes: ['crop', 'leg', 'tee'],
+        bgs: ['#ff4fa3', '#cfc2ff', '#ffb199'],
+      },
+      {
+        title: 'Heavy lifting',
+        text: 'Compression fits and breathable tees for serious sessions.',
+        shapes: ['tee', 'short', 'hood'],
+        bgs: ['#3a3ce0', '#120f18', '#d8f25a'],
+      },
+      {
+        title: 'Road and track',
+        text: 'Light layers and shorts for running and team sport.',
+        shapes: ['short', 'tee', 'leg'],
+        bgs: ['#d8f25a', '#ff5a1f', '#7a3cff'],
+      },
+    ],
   },
 };
 

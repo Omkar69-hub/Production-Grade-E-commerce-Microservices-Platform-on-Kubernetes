@@ -48,9 +48,11 @@ const MainLayout: React.FC = () => {
       // Toggle off / deselect back to default unstyled homepage
       setActiveDepartment(null);
       document.body.removeAttribute('data-a');
+      navigate('/', { replace: true });
     } else {
       setActiveDepartment(slug);
       document.body.dataset.a = slug;
+      navigate(`/?dept=${slug}`, { replace: true });
     }
   };
 
@@ -59,6 +61,7 @@ const MainLayout: React.FC = () => {
       if (e) e.preventDefault();
       setActiveDepartment(null);
       document.body.removeAttribute('data-a');
+      navigate('/', { replace: true });
     }
   };
 
@@ -106,6 +109,19 @@ const MainLayout: React.FC = () => {
       window.removeEventListener('storage', updateWishlist);
       window.removeEventListener('lumiere-wishlist-updated', updateWishlist);
     };
+  }, []);
+
+  // Scroll progress bar indicator (#pg from prototype)
+  useEffect(() => {
+    const handleScroll = () => {
+      const pg = document.getElementById('pg');
+      if (!pg) return;
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      pg.style.transform = `scaleX(${h > 0 ? window.scrollY / h : 0})`;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleDrawerToggle = () => {
@@ -161,9 +177,31 @@ const MainLayout: React.FC = () => {
             handleHomeClick(e);
             handleDrawerToggle();
           }}
-          sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: '#1a1420' }}
+          sx={{ fontFamily: '"Fraunces", serif', letterSpacing: '0.04em', fontWeight: 600, color: '#1a1420', display: 'flex', alignItems: 'center' }}
         >
           LUMIÈRE
+          {activeDepartment && (
+            <Box
+              component="small"
+              id="ltag-mobile"
+              sx={{
+                fontFamily: '"Instrument Sans", sans-serif',
+                fontWeight: 600,
+                fontSize: '10px',
+                letterSpacing: '0.2em',
+                ml: 1,
+                bgcolor: 'var(--lime, #d8f25a)',
+                color: '#120f18',
+                px: 0.8,
+                py: 0.2,
+                borderRadius: '99px',
+                verticalAlign: 'middle',
+                display: 'inline-block'
+              }}
+            >
+              {activeDepartment.toUpperCase()}
+            </Box>
+          )}
         </Typography>
       </Box>
       <Divider sx={{ borderColor: 'var(--line, #e5dccb)' }} />
@@ -333,6 +371,9 @@ const MainLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'var(--bg, #fbf6ec)' }}>
+      {/* Scroll Progress Bar (#pg from prototype) */}
+      <div id="pg" aria-hidden="true" />
+
       {/* Skip to Content for Keyboard and Screen Reader Accessibility */}
       <a href="#main-content" className="skip-to-content">
         Skip to main content
@@ -371,18 +412,25 @@ const MainLayout: React.FC = () => {
       <AppBar position="sticky" elevation={0} sx={{
         bgcolor: 'rgba(251, 246, 236, 0.96)',
         backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--line, #e5dccb)'
+        borderBottom: '1px solid var(--line, #e5dccb)',
+        overflow: 'hidden'
       }}>
-        <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ py: { xs: 1.4, md: 1.8 }, gap: 2 }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 2, md: 3 } }}>
+          <Toolbar disableGutters sx={{ py: { xs: 1.4, md: 1.8 }, gap: { xs: 1, md: 1, lg: 2 } }}>
             {isMobile && (
-              <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 0.5, color: 'var(--ink, #1a1420)' }}>
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={handleDrawerToggle}
+                aria-label="open navigation drawer"
+                sx={{ mr: 0.5, color: 'var(--ink, #1a1420)' }}
+              >
                 <MenuIcon />
               </IconButton>
             )}
 
             {/* Brand Logo & Subtitle */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', mr: { xs: 'auto', md: 4 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', mr: { xs: 'auto', md: 2, lg: 4 } }}>
               <Typography
                 variant="h5"
                 component={Link}
@@ -400,6 +448,29 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 LUMIÈRE
+                {activeDepartment && (
+                  <Box
+                    component="small"
+                    id="ltag"
+                    sx={{
+                      fontFamily: '"Instrument Sans", sans-serif',
+                      fontWeight: 600,
+                      fontSize: '11px',
+                      letterSpacing: '0.2em',
+                      ml: 1,
+                      bgcolor: 'var(--lime, #d8f25a)',
+                      color: '#120f18',
+                      px: 1,
+                      py: 0.3,
+                      borderRadius: '99px',
+                      verticalAlign: 'middle',
+                      display: 'inline-block',
+                      lineHeight: 1.4
+                    }}
+                  >
+                    {activeDepartment.toUpperCase()}
+                  </Box>
+                )}
               </Typography>
               <Typography
                 variant="caption"
@@ -427,7 +498,7 @@ const MainLayout: React.FC = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  gap: { md: 1, lg: 1.8, xl: 2.6 }
+                  gap: { md: 0.2, lg: 1.2, xl: 2.2 }
                 }}
               >
                 {primaryNavItems.map((item) => {
@@ -450,8 +521,8 @@ const MainLayout: React.FC = () => {
                             fontWeight: isSelected ? 700 : 500,
                             color: isSelected ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
                             letterSpacing: '0.02em',
-                            fontSize: { md: '0.80rem', lg: '0.86rem' },
-                            px: { md: 0.6, lg: 1.0 },
+                            fontSize: { md: '0.74rem', lg: '0.82rem', xl: '0.86rem' },
+                            px: { md: 0.4, lg: 0.8, xl: 1.0 },
                             py: 0.5,
                             minWidth: 'auto',
                             textTransform: 'none',
@@ -488,8 +559,8 @@ const MainLayout: React.FC = () => {
                           fontWeight: isActive ? 700 : 500,
                           color: isActive ? 'var(--cobalt, #3a3ce0)' : 'var(--ink, #1a1420)',
                           letterSpacing: '0.02em',
-                          fontSize: { md: '0.80rem', lg: '0.86rem' },
-                          px: { md: 0.6, lg: 1.0 },
+                          fontSize: { md: '0.74rem', lg: '0.82rem', xl: '0.86rem' },
+                          px: { md: 0.4, lg: 0.8, xl: 1.0 },
                           py: 0.5,
                           minWidth: 'auto',
                           textTransform: 'none',
@@ -510,7 +581,7 @@ const MainLayout: React.FC = () => {
             {!isMobile && (
               <Box component="form" onSubmit={handleSearch} sx={{
                 display: 'flex', alignItems: 'center', bgcolor: '#FFFFFF',
-                borderRadius: '30px', px: 2, py: 0.6, width: 250,
+                borderRadius: '30px', px: 2, py: 0.6, width: { md: 130, lg: 190, xl: 240 },
                 border: '1px solid var(--line, #e5dccb)',
                 transition: 'all 0.25s ease',
                 '&:focus-within': { borderColor: 'var(--cobalt, #3a3ce0)', bgcolor: '#FFFFFF', boxShadow: '0 0 0 3px rgba(58, 60, 224, 0.12)' }
@@ -532,6 +603,7 @@ const MainLayout: React.FC = () => {
               <Tooltip title={effectsEnabled ? "Visual Atmosphere: Active (Click to reduce)" : "Visual Atmosphere: Reduced (Click to activate)"}>
                 <IconButton
                   onClick={toggleEffects}
+                  aria-label={effectsEnabled ? "Visual Atmosphere: Active" : "Visual Atmosphere: Reduced"}
                   sx={{
                     color: effectsEnabled ? 'var(--cobalt, #3a3ce0)' : 'var(--mute, #6b6173)',
                     border: '1px solid',
@@ -600,6 +672,7 @@ const MainLayout: React.FC = () => {
                   <IconButton
                     component={Link}
                     to="/cart"
+                    aria-label="Shopping Bag"
                     sx={{
                       color: 'var(--ink, #1a1420)',
                       border: '1px solid var(--line, #e5dccb)',
@@ -629,6 +702,7 @@ const MainLayout: React.FC = () => {
                 <>
                   <IconButton
                     onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    aria-label="User Account Menu"
                     sx={{
                       color: 'var(--ink, #1a1420)',
                       border: '1px solid var(--line, #e5dccb)',

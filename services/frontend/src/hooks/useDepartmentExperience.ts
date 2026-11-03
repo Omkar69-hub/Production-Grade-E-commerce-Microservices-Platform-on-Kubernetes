@@ -20,12 +20,12 @@
  * the current department config plus the .on state for the hero.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   DEPARTMENT_CONFIGS,
   BASELINE_HERO,
   type DepartmentConfig,
-  type DepartmentSlug,
 } from '../data/departmentConfig';
 
 interface DepartmentExperience {
@@ -57,13 +57,26 @@ interface DepartmentExperience {
 }
 
 export function useDepartmentExperience(): DepartmentExperience {
-  const [activeDept, setActiveDept] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const deptParam = searchParams.get('dept')?.toLowerCase() || null;
+  const initialDept = (deptParam && DEPARTMENT_CONFIGS[deptParam]) ? deptParam : (document.body.dataset.a || null);
+
+  const [activeDept, setActiveDept] = useState<string | null>(initialDept);
   const [heroRevealed, setHeroRevealed] = useState(true); // baseline starts revealed
   const [lookbookRevealed, setLookbookRevealed] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const prevDeptRef = useRef<string | null>(null);
+  const prevDeptRef = useRef<string | null>(initialDept);
   const entranceTimerRef = useRef<number | null>(null);
   const lookbookTimerRef = useRef<number | null>(null);
+
+  // Synchronize state with URL search param
+  useEffect(() => {
+    if (deptParam && DEPARTMENT_CONFIGS[deptParam]) {
+      setActiveDept(deptParam);
+    } else if (!deptParam && !document.body.dataset.a) {
+      setActiveDept(null);
+    }
+  }, [deptParam]);
 
   // Observe body[data-a] changes from MainLayout
   useEffect(() => {
@@ -77,11 +90,20 @@ export function useDepartmentExperience(): DepartmentExperience {
       attributeFilter: ['data-a'],
     });
 
-    // Initial read
-    setActiveDept(document.body.dataset.a || null);
-
     return () => observer.disconnect();
   }, []);
+
+  // Synchronize document.title with active department matching prototype load(name)
+  useEffect(() => {
+    if (activeDept && DEPARTMENT_CONFIGS[activeDept]) {
+      document.title = `LUMIÈRE ${DEPARTMENT_CONFIGS[activeDept].label} – found for you`;
+    } else {
+      document.title = 'LUMIÈRE – Fashion, found for you';
+    }
+    return () => {
+      document.title = 'LUMIÈRE – Fashion, found for you';
+    };
+  }, [activeDept]);
 
   // Handle department transitions with animation sequencing
   useEffect(() => {

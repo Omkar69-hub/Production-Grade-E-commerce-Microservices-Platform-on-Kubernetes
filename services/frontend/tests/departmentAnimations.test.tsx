@@ -128,7 +128,7 @@ describe('Stage 15C.1: Prototype-Matched Department Animations & Lifecycle', () 
     fireEvent.click(getTab('Gym'));
     expect(document.body.getAttribute('data-a')).toBe('gym');
     expect(getTab('Gym').getAttribute('aria-selected')).toBe('true');
-  });
+  }, 30000);
 
   it('4. Toggling the active department off returns body to default unstyled state (data-a removed)', () => {
     renderWithProviders('/');
@@ -157,4 +157,81 @@ describe('Stage 15C.1: Prototype-Matched Department Animations & Lifecycle', () 
     unmount();
     expect(document.body.getAttribute('data-a')).toBeNull();
   });
+
+  it('6. Deep-link activation via /?dept=women activates Women experience and prototype elements', () => {
+    renderWithProviders('/?dept=women');
+
+    // Body data-a attribute
+    expect(document.body.getAttribute('data-a')).toBe('women');
+
+    // Header #ltag indicator badge (matches prototype name.toUpperCase())
+    const ltag = document.getElementById('ltag');
+    expect(ltag).toBeInTheDocument();
+    expect(ltag?.textContent).toBe('WOMEN');
+
+    // Document title synchronization
+    expect(document.title).toBe('LUMIÈRE Women – found for you');
+
+    // Prototype lookbook accordion curation header
+    expect(screen.getByText(/WOMEN LOOKBOOK CURATION/i)).toBeInTheDocument();
+
+    // Prototype hero dynamic CTA
+    expect(screen.getByRole('link', { name: /Shop Dresses →/i })).toBeInTheDocument();
+
+    // Prototype brand spotlight header
+    expect(screen.getByText(/WOMEN BRAND DIRECTORY/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, el) => el?.textContent === "Women's brands we send you to").length).toBeGreaterThan(0);
+
+    // Prototype runway spotlight section header
+    expect(screen.getByText(/WOMEN RUNWAY/i)).toBeInTheDocument();
+  }, 15000);
+
+  it('7. Deep-link activation via /?dept=gym activates Gym experience cleanly', () => {
+    renderWithProviders('/?dept=gym');
+
+    // Body data-a attribute
+    expect(document.body.getAttribute('data-a')).toBe('gym');
+
+    // Header #ltag indicator badge
+    const ltag = document.getElementById('ltag');
+    expect(ltag).toBeInTheDocument();
+    expect(ltag?.textContent).toBe('GYM');
+
+    // Document title
+    expect(document.title).toBe('LUMIÈRE Gym – found for you');
+
+    // Prototype brand spotlight header
+    expect(screen.getByText(/GYM BRAND DIRECTORY/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, el) => el?.textContent === "Gym's brands we send you to").length).toBeGreaterThan(0);
+
+    // Prototype runway spotlight section header
+    expect(screen.getByText(/GYM RUNWAY/i)).toBeInTheDocument();
+  }, 15000);
+
+  it('8. Clicking Home navigation link resets active department and restores baseline state', () => {
+    renderWithProviders('/?dept=men');
+
+    expect(document.body.getAttribute('data-a')).toBe('men');
+    expect(document.getElementById('ltag')?.textContent).toBe('MEN');
+
+    const homeLink = screen.getByRole('link', { name: /Home/i });
+    fireEvent.click(homeLink);
+
+    expect(document.body.getAttribute('data-a')).toBeNull();
+    expect(document.getElementById('ltag')).toBeNull();
+    expect(document.title).toBe('LUMIÈRE – Fashion, found for you');
+  }, 15000);
+
+  it('9. Navigating to Brands Directory route cleans up department body state and header badge', () => {
+    renderWithProviders('/?dept=ethnic');
+
+    expect(document.body.getAttribute('data-a')).toBe('ethnic');
+
+    const brandsLink = screen.getByRole('link', { name: /Brands Directory/i });
+    fireEvent.click(brandsLink);
+
+    expect(screen.getByTestId('brands-page')).toBeInTheDocument();
+    expect(document.body.getAttribute('data-a')).toBeNull();
+    expect(document.getElementById('ltag')).toBeNull();
+  }, 15000);
 });

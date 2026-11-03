@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   /* LUMIÈRE Editorial High-Fashion Tokens (Prototype Aligned) */
@@ -60,6 +60,7 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
   background-color: var(--bg);
   color: var(--ink);
   font-family: 'Instrument Sans', 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -79,9 +80,12 @@ html, body {
 
 /* Accessibility: Skip to Content */
 .skip-to-content {
-  position: absolute;
-  top: -100px;
+  position: fixed;
+  top: 16px;
   left: 16px;
+  transform: translateY(-200%);
+  opacity: 0;
+  pointer-events: none;
   background: var(--cobalt, #3a3ce0);
   color: #ffffff !important;
   padding: 10px 18px;
@@ -91,11 +95,14 @@ html, body {
   font-size: 0.85rem;
   text-decoration: none;
   z-index: 9999;
-  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
   box-shadow: 0 4px 14px rgba(58, 60, 224, 0.35);
 }
-.skip-to-content:focus {
-  top: 16px;
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Luxury Editorial Headings */
@@ -342,6 +349,97 @@ a {
 .dept button[aria-selected="true"] {
   background: var(--ink, #1a1420) !important;
   color: var(--bg, #fbf6ec) !important;
+}
+
+/* Prototype Progress Bar */
+#pg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lime, #d8f25a), var(--cobalt, #3a3ce0));
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: 70;
+  pointer-events: none;
+  transition: transform 0.1s ease-out;
+}
+
+/* Prototype Department Marquee */
+.mq {
+  background: var(--lime, #d8f25a);
+  color: #120f18;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.mq div {
+  display: inline-block;
+  animation: mq 28s linear infinite;
+  padding: 13px 0;
+  font: 600 15px "Instrument Sans", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mq span {
+  margin: 0 26px;
+}
+@keyframes mq {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Prototype SVG Silhouette Fill Rules */
+svg.il {
+  margin-bottom: 2% !important;
+}
+.gm {
+  fill: var(--f, inherit);
+}
+
+/* Prototype Collections Fan-Out Cards */
+.fan {
+  position: relative;
+  height: min(46vw, 340px);
+}
+.fc {
+  position: absolute;
+  top: 0;
+  width: 34%;
+  aspect-ratio: 3/4;
+  border-radius: 20px;
+  display: grid;
+  place-items: end center;
+  overflow: hidden;
+  background: var(--a, #ff5a1f);
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.fc svg {
+  width: 64%;
+  margin-bottom: -4%;
+}
+.fc:nth-child(1) {
+  left: 12%;
+  transform: rotate(-9deg);
+}
+.fc:nth-child(2) {
+  left: 33%;
+  z-index: 2;
+  top: -12px;
+}
+.fc:nth-child(3) {
+  left: 54%;
+  transform: rotate(9deg);
+}
+.fan:hover .fc:nth-child(1) {
+  transform: rotate(-16deg) translateX(-30px);
+}
+.fan:hover .fc:nth-child(3) {
+  transform: rotate(16deg) translateX(30px);
+}
+.fan:hover .fc:nth-child(2) {
+  transform: translateY(-14px) scale(1.05);
 }
 
 /* Prototype Scroll Reveal In-State Reset (except gym) */

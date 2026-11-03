@@ -147,6 +147,9 @@ export const EditorialRunwayTrack: React.FC<EditorialRunwayTrackProps> = ({
       className={`lumiere-editorial-runway ${className}`}
       sx={{
         width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        overflow: 'hidden',
         py: { xs: 2, md: 3 },
       }}
     >
