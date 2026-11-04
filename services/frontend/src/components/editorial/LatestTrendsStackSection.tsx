@@ -65,7 +65,7 @@ export const LatestTrendsStackSection: React.FC = () => {
       aria-label="Latest Trends Stories Behind the Seams"
       sx={{
         py: { xs: 8, md: 14 },
-        bgcolor: '#FFFFFF',
+        bgcolor: 'var(--bg, #fbf6ec)',
         borderBottom: '1px solid var(--line, #e5dccb)',
         position: 'relative',
         overflow: 'hidden'
@@ -178,7 +178,7 @@ export const LatestTrendsStackSection: React.FC = () => {
               sx={{
                 p: 3,
                 borderRadius: '16px',
-                bgcolor: '#FBF7F0',
+                bgcolor: 'var(--card-bg, #FFFFFF)',
                 border: '1px solid var(--line, #e5dccb)'
               }}
             >
@@ -389,7 +389,7 @@ export const LatestTrendsStackSection: React.FC = () => {
                   border: '1px solid transparent',
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    bgcolor: '#FBF7F0',
+                    bgcolor: 'var(--card-bg, #FBF7F0)',
                     borderColor: 'var(--line, #e5dccb)',
                     transform: 'translateX(6px)'
                   }

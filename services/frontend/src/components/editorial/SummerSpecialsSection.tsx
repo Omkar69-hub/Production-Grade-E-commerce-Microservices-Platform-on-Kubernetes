@@ -24,7 +24,7 @@ const SUMMER_ITEMS: SummerItem[] = [
     price: '₹19,200',
     rating: 4.8,
     reviews: 94,
-    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=900',
+    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900',
     sizes: ['XS', 'S', 'M', 'L']
   },
   {
@@ -57,7 +57,7 @@ const SUMMER_ITEMS: SummerItem[] = [
     price: '₹12,800',
     rating: 4.9,
     reviews: 145,
-    imageUrl: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&q=80&w=900',
+    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900',
     sizes: ['S', 'M', 'L', 'XL']
   }
 ];
@@ -92,7 +92,7 @@ export const SummerSpecialsSection: React.FC = () => {
       aria-label="Summer Specials and Trending Today"
       sx={{
         py: { xs: 8, md: 12 },
-        bgcolor: '#FFFFFF',
+        bgcolor: 'var(--bg, #fbf6ec)',
         borderBottom: '1px solid var(--line, #e5dccb)'
       }}
     >
@@ -132,19 +132,29 @@ export const SummerSpecialsSection: React.FC = () => {
               </Typography>
             </Box>
 
-            <Typography
-              variant="h2"
-              sx={{
-                fontFamily: '"Fraunces", Georgia, serif',
-                fontSize: { xs: '2.4rem', sm: '3.2rem', md: '3.8rem' },
-                fontWeight: 500,
-                color: 'var(--ink, #1a1420)',
-                letterSpacing: '-0.025em',
-                lineHeight: 1.08
-              }}
-            >
-              Summer Specials
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 4,
+                  height: { xs: 36, md: 46 },
+                  bgcolor: '#2dd4bf',
+                  borderRadius: '2px'
+                }}
+              />
+              <Typography
+                variant="h2"
+                sx={{
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  fontSize: { xs: '2.4rem', sm: '3.2rem', md: '3.8rem' },
+                  fontWeight: 500,
+                  color: 'var(--ink, #1a1420)',
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1.08
+                }}
+              >
+                Summer Specials
+              </Typography>
+            </Box>
           </Box>
 
           <Box
@@ -222,7 +232,7 @@ export const SummerSpecialsSection: React.FC = () => {
                   color: 'inherit',
                   display: 'flex',
                   flexDirection: 'column',
-                  bgcolor: '#FFFFFF',
+                  bgcolor: 'var(--card-bg, #FFFFFF)',
                   borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
                   overflow: 'hidden',

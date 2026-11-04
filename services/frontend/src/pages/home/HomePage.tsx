@@ -625,7 +625,7 @@ export const HomePage: React.FC = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
-                  bgcolor: '#FFFFFF',
+                  bgcolor: 'var(--card-bg, #FFFFFF)',
                   borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
                   boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
@@ -641,9 +641,9 @@ export const HomePage: React.FC = () => {
                 <Box sx={{ position: 'relative', pt: '96%', overflow: 'hidden', bgcolor: '#F5EFEB' }}>
                   <CardMedia
                     component="img"
-                    image="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900"
+                    image="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900"
                     alt="Women's Haute Couture Collection"
-                    loading="lazy"
+                    loading="eager"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.5s ease',
@@ -654,7 +654,7 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="FEMME ATELIER"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
@@ -687,7 +687,7 @@ export const HomePage: React.FC = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
-                  bgcolor: '#FFFFFF',
+                  bgcolor: 'var(--card-bg, #FFFFFF)',
                   borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
                   boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
@@ -705,7 +705,7 @@ export const HomePage: React.FC = () => {
                     component="img"
                     image="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900"
                     alt="Men's Sartorial Collection"
-                    loading="lazy"
+                    loading="eager"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.5s ease',
@@ -716,7 +716,7 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="HOMME SARTORIAL"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>
@@ -749,7 +749,7 @@ export const HomePage: React.FC = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   textDecoration: 'none',
-                  bgcolor: '#FFFFFF',
+                  bgcolor: 'var(--card-bg, #FFFFFF)',
                   borderRadius: '20px',
                   border: '1px solid var(--line, #e5dccb)',
                   boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
@@ -765,9 +765,9 @@ export const HomePage: React.FC = () => {
                 <Box sx={{ position: 'relative', pt: '88%', overflow: 'hidden', bgcolor: '#F2EDE4' }}>
                   <CardMedia
                     component="img"
-                    image="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=900"
+                    image="https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=900"
                     alt="Kids' Festive & Heritage Collection"
-                    loading="lazy"
+                    loading="eager"
                     sx={{
                       position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.5s ease',
@@ -778,7 +778,7 @@ export const HomePage: React.FC = () => {
                     <Chip
                       label="ENFANT HERITAGE"
                       size="small"
-                      sx={{ bgcolor: 'var(--ink, #1a1420)', color: '#FFF', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
+                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
                     />
                   </Box>
                 </Box>

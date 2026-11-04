@@ -22,6 +22,10 @@
   --announcement-ink: #fbf6ec;
 
   /* Semantic Lumière Tokens */
+  --card-bg: #FFFFFF;
+  --card-ink: #1a1420;
+  --chip-dark-bg: #1a1420;
+  --chip-dark-ink: #FFFFFF;
   --lumiere-bg: var(--bg);
   --lumiere-ink: var(--ink);
   --lumiere-mute: var(--mute);
@@ -62,6 +66,10 @@
     --header-search-ink: #f4eee4;
     --announcement-bg: #120f18;
     --announcement-ink: #f4eee4;
+    --card-bg: #211a27;
+    --card-ink: #f4eee4;
+    --chip-dark-bg: #f4eee4;
+    --chip-dark-ink: #17111b;
   }
 }
 
@@ -78,6 +86,10 @@
   --header-search-ink: #f4eee4;
   --announcement-bg: #120f18;
   --announcement-ink: #f4eee4;
+  --card-bg: #211a27;
+  --card-ink: #f4eee4;
+  --chip-dark-bg: #f4eee4;
+  --chip-dark-ink: #17111b;
 }
 
 html, body {
