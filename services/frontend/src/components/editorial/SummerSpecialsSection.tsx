@@ -1,71 +1,164 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, Container, Typography, IconButton } from '@mui/material';
-import { StarRounded, ShoppingBagOutlined, ArrowForwardOutlined } from '@mui/icons-material';
+import {
+  ShoppingBagOutlined,
+  ArrowForwardOutlined,
+  CheckOutlined,
+  ArrowBackIosNewOutlined,
+  ArrowForwardIosOutlined
+} from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
-interface SummerItem {
+interface EditorialProductItem {
   id: string;
-  category: string;
   title: string;
   subtitle: string;
   price: string;
+  originalPrice?: string;
   rating: number;
-  reviews: number;
   imageUrl: string;
+  bgColor: string;
   sizes: string[];
+  link: string;
 }
 
-const SUMMER_ITEMS: SummerItem[] = [
+const TRENDING_ITEMS: EditorialProductItem[] = [
   {
-    id: 'sum-1',
-    category: 'DRESSES',
+    id: 'tr-1',
     title: 'Lemon Pleated Midi Skirt',
-    subtitle: 'Satin • Sunray accordion pleats',
+    subtitle: 'Satin · Sunray pleats',
     price: '₹19,200',
-    rating: 4.8,
-    reviews: 94,
-    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900',
-    sizes: ['XS', 'S', 'M', 'L']
-  },
-  {
-    id: 'sum-2',
-    category: 'CO-ORDS',
-    title: 'Aqua Crochet Co-ord',
-    subtitle: 'Hand-crocheted cotton • Two-piece',
-    price: '₹20,200',
-    rating: 4.7,
-    reviews: 112,
-    imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=900',
-    sizes: ['S', 'M', 'L']
-  },
-  {
-    id: 'sum-3',
-    category: 'LINEN',
-    title: 'Ultramarine Flare Jeans',
-    subtitle: 'Rigid organic denim • High-rise flare',
-    price: '₹15,200',
+    originalPrice: '₹24,500',
     rating: 4.6,
-    reviews: 86,
-    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=900',
-    sizes: ['XS', 'S', 'M', 'L']
+    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#D8CEF6', // Soft lilac purple
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    link: '/products?item=lemon-pleated-midi-skirt'
   },
   {
-    id: 'sum-4',
-    category: 'DRESSES',
-    title: 'Cobalt Camp-Collar Shirt',
-    subtitle: 'Washed French linen • Boxy silhouette',
-    price: '₹12,800',
-    rating: 4.9,
-    reviews: 145,
-    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900',
-    sizes: ['S', 'M', 'L', 'XL']
+    id: 'tr-2',
+    title: 'Ultramarine Flare Jeans',
+    subtitle: 'Rigid organic denim · High-rise flare',
+    price: '₹15,200',
+    rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#B4DC45', // Vibrant lime
+    sizes: ['26', '27', '28', '29'],
+    link: '/products?item=ultramarine-flare-jeans'
+  },
+  {
+    id: 'tr-3',
+    title: 'Lilac Organza Blouse',
+    subtitle: 'Silk organza · Puff sleeve',
+    price: '₹16,500',
+    rating: 4.7,
+    imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#C8ECE5', // Soft mint cyan
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    link: '/products?item=lilac-organza-blouse'
   }
 ];
 
-export const SummerSpecialsSection: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
+const SUMMER_ITEMS: EditorialProductItem[] = [
+  {
+    id: 'su-1',
+    title: 'Aqua Crochet Co-ord',
+    subtitle: 'Hand-crocheted cotton · Two-piece',
+    price: '₹20,200',
+    rating: 4.6,
+    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#F7D9C4', // Peach blush
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    link: '/products?item=aqua-crochet-co-ord'
+  },
+  {
+    id: 'su-2',
+    title: 'Mint Terry Polo',
+    subtitle: 'Cotton terry · Resort collar',
+    price: '₹11,500',
+    rating: 4.7,
+    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#E75A2A', // Warm terracotta
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    link: '/products?item=mint-terry-polo'
+  },
+  {
+    id: 'su-3',
+    title: 'Riviera Wide-Leg Trousers',
+    subtitle: 'Linen-silk · High-rise, double pleat',
+    price: '₹18,500',
+    rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900',
+    bgColor: '#E8C547', // Warm solar yellow
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    link: '/products?item=riviera-wide-leg-trousers'
+  }
+];
+
+interface EditorialTrackRowProps {
+  title: string;
+  accentColor: string;
+  shopLink: string;
+  shopLabel: string;
+  items: EditorialProductItem[];
+}
+
+const EditorialTrackRow: React.FC<EditorialTrackRowProps> = ({
+  title,
+  accentColor,
+  shopLink,
+  shopLabel,
+  items
+}) => {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isPointerDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftStartRef = useRef(0);
+  const hasMovedRef = useRef(false);
+
   const [activeSizes, setActiveSizes] = useState<Record<string, string>>({});
-  const [cartCount, setCartCount] = useState<Record<string, boolean>>({});
+  const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    isPointerDownRef.current = true;
+    hasMovedRef.current = false;
+    startXRef.current = e.clientX;
+    scrollLeftStartRef.current = trackRef.current ? trackRef.current.scrollLeft : 0;
+  };
+
+  useEffect(() => {
+    const handleWindowPointerMove = (e: PointerEvent) => {
+      if (!isPointerDownRef.current || !trackRef.current) return;
+      const deltaX = e.clientX - startXRef.current;
+      if (Math.abs(deltaX) > 6) {
+        hasMovedRef.current = true;
+      }
+      trackRef.current.scrollLeft = scrollLeftStartRef.current - deltaX;
+    };
+
+    const handleWindowPointerUp = () => {
+      if (isPointerDownRef.current) {
+        isPointerDownRef.current = false;
+      }
+    };
+
+    window.addEventListener('pointermove', handleWindowPointerMove);
+    window.addEventListener('pointerup', handleWindowPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove);
+      window.removeEventListener('pointerup', handleWindowPointerUp);
+    };
+  }, []);
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (hasMovedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      hasMovedRef.current = false;
+    }
+  };
 
   const handleSizeSelect = (itemId: string, size: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,94 +169,65 @@ export const SummerSpecialsSection: React.FC = () => {
   const handleAddToCart = (itemId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCartCount(prev => ({ ...prev, [itemId]: true }));
+    setAddedItems(prev => ({ ...prev, [itemId]: true }));
     setTimeout(() => {
-      setCartCount(prev => ({ ...prev, [itemId]: false }));
+      setAddedItems(prev => ({ ...prev, [itemId]: false }));
     }, 1500);
   };
 
-  const filtered = selectedCategory === 'ALL'
-    ? SUMMER_ITEMS
-    : SUMMER_ITEMS.filter(item => item.category === selectedCategory);
+  const scrollByAmount = (direction: 'left' | 'right') => {
+    if (trackRef.current) {
+      const scrollAmount = direction === 'left' ? -380 : 380;
+      trackRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <Box
-      component="section"
-      aria-label="Summer Specials and Trending Today"
-      sx={{
-        py: { xs: 8, md: 12 },
-        bgcolor: 'var(--bg, #fbf6ec)',
-        borderBottom: '1px solid var(--line, #e5dccb)'
-      }}
-    >
-      <Container maxWidth="xl">
-        {/* Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            mb: 5,
-            gap: 2
-          }}
-        >
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: '#e7c04a'
-                }}
-              />
-              <Typography
-                variant="overline"
-                sx={{
-                  color: 'var(--ink, #1a1420)',
-                  fontWeight: 700,
-                  letterSpacing: '0.18em',
-                  fontSize: '0.78rem',
-                  fontFamily: '"Instrument Sans", sans-serif'
-                }}
-              >
-                SUMMER DROP
-              </Typography>
-            </Box>
+    <Box sx={{ mb: { xs: 8, md: 10 } }}>
+      {/* Header with Vertical Color Bar */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 3.5,
+          gap: 2
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6 }}>
+          {/* Vertical Accent Color Bar (Reference Match) */}
+          <Box
+            sx={{
+              width: 3.5,
+              height: { xs: 32, md: 42 },
+              bgcolor: accentColor,
+              borderRadius: '2px'
+            }}
+          />
+          <Typography
+            variant="h2"
+            sx={{
+              fontFamily: '"Fraunces", Georgia, serif',
+              fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.4rem' },
+              fontWeight: 500,
+              color: 'var(--ink, #1a1420)',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box
-                sx={{
-                  width: 4,
-                  height: { xs: 36, md: 46 },
-                  bgcolor: '#2dd4bf',
-                  borderRadius: '2px'
-                }}
-              />
-              <Typography
-                variant="h2"
-                sx={{
-                  fontFamily: '"Fraunces", Georgia, serif',
-                  fontSize: { xs: '2.4rem', sm: '3.2rem', md: '3.8rem' },
-                  fontWeight: 500,
-                  color: 'var(--ink, #1a1420)',
-                  letterSpacing: '-0.025em',
-                  lineHeight: 1.08
-                }}
-              >
-                Summer Specials
-              </Typography>
-            </Box>
-          </Box>
-
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
           <Box
             component={Link}
-            to="/products?season=summer"
+            to={shopLink}
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 1,
+              gap: 0.8,
               color: 'var(--ink, #1a1420)',
               textDecoration: 'none',
               fontWeight: 700,
@@ -175,225 +239,301 @@ export const SummerSpecialsSection: React.FC = () => {
               '&:hover': { color: 'var(--cobalt, #3a3ce0)' }
             }}
           >
-            <span>SHOP SUMMER</span>
+            <span>{shopLabel}</span>
             <ArrowForwardOutlined sx={{ fontSize: 16 }} />
           </Box>
-        </Box>
 
-        {/* Filter Pills */}
-        <Box sx={{ display: 'flex', gap: 1.2, mb: 4, overflowX: 'auto', pb: 0.5 }}>
-          {['ALL', 'DRESSES', 'CO-ORDS', 'LINEN'].map((cat) => (
-            <Box
-              key={cat}
-              component="button"
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
+          {/* Navigation Controls */}
+          <Box sx={{ display: 'flex', gap: 0.8 }}>
+            <IconButton
+              onClick={() => scrollByAmount('left')}
+              size="small"
+              aria-label={`Scroll ${title} left`}
               sx={{
-                px: 2.2,
-                py: 0.8,
-                borderRadius: '999px',
-                border: '1px solid',
-                borderColor: selectedCategory === cat ? 'var(--ink, #1a1420)' : 'var(--line, #e5dccb)',
-                bgcolor: selectedCategory === cat ? 'var(--ink, #1a1420)' : 'transparent',
-                color: selectedCategory === cat ? '#FFFFFF' : 'var(--ink, #1a1420)',
-                fontSize: '0.74rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                fontFamily: '"Instrument Sans", sans-serif',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: '1px solid var(--line, #e5dccb)',
+                bgcolor: '#FFFFFF',
+                color: 'var(--ink, #1a1420)',
+                '&:hover': { bgcolor: 'var(--ink, #1a1420)', color: '#FFFFFF' }
               }}
             >
-              {cat}
-            </Box>
-          ))}
+              <ArrowBackIosNewOutlined sx={{ fontSize: 12 }} />
+            </IconButton>
+            <IconButton
+              onClick={() => scrollByAmount('right')}
+              size="small"
+              aria-label={`Scroll ${title} right`}
+              sx={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: '1px solid var(--line, #e5dccb)',
+                bgcolor: '#FFFFFF',
+                color: 'var(--ink, #1a1420)',
+                '&:hover': { bgcolor: 'var(--ink, #1a1420)', color: '#FFFFFF' }
+              }}
+            >
+              <ArrowForwardIosOutlined sx={{ fontSize: 12 }} />
+            </IconButton>
+          </Box>
         </Box>
+      </Box>
 
-        {/* Product Cards Grid */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' },
-            gap: 3.5
-          }}
-        >
-          {filtered.map((item) => {
-            const chosenSize = activeSizes[item.id] || item.sizes[0];
-            const isAdded = cartCount[item.id] || false;
+      {/* Horizontal Drag-to-Scroll Track (Reference Match: 3 Split Cards) */}
+      <Box
+        ref={trackRef}
+        onPointerDown={handlePointerDown}
+        onClickCapture={handleClickCapture}
+        sx={{
+          display: 'flex',
+          gap: { xs: 2.5, md: 3.5 },
+          overflowX: 'auto',
+          pb: 3,
+          pt: 1,
+          px: 0.5,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+          cursor: 'grab',
+          '&:active': { cursor: 'grabbing' },
+          userSelect: 'none'
+        }}
+      >
+        {items.map((item) => {
+          const chosenSize = activeSizes[item.id] || item.sizes[item.sizes.length > 2 ? 2 : 0]; // Default M or middle
+          const isAdded = addedItems[item.id] || false;
 
-            return (
+          return (
+            <Box
+              key={item.id}
+              component={Link}
+              to={item.link}
+              sx={{
+                flex: { xs: '0 0 320px', sm: '0 0 370px', md: '0 0 410px' },
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 2, md: 2.8 },
+                p: { xs: 1.5, md: 2 },
+                borderRadius: '20px',
+                bgcolor: 'transparent',
+                transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                '&:hover': {
+                  transform: 'translateY(-4px)'
+                }
+              }}
+            >
+              {/* Left: Portrait Product Photo on Colored Background */}
               <Box
-                key={item.id}
-                component={Link}
-                to={`/products?item=${item.id}`}
                 sx={{
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  bgcolor: 'var(--card-bg, #FFFFFF)',
-                  borderRadius: '20px',
-                  border: '1px solid var(--line, #e5dccb)',
+                  position: 'relative',
+                  width: { xs: 130, sm: 145, md: 160 },
+                  height: { xs: 185, sm: 205, md: 225 },
+                  borderRadius: '16px',
                   overflow: 'hidden',
-                  p: 2,
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 16px 36px rgba(26, 20, 32, 0.08)'
-                  }
+                  bgcolor: item.bgColor,
+                  flexShrink: 0,
+                  boxShadow: '0 8px 24px rgba(26, 20, 32, 0.08)',
+                  border: '1px solid rgba(26, 20, 32, 0.05)'
                 }}
               >
-                {/* Visual Area */}
+                <Box
+                  component="img"
+                  src={item.imageUrl}
+                  alt={item.title}
+                  loading="lazy"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'transform 0.5s ease',
+                    '&:hover': { transform: 'scale(1.05)' }
+                  }}
+                />
+
+                {/* Rating Badge Chip in Corner (Reference Match: ★ 4.6) */}
                 <Box
                   sx={{
-                    position: 'relative',
-                    width: '100%',
-                    pt: '120%',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    bgcolor: '#FAF7F2',
-                    mb: 2
+                    position: 'absolute',
+                    bottom: 10,
+                    left: 10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.4,
+                    px: 1.1,
+                    py: 0.4,
+                    borderRadius: '999px',
+                    bgcolor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(6px)',
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    color: '#1a1420',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={item.imageUrl}
-                    alt={item.title}
-                    loading="lazy"
-                    sx={{
-                      position: 'absolute',
-                      inset: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-
-                  {/* Rating Tag */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 12,
-                      left: 12,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      px: 1.2,
-                      py: 0.4,
-                      borderRadius: '999px',
-                      bgcolor: 'rgba(255, 255, 255, 0.92)',
-                      backdropFilter: 'blur(8px)',
-                      color: '#1a1420',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      fontFamily: '"Instrument Sans", sans-serif'
-                    }}
-                  >
-                    <StarRounded sx={{ color: '#e7c04a', fontSize: 15 }} />
-                    <span>{item.rating}</span>
-                    <span style={{ color: '#888' }}>({item.reviews})</span>
-                  </Box>
+                  <Box component="span" sx={{ color: '#e7c04a', fontSize: '11px', lineHeight: 1 }}>★</Box>
+                  <span>{item.rating}</span>
                 </Box>
+              </Box>
 
-                {/* Info */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Fraunces", Georgia, serif',
-                      fontSize: '1.14rem',
-                      fontWeight: 600,
-                      color: 'var(--ink, #1a1420)',
-                      mb: 0.4
-                    }}
-                  >
-                    {item.title}
-                  </Typography>
+              {/* Right: Product Details & Controls (Reference Match) */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, flexGrow: 1, minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontFamily: '"Fraunces", Georgia, serif',
+                    fontSize: { xs: '1.15rem', md: '1.25rem' },
+                    fontWeight: 600,
+                    color: 'var(--ink, #1a1420)',
+                    lineHeight: 1.25,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {item.title}
+                </Typography>
 
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: 'var(--mute, #6b6173)',
-                      fontFamily: '"Instrument Sans", sans-serif',
-                      fontSize: '0.82rem',
-                      mb: 1.8,
-                      flexGrow: 1
-                    }}
-                  >
-                    {item.subtitle}
-                  </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: '"Instrument Sans", sans-serif',
+                    fontSize: '0.78rem',
+                    color: 'var(--mute, #6b6173)',
+                    lineHeight: 1.35,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {item.subtitle}
+                </Typography>
 
-                  {/* Size Selectors Chips */}
-                  <Box sx={{ display: 'flex', gap: 0.8, mb: 2 }}>
-                    {item.sizes.map((sz) => (
+                {/* Size Selector Buttons Row (Reference Match: XS S [M] L XL) */}
+                <Box sx={{ display: 'flex', gap: 0.6, my: 0.6, flexWrap: 'wrap' }}>
+                  {item.sizes.map((size) => {
+                    const isSelected = chosenSize === size;
+                    return (
                       <Box
-                        key={sz}
+                        key={size}
                         component="button"
                         type="button"
-                        onClick={(e) => handleSizeSelect(item.id, sz, e)}
+                        onClick={(e) => handleSizeSelect(item.id, size, e)}
                         sx={{
-                          px: 1.2,
-                          py: 0.4,
-                          borderRadius: '6px',
+                          px: 1,
+                          py: 0.35,
+                          minWidth: 28,
+                          borderRadius: '4px',
                           border: '1px solid',
-                          borderColor: chosenSize === sz ? 'var(--ink, #1a1420)' : 'var(--line, #e5dccb)',
-                          bgcolor: chosenSize === sz ? 'var(--ink, #1a1420)' : 'transparent',
-                          color: chosenSize === sz ? '#FFFFFF' : 'var(--ink, #1a1420)',
-                          fontSize: '0.66rem',
+                          borderColor: isSelected ? 'var(--ink, #1a1420)' : 'var(--line, #e5dccb)',
+                          bgcolor: isSelected ? 'var(--ink, #1a1420)' : '#FFFFFF',
+                          color: isSelected ? '#FFFFFF' : 'var(--ink, #1a1420)',
+                          fontSize: '0.68rem',
                           fontWeight: 700,
                           fontFamily: '"Instrument Sans", sans-serif',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          '&:hover': {
+                            borderColor: 'var(--ink, #1a1420)'
+                          }
                         }}
                       >
-                        {sz}
+                        {size}
                       </Box>
-                    ))}
-                  </Box>
+                    );
+                  })}
+                </Box>
 
-                  {/* Price & Yellow Round Bag Button */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px solid var(--line, #e5dccb)' }}>
+                {/* Bottom Row: Price + Round Yellow Shopping Bag Button */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.6 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.8 }}>
                     <Typography
-                      variant="subtitle1"
                       sx={{
                         fontFamily: '"Instrument Sans", sans-serif',
                         fontWeight: 700,
-                        color: 'var(--ink, #1a1420)',
-                        fontSize: '1.08rem'
+                        fontSize: { xs: '1.02rem', md: '1.12rem' },
+                        color: 'var(--ink, #1a1420)'
                       }}
                     >
                       {item.price}
                     </Typography>
-
-                    <IconButton
-                      onClick={(e) => handleAddToCart(item.id, e)}
-                      aria-label="Add to bag"
-                      size="small"
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        bgcolor: isAdded ? 'var(--lime, #d8f25a)' : '#E7C04A',
-                        color: '#1a1420',
-                        boxShadow: '0 4px 12px rgba(231, 192, 74, 0.35)',
-                        '&:hover': {
-                          bgcolor: '#d8b038',
-                          transform: 'scale(1.06)'
-                        }
-                      }}
-                    >
-                      <ShoppingBagOutlined sx={{ fontSize: 18 }} />
-                    </IconButton>
+                    {item.originalPrice && (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Instrument Sans", sans-serif',
+                          fontSize: '0.82rem',
+                          color: 'var(--mute, #6b6173)',
+                          textDecoration: 'line-through'
+                        }}
+                      >
+                        {item.originalPrice}
+                      </Typography>
+                    )}
                   </Box>
+
+                  {/* Round Yellow Shopping Bag Icon Button (Reference Match) */}
+                  <IconButton
+                    onClick={(e) => handleAddToCart(item.id, e)}
+                    size="small"
+                    aria-label={`Add ${item.title} to bag`}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      bgcolor: isAdded ? 'var(--lime, #d8f25a)' : '#E7C04A', // Warm golden yellow
+                      color: '#1a1420',
+                      boxShadow: '0 4px 14px rgba(231, 192, 74, 0.35)',
+                      transition: 'transform 0.2s ease, background-color 0.2s ease',
+                      '&:hover': {
+                        bgcolor: '#d4af37',
+                        transform: 'scale(1.08)'
+                      }
+                    }}
+                  >
+                    {isAdded ? <CheckOutlined sx={{ fontSize: 18 }} /> : <ShoppingBagOutlined sx={{ fontSize: 18 }} />}
+                  </IconButton>
                 </Box>
               </Box>
-            );
-          })}
-        </Box>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+};
+
+export const SummerSpecialsSection: React.FC = () => {
+  return (
+    <Box
+      component="section"
+      aria-label="Trending Today and Summer Specials Editorial Tracks"
+      sx={{
+        py: { xs: 8, md: 12 },
+        bgcolor: 'var(--bg, #fbf6ec)',
+        borderBottom: '1px solid var(--line, #e5dccb)'
+      }}
+    >
+      <Container maxWidth="xl">
+        {/* ROW 1: TRENDING TODAY (FRAME 14 REFERENCE MATCH) */}
+        <EditorialTrackRow
+          title="Trending Today"
+          accentColor="#E8572B" // Coral Red
+          shopLink="/products?tag=trending"
+          shopLabel="SHOP TRENDING"
+          items={TRENDING_ITEMS}
+        />
+
+        {/* ROW 2: SUMMER SPECIALS (FRAME 14/15 REFERENCE MATCH) */}
+        <EditorialTrackRow
+          title="Summer Specials"
+          accentColor="#2DD4BF" // Turquoise Teal
+          shopLink="/products?season=summer"
+          shopLabel="SHOP SUMMER"
+          items={SUMMER_ITEMS}
+        />
       </Container>
     </Box>
   );
 };
 
 export default SummerSpecialsSection;
-
