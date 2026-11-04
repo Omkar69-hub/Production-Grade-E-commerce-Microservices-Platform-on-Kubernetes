@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  Box, Container, Typography, Button, Grid, Card, CardMedia, CardContent,
+  Box, Container, Typography, Button, Grid, Card, CardMedia,
   Chip, IconButton, Drawer, Divider
 } from '@mui/material';
 import {
@@ -17,7 +17,7 @@ import { useDepartmentExperience } from '../../hooks/useDepartmentExperience';
 import { PrototypeIllustration } from '../../utils/prototypeIllustrations';
 
 // Video Reference Recreated Sections
-import TheLumiereSignatures from '../../components/editorial/TheLumiereSignatures';
+import DesignerRunwayCarousel from '../../components/editorial/DesignerRunwayCarousel';
 import NewArrivalsTrack from '../../components/editorial/NewArrivalsTrack';
 import EveningEditSection from '../../components/editorial/EveningEditSection';
 import SummerSpecialsSection from '../../components/editorial/SummerSpecialsSection';
@@ -581,228 +581,11 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          SECTION 1 (REFERENCE RECREATION): THE LUMIÈRE SIGNATURES (ARCHED CAROUSEL)
+          FASHION DESIGNER 3D ANIMATED CAROUSEL (REFERENCE IMAGE 3 RECREATION)
+          - Replaces Section 1 (The Lumière Signatures arched cards) and Section 2 (Three Portfolio Cards)
+          - Single unified 3D layered carousel with warm cream background, rich colors, and DRAG interaction
       ========================================================================= */}
-      <TheLumiereSignatures />
-
-      {/* =========================================================================
-          SECTION 2 (USER MANDATED FIX): THREE EDITORIAL PORTFOLIO CARDS
-          - Balanced asymmetric proportions & reduced heights
-          - Captions, titles and tags permanently visible without hiding on hover
-      ========================================================================= */}
-      <Box
-        component="section"
-        className={`rv${dept.heroRevealed ? ' in' : ''}`}
-        sx={{
-          py: { xs: 8, md: 12 },
-          bgcolor: 'var(--bg, #fbf6ec)',
-          borderBottom: '1px solid var(--line, #e5dccb)'
-        }}
-      >
-        <Container maxWidth="xl">
-          <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto', mb: { xs: 5, md: 7 } }}>
-            <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.2em', fontFamily: '"Instrument Sans", sans-serif' }}>
-              DISTINCT CURATIONS
-            </Typography>
-            <Typography variant="h2" sx={{ fontWeight: 400, mt: 1, mb: 1.8, fontFamily: '"Fraunces", Georgia, serif', color: 'var(--ink, #1a1420)' }}>
-              Choose Your Atelier Universe
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'var(--mute, #6b6173)', fontSize: '1.02rem', fontFamily: '"Instrument Sans", sans-serif', lineHeight: 1.6 }}>
-              Explore dedicated fashion portfolios tailored to women’s couture, men’s bespoke sartorial suiting, and exquisite young heritage wear.
-            </Typography>
-          </Box>
-
-          <Grid container spacing={3.5} sx={{ alignItems: 'flex-start' }}>
-
-            {/* 1. WOMEN'S COLLECTION (PORTFOLIO I) - Balanced 96% Proportion */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                component={Link}
-                to="/products?gender=women"
-                className="lumiere-card"
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  textDecoration: 'none',
-                  bgcolor: 'var(--card-bg, #FFFFFF)',
-                  borderRadius: '20px',
-                  border: '1px solid var(--line, #e5dccb)',
-                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
-                  }
-                }}
-              >
-                <Box sx={{ position: 'relative', pt: '96%', overflow: 'hidden', bgcolor: '#F5EFEB' }}>
-                  <CardMedia
-                    component="img"
-                    image="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900"
-                    alt="Women's Haute Couture Collection"
-                    loading="eager"
-                    sx={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.5s ease',
-                      '&:hover': { transform: 'scale(1.04)' }
-                    }}
-                  />
-                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
-                    <Chip
-                      label="FEMME ATELIER"
-                      size="small"
-                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
-                    />
-                  </Box>
-                </Box>
-                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
-                    PORTFOLIO I
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
-                    Women’s Couture & Pret
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
-                    Fluid silk lehengas, structured double-breasted blazers, hand-embroidered anarkalis, and evening gowns.
-                  </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Women's</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* 2. MEN'S COLLECTION (PORTFOLIO II) - Asymmetric Sleek 80% Proportion */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                component={Link}
-                to="/products?gender=men"
-                className="lumiere-card"
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  textDecoration: 'none',
-                  bgcolor: 'var(--card-bg, #FFFFFF)',
-                  borderRadius: '20px',
-                  border: '1px solid var(--line, #e5dccb)',
-                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
-                  }
-                }}
-              >
-                <Box sx={{ position: 'relative', pt: '80%', overflow: 'hidden', bgcolor: '#EFEBE4' }}>
-                  <CardMedia
-                    component="img"
-                    image="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900"
-                    alt="Men's Sartorial Collection"
-                    loading="eager"
-                    sx={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.5s ease',
-                      '&:hover': { transform: 'scale(1.04)' }
-                    }}
-                  />
-                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
-                    <Chip
-                      label="HOMME SARTORIAL"
-                      size="small"
-                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
-                    />
-                  </Box>
-                </Box>
-                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
-                    PORTFOLIO II
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
-                    Men’s Sartorial & Festive
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
-                    Bespoke wool suiting, royal jacquard sherwanis, bandhgalas, raw silk kurtas, and luxury linen overshirts.
-                  </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Men's</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* 3. KIDS' COLLECTION (PORTFOLIO III) - Balanced Compact 88% Proportion */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                component={Link}
-                to="/products?gender=kids"
-                className="lumiere-card"
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  textDecoration: 'none',
-                  bgcolor: 'var(--card-bg, #FFFFFF)',
-                  borderRadius: '20px',
-                  border: '1px solid var(--line, #e5dccb)',
-                  boxShadow: '0 10px 28px rgba(26, 20, 32, 0.05)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 18px 40px rgba(26, 20, 32, 0.12)'
-                  }
-                }}
-              >
-                <Box sx={{ position: 'relative', pt: '88%', overflow: 'hidden', bgcolor: '#F2EDE4' }}>
-                  <CardMedia
-                    component="img"
-                    image="https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=900"
-                    alt="Kids' Festive & Heritage Collection"
-                    loading="eager"
-                    sx={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      transition: 'transform 0.5s ease',
-                      '&:hover': { transform: 'scale(1.04)' }
-                    }}
-                  />
-                  <Box sx={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
-                    <Chip
-                      label="ENFANT HERITAGE"
-                      size="small"
-                      sx={{ bgcolor: 'var(--chip-dark-bg, #1a1420)', color: 'var(--chip-dark-ink, #FFF)', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: '99px' }}
-                    />
-                  </Box>
-                </Box>
-                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <Typography variant="overline" sx={{ color: 'var(--cobalt, #3a3ce0)', fontWeight: 700, letterSpacing: '0.12em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.74rem' }}>
-                    PORTFOLIO III
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 600, my: 0.8, color: 'var(--ink, #1a1420)', fontFamily: '"Fraunces", Georgia, serif', fontSize: '1.35rem' }}>
-                    Kids’ Festive & Heritage
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'var(--mute, #6b6173)', mb: 2.5, lineHeight: 1.6, fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.86rem' }}>
-                    Pure organic cotton kurta sets, festive lehengas for young girls, miniature sherwanis, and celebration wear.
-                  </Typography>
-                  <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', gap: 1, color: 'var(--cobalt, #3a3ce0)', fontWeight: 600 }}>
-                    <Typography variant="button" sx={{ letterSpacing: '0.04em', fontFamily: '"Instrument Sans", sans-serif', fontSize: '0.78rem' }}>Explore Kids'</Typography>
-                    <ArrowForwardOutlined sx={{ fontSize: 15 }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-          </Grid>
-        </Container>
-      </Box>
+      <DesignerRunwayCarousel />
 
       {/* =========================================================================
           SECTION 3 (REFERENCE RECREATION): FRESH OFF THE CUTTING TABLE / NEW ARRIVALS

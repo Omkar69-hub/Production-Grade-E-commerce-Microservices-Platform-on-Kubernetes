@@ -88,9 +88,9 @@ describe('Stage 13A: Homepage Brand Ticker Removal & Auth Defect Fixes', () => {
       expect(screen.getByText(/Direct referrals exclusively to certified brand flagships/i)).toBeInTheDocument();
       expect(screen.getByText(/AUTHENTICITY/i)).toBeInTheDocument();
 
-      // Verify Atelier universe / curations section is intact
-      expect(screen.getAllByText(/Choose Your Atelier Universe/i)[0]).toBeInTheDocument();
-      expect(screen.getByText(/DISTINCT CURATIONS/i)).toBeInTheDocument();
+      // Verify Designer Runway Carousel section is intact
+      expect(screen.getByText(/DRAG, SWIPE OR USE ARROW KEYS TO EXPLORE/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/TARUN TAHILIANI/i)[0]).toBeInTheDocument();
     });
   });
 
