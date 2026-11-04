@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Container, Typography, IconButton } from '@mui/material';
 import {
   ArrowForwardOutlined,
@@ -15,16 +15,6 @@ interface CategoryCapsule {
   imageUrl: string;
   link: string;
   hasArrow?: boolean;
-}
-
-interface SignatureLook {
-  id: string;
-  overline: string;
-  title: string;
-  price: string;
-  bgColor: string;
-  imageUrl: string;
-  link: string;
 }
 
 const CATEGORY_CAPSULES: CategoryCapsule[] = [
@@ -74,93 +64,134 @@ const CATEGORY_CAPSULES: CategoryCapsule[] = [
   }
 ];
 
-const SIGNATURE_LOOKS: SignatureLook[] = [
-  {
-    id: 'sig-1',
-    overline: 'HEAVY SATIN · WRAP MIDI',
-    title: 'Fuchsia Satin Wrap Dress',
-    price: '₹24,500',
-    bgColor: '#1B1D36', // Deep Navy / Midnight
-    imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=fuchsia-satin-wrap-dress'
-  },
-  {
-    id: 'sig-2',
-    overline: 'LINEN-SILK · RELAXED DOUBLE-BREASTED',
-    title: 'Riviera Linen Blazer',
-    price: '₹28,500',
-    bgColor: '#2A38D4', // Royal Blue
-    imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=riviera-linen-blazer'
-  },
-  {
-    id: 'sig-3',
-    overline: 'MULBERRY SILK · BIAS-CUT MIDI',
-    title: 'Cobalt Silk Slip Dress',
-    price: '₹21,800',
-    bgColor: '#994226', // Terracotta / Rust
-    imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=cobalt-silk-slip-dress'
-  },
-  {
-    id: 'sig-4',
-    overline: 'COTTON-SILK BOUCLÉ · CROPPED',
-    title: 'Petal Bouclé Jacket',
-    price: '₹31,500',
-    bgColor: '#7A9E7E', // Sage / Pistachio
-    imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=petal-boucle-jacket'
-  },
-  {
-    id: 'sig-5',
-    overline: 'COTTON VOILE · TIERED',
-    title: 'Poppy Floral Maxi Dress',
-    price: '₹25,800',
-    bgColor: '#5B9EA6', // Soft Teal
-    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=poppy-floral-maxi-dress'
-  },
-  {
-    id: 'sig-6',
-    overline: 'IRISH LINEN · BESPOKE',
-    title: 'Saffron Linen Suit',
-    price: '₹46,800',
-    bgColor: '#D68C45', // Warm Mustard Amber
-    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=900',
-    link: '/products?item=saffron-linen-suit'
-  }
-];
-
 export const TheLumiereSignatures: React.FC = () => {
-  const runwayTrackRef = useRef<HTMLDivElement>(null);
-  const isPointerDownRef = useRef(false);
-  const startXRef = useRef(0);
-  const scrollLeftStartRef = useRef(0);
-  const hasMovedRef = useRef(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
-  // Floating Drag Badge position state
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+
+  // Floating DRAG cursor follower state
   const [dragBadge, setDragBadge] = useState<{ visible: boolean; x: number; y: number }>({
     visible: false,
     x: 0,
     y: 0
   });
 
+  // Drag physics tracking refs
+  const isPointerDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftStartRef = useRef(0);
+  const hasMovedRef = useRef(false);
+
+  // Check user preference for reduced motion
+  const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Staggered reveal observer on viewport entrance
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsRevealed(true);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Update scroll bounds, progress, and parallax offsets
+  const updateScrollState = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const maxScroll = scrollWidth - clientWidth;
+    const progress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+    setScrollProgress(progress);
+    setScrollOffset(scrollLeft);
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    updateScrollState();
+
+    return () => {
+      el.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  // Page vertical scroll drives subtle horizontal translation & parallax
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let rafId: number;
+    const handleWindowScroll = () => {
+      rafId = requestAnimationFrame(() => {
+        const el = sectionRef.current;
+        if (!el || !trackRef.current) return;
+
+        const rect = el.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        // Active while section travels across viewport
+        if (rect.top < windowHeight && rect.bottom > 0) {
+          const totalDistance = windowHeight + rect.height;
+          const currentProgress = (windowHeight - rect.top) / totalDistance;
+          const clamped = Math.max(0, Math.min(1, currentProgress));
+
+          // Only apply scroll-driven nudging if user is not actively dragging
+          if (!isPointerDownRef.current && trackRef.current) {
+            const maxScroll = trackRef.current.scrollWidth - trackRef.current.clientWidth;
+            if (maxScroll > 0) {
+              // Smoothly glide horizontal track proportionally
+              const targetScroll = clamped * (maxScroll * 0.7);
+              trackRef.current.scrollLeft = targetScroll;
+            }
+          }
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [prefersReducedMotion]);
+
+  // Pointer drag-to-scroll handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return;
     isPointerDownRef.current = true;
     hasMovedRef.current = false;
     startXRef.current = e.clientX;
-    scrollLeftStartRef.current = runwayTrackRef.current ? runwayTrackRef.current.scrollLeft : 0;
+    scrollLeftStartRef.current = trackRef.current ? trackRef.current.scrollLeft : 0;
   };
 
   useEffect(() => {
     const handleWindowPointerMove = (e: PointerEvent) => {
-      if (!isPointerDownRef.current || !runwayTrackRef.current) return;
+      if (!isPointerDownRef.current || !trackRef.current) return;
       const deltaX = e.clientX - startXRef.current;
       if (Math.abs(deltaX) > 6) {
         hasMovedRef.current = true;
       }
-      runwayTrackRef.current.scrollLeft = scrollLeftStartRef.current - deltaX;
+      trackRef.current.scrollLeft = scrollLeftStartRef.current - deltaX;
     };
 
     const handleWindowPointerUp = () => {
@@ -200,174 +231,76 @@ export const TheLumiereSignatures: React.FC = () => {
   };
 
   const scroll = (direction: 'left' | 'right') => {
-    if (runwayTrackRef.current) {
+    if (trackRef.current) {
       const scrollAmount = direction === 'left' ? -380 : 380;
-      runwayTrackRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      trackRef.current.scrollBy({ left: scrollAmount, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
   };
 
   return (
     <Box
       component="section"
-      aria-label="The Lumière Signatures & Editorial Portals"
+      ref={sectionRef}
+      aria-label="The Lumière Signatures Arched Categories"
       sx={{
         py: { xs: 8, md: 12 },
-        bgcolor: 'var(--bg, #fbf6ec)',
+        bgcolor: '#17111b', // Dark LUMIÈRE background as requested
+        color: '#FFFFFF',
         position: 'relative',
         overflow: 'hidden',
-        borderBottom: '1px solid var(--line, #e5dccb)'
+        borderBottom: '1px solid rgba(229, 220, 203, 0.12)'
       }}
     >
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-        {/* =========================================================================
-            PART 1: SIX ARCHED CATEGORY CAPSULES (FRAME 0 REFERENCE MATCH)
-        ========================================================================= */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(6, 150px)',
-              sm: 'repeat(6, 175px)',
-              lg: 'repeat(6, 1fr)'
-            },
-            gap: { xs: 2, md: 2.8 },
-            overflowX: { xs: 'auto', lg: 'visible' },
-            pb: { xs: 2.5, lg: 0 },
-            mb: { xs: 8, md: 12 },
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' }
-          }}
-        >
-          {CATEGORY_CAPSULES.map((capsule) => (
-            <Box
-              key={capsule.id}
-              component={Link}
-              to={capsule.link}
-              sx={{
-                textDecoration: 'none',
-                color: 'inherit',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                '&:hover': {
-                  transform: 'translateY(-4px)'
-                }
-              }}
-            >
-              {/* Arched Top Image Portal */}
-              <Box
-                sx={{
-                  position: 'relative',
-                  width: '100%',
-                  pt: '150%', // Statuesque tall arched silhouette
-                  borderRadius: '160px 160px 18px 18px',
-                  overflow: 'hidden',
-                  bgcolor: '#F0ECE1',
-                  boxShadow: '0 12px 28px rgba(26, 20, 32, 0.08)',
-                  border: '1px solid var(--line, #e5dccb)',
-                  mb: 1.6
-                }}
-              >
-                <Box
-                  component="img"
-                  src={capsule.imageUrl}
-                  alt={capsule.label}
-                  loading="lazy"
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                    '&:hover': { transform: 'scale(1.06)' }
-                  }}
-                />
+      {/* Background Watermark Outlined Text */}
+      <Box
+        aria-hidden="true"
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          textAlign: 'center',
+          fontFamily: '"Fraunces", Georgia, serif',
+          fontSize: 'clamp(70px, 15vw, 210px)',
+          fontWeight: 800,
+          color: 'transparent',
+          WebkitTextStroke: '1px rgba(255, 255, 255, 0.06)',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          zIndex: 1,
+          letterSpacing: '0.04em',
+          userSelect: 'none'
+        }}
+      >
+        SIGNATURES • SIGNATURES
+      </Box>
 
-                {/* Optional White Circular Arrow Button inside Arch (Reference Match) */}
-                {capsule.hasArrow && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 12,
-                      right: 12,
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(255, 255, 255, 0.95)',
-                      backdropFilter: 'blur(4px)',
-                      color: 'var(--ink, #1a1420)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
-                      transition: 'transform 0.2s ease',
-                      '&:hover': { transform: 'scale(1.1)' }
-                    }}
-                  >
-                    <NorthEastOutlined sx={{ fontSize: 16 }} />
-                  </Box>
-                )}
-              </Box>
-
-              {/* Capsule Label with Dot */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mt: 0.5 }}>
-                <Box
-                  sx={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    bgcolor: capsule.dotColor,
-                    flexShrink: 0
-                  }}
-                />
-                <Typography
-                  sx={{
-                    fontFamily: '"Instrument Sans", sans-serif',
-                    fontSize: { xs: '0.68rem', sm: '0.74rem' },
-                    fontWeight: 700,
-                    letterSpacing: '0.12em',
-                    color: 'var(--ink, #1a1420)',
-                    textTransform: 'uppercase',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {capsule.label}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-
-        {/* =========================================================================
-            PART 2: ANIMATED HORIZONTAL SIGNATURES RUNWAY (FRAME 2 REFERENCE MATCH)
-        ========================================================================= */}
-        {/* Header Row */}
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 3, mb: { xs: 4, md: 6 } }}>
+        {/* Section Editorial Header */}
         <Box
           sx={{
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
-            mb: 4.5,
             gap: 2
           }}
         >
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.4 }}>
               <Box
                 sx={{
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  bgcolor: '#D92672' // Fuchsia pink dot (Reference Match)
+                  bgcolor: '#D92672' // Magenta fuchsia dot
                 }}
               />
               <Typography
                 variant="overline"
                 sx={{
-                  color: 'var(--ink, #1a1420)',
+                  color: 'rgba(255, 255, 255, 0.82)',
                   fontWeight: 700,
                   letterSpacing: '0.18em',
                   fontSize: '0.78rem',
@@ -384,7 +317,7 @@ export const TheLumiereSignatures: React.FC = () => {
                 fontFamily: '"Fraunces", Georgia, serif',
                 fontSize: { xs: '2.4rem', sm: '3.2rem', md: '3.8rem' },
                 fontWeight: 500,
-                color: 'var(--ink, #1a1420)',
+                color: '#FFFFFF',
                 letterSpacing: '-0.025em',
                 lineHeight: 1.08
               }}
@@ -394,7 +327,7 @@ export const TheLumiereSignatures: React.FC = () => {
                 component="span"
                 sx={{
                   fontStyle: 'italic',
-                  color: '#D92672', // Magenta/fuchsia matching reference video
+                  color: '#D92672',
                   fontFamily: '"Fraunces", Georgia, serif'
                 }}
               >
@@ -412,7 +345,7 @@ export const TheLumiereSignatures: React.FC = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 1,
-                color: 'var(--ink, #1a1420)',
+                color: '#FFFFFF',
                 textDecoration: 'none',
                 fontWeight: 700,
                 fontSize: '0.82rem',
@@ -430,34 +363,36 @@ export const TheLumiereSignatures: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <IconButton
                 onClick={() => scroll('left')}
-                aria-label="Previous signature look"
+                aria-label="Previous signature category"
                 size="small"
                 sx={{
                   width: 42,
                   height: 42,
                   borderRadius: '50%',
-                  border: '1px solid var(--line, #e5dccb)',
-                  bgcolor: '#FFFFFF',
-                  color: 'var(--ink, #1a1420)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  '&:hover': { bgcolor: 'var(--ink, #1a1420)', color: '#FFFFFF' }
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  bgcolor: 'rgba(255, 255, 255, 0.08)',
+                  color: '#FFFFFF',
+                  backdropFilter: 'blur(8px)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { bgcolor: '#FFFFFF', color: '#17111b' }
                 }}
               >
                 <ArrowBackIosNewOutlined sx={{ fontSize: 14 }} />
               </IconButton>
               <IconButton
                 onClick={() => scroll('right')}
-                aria-label="Next signature look"
+                aria-label="Next signature category"
                 size="small"
                 sx={{
                   width: 42,
                   height: 42,
                   borderRadius: '50%',
-                  border: '1px solid var(--line, #e5dccb)',
-                  bgcolor: '#FFFFFF',
-                  color: 'var(--ink, #1a1420)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  '&:hover': { bgcolor: 'var(--ink, #1a1420)', color: '#FFFFFF' }
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  bgcolor: 'rgba(255, 255, 255, 0.08)',
+                  color: '#FFFFFF',
+                  backdropFilter: 'blur(8px)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { bgcolor: '#FFFFFF', color: '#17111b' }
                 }}
               >
                 <ArrowForwardIosOutlined sx={{ fontSize: 14 }} />
@@ -468,46 +403,19 @@ export const TheLumiereSignatures: React.FC = () => {
       </Container>
 
       {/* =========================================================================
-          BACKGROUND WATERMARK OUTLINED TEXT (FRAME 2 REFERENCE MATCH)
-      ========================================================================= */}
-      <Box
-        aria-hidden="true"
-        sx={{
-          position: 'absolute',
-          top: { xs: '65%', md: '62%' },
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '100%',
-          textAlign: 'center',
-          fontFamily: '"Fraunces", Georgia, serif',
-          fontSize: 'clamp(70px, 15vw, 210px)',
-          fontWeight: 800,
-          color: 'transparent',
-          WebkitTextStroke: '1px rgba(229, 220, 203, 0.45)',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-          zIndex: 1,
-          letterSpacing: '0.04em',
-          userSelect: 'none'
-        }}
-      >
-        SIGNATURES • SIGNATURES
-      </Box>
-
-      {/* =========================================================================
-          ANIMATED HORIZONTAL DRAG RUNWAY TRACK (COLOR-BLOCKED RECTANGULAR CARDS)
+          THE SIX ARCHED CATEGORY CARDS — CINEMATIC SCROLLING ANIMATION EXPERIENCE
       ========================================================================= */}
       <Box
         sx={{
           position: 'relative',
-          zIndex: 2,
+          zIndex: 3,
           maxWidth: '100%',
           overflow: 'hidden'
         }}
         onMouseMove={handleTrackMouseMove}
         onMouseLeave={handleTrackMouseLeave}
       >
-        {/* Floating Lime DRAG Badge Cursor Follower (Reference Match) */}
+        {/* Floating Lime DRAG Badge Cursor Follower */}
         {dragBadge.visible && (
           <Box
             sx={{
@@ -527,10 +435,9 @@ export const TheLumiereSignatures: React.FC = () => {
               fontFamily: '"Instrument Sans", sans-serif',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.22)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
               pointerEvents: 'none',
               zIndex: 10,
-              transition: 'opacity 0.2s ease',
               userSelect: 'none'
             }}
           >
@@ -538,17 +445,18 @@ export const TheLumiereSignatures: React.FC = () => {
           </Box>
         )}
 
+        {/* Horizontal Drag-and-Scroll Runway */}
         <Box
-          ref={runwayTrackRef}
+          ref={trackRef}
           onPointerDown={handlePointerDown}
           onClickCapture={handleClickCapture}
           sx={{
             display: 'flex',
-            gap: 3.5,
+            gap: { xs: 2.5, sm: 3, md: 3.8 },
             overflowX: 'auto',
-            pb: 4,
+            pb: 3,
             pt: 1,
-            px: { xs: 2, md: 'calc((100vw - 1536px) / 2 + 24px)' },
+            px: { xs: 2.5, md: 'calc((100vw - 1536px) / 2 + 24px)' },
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
             cursor: 'grab',
@@ -556,126 +464,194 @@ export const TheLumiereSignatures: React.FC = () => {
             userSelect: 'none'
           }}
         >
-          {SIGNATURE_LOOKS.map((look) => (
-            <Box
-              key={look.id}
-              component={Link}
-              to={look.link}
-              sx={{
-                flex: { xs: '0 0 280px', sm: '0 0 320px', md: '0 0 345px' },
-                textDecoration: 'none',
-                color: 'inherit',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                bgcolor: look.bgColor,
-                boxShadow: '0 16px 36px rgba(26, 20, 32, 0.12)',
-                position: 'relative',
-                transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease',
-                '&:hover': {
-                  transform: 'translateY(-6px)',
-                  boxShadow: '0 24px 48px rgba(26, 20, 32, 0.22)'
-                }
-              }}
-            >
-              {/* Card Image Area with Solid Vibrant Colored Backdrop */}
+          {CATEGORY_CAPSULES.map((capsule, index) => {
+            // Calculate subtle inner parallax offset based on horizontal scroll
+            const parallaxShift = (scrollOffset * 0.08) - (index * 12);
+
+            return (
               <Box
+                key={capsule.id}
+                component={Link}
+                to={capsule.link}
                 sx={{
-                  position: 'relative',
-                  width: '100%',
-                  pt: '135%', // Statuesque rectangular proportion
-                  overflow: 'hidden',
-                  bgcolor: look.bgColor
+                  flex: {
+                    xs: '0 0 240px',
+                    sm: '0 0 280px',
+                    md: '0 0 320px',
+                    lg: '0 0 350px'
+                  },
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  // Staggered entrance animation
+                  opacity: isRevealed || prefersReducedMotion ? 1 : 0,
+                  transform: isRevealed || prefersReducedMotion
+                    ? 'translateY(0) scale(1)'
+                    : 'translateY(40px) scale(0.96)',
+                  transition: prefersReducedMotion
+                    ? 'none'
+                    : `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 80}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 80}ms`,
+                  '&:hover .arched-portal': {
+                    transform: 'translateY(-8px)',
+                    boxShadow: `0 24px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px ${capsule.dotColor}`
+                  },
+                  '&:hover .arched-image': {
+                    transform: 'scale(1.08)'
+                  },
+                  '&:hover .arrow-button': {
+                    transform: 'scale(1.12)',
+                    bgcolor: '#FFFFFF',
+                    color: '#17111b'
+                  }
                 }}
               >
+                {/* Arched Top Image Container (Preserved Proportion & Shape) */}
                 <Box
-                  component="img"
-                  src={look.imageUrl}
-                  alt={look.title}
-                  loading="lazy"
+                  className="arched-portal"
                   sx={{
-                    position: 'absolute',
-                    inset: 0,
+                    position: 'relative',
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                    '&:hover': { transform: 'scale(1.05)' }
-                  }}
-                />
-
-                {/* Bottom Card Content Overlay (Internal Inside Card - Reference Match) */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    p: 2.8,
-                    background: 'linear-gradient(to top, rgba(20, 15, 25, 0.92) 0%, rgba(20, 15, 25, 0.5) 60%, transparent 100%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.6,
-                    zIndex: 3
+                    pt: '145%', // Statuesque tall arched silhouette
+                    borderRadius: '160px 160px 20px 20px',
+                    overflow: 'hidden',
+                    bgcolor: '#211a27',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    mb: 2,
+                    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease'
                   }}
                 >
-                  <Typography
+                  {/* Inner Image with Parallax Movement */}
+                  <Box
+                    component="img"
+                    className="arched-image"
+                    src={capsule.imageUrl}
+                    alt={capsule.label}
+                    loading="lazy"
                     sx={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontFamily: '"Instrument Sans", sans-serif',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase'
+                      position: 'absolute',
+                      inset: -15,
+                      width: 'calc(100% + 30px)',
+                      height: 'calc(100% + 30px)',
+                      objectFit: 'cover',
+                      transform: prefersReducedMotion
+                        ? 'none'
+                        : `translateX(${parallaxShift.toFixed(1)}px)`,
+                      transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
-                  >
-                    {look.overline}
-                  </Typography>
+                  />
 
-                  <Typography
+                  {/* Subtle Gradient Shade at Arch Base for Contrast */}
+                  <Box
                     sx={{
-                      fontFamily: '"Fraunces", Georgia, serif',
-                      fontSize: { xs: '1.2rem', md: '1.38rem' },
-                      fontWeight: 500,
-                      color: '#FFFFFF',
-                      lineHeight: 1.2
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(to top, rgba(23, 17, 27, 0.7) 0%, transparent 40%)',
+                      pointerEvents: 'none'
                     }}
-                  >
-                    {look.title}
-                  </Typography>
+                  />
 
+                  {/* Corner Diagonal Arrow Button inside Arch */}
+                  {capsule.hasArrow && (
+                    <Box
+                      className="arrow-button"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 16,
+                        right: 16,
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        bgcolor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(6px)',
+                        color: '#17111b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                        transition: 'transform 0.25s ease, background-color 0.25s ease',
+                        zIndex: 4
+                      }}
+                    >
+                      <NorthEastOutlined sx={{ fontSize: 18 }} />
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Category Label with Colored Indicator Dot */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      bgcolor: capsule.dotColor,
+                      boxShadow: `0 0 10px ${capsule.dotColor}`,
+                      flexShrink: 0
+                    }}
+                  />
                   <Typography
                     sx={{
                       fontFamily: '"Instrument Sans", sans-serif',
-                      fontSize: '1.05rem',
+                      fontSize: { xs: '0.74rem', sm: '0.82rem' },
                       fontWeight: 700,
+                      letterSpacing: '0.14em',
                       color: '#FFFFFF',
-                      mt: 0.4
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    {look.price}
+                    {capsule.label}
                   </Typography>
                 </Box>
               </Box>
-            </Box>
-          ))}
+            );
+          })}
         </Box>
 
-        {/* Drag to Explore Centered Indicator (Reference Match) */}
-        <Box
-          sx={{
-            textAlign: 'center',
-            mt: 2,
-            color: 'var(--mute, #6b6173)',
-            fontFamily: '"Instrument Sans", sans-serif',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase'
-          }}
-        >
-          ← DRAG TO EXPLORE →
+        {/* Drag to Explore Indicator & Horizontal Progress Bar */}
+        <Box sx={{ textAlign: 'center', mt: 3, userSelect: 'none' }}>
+          <Typography
+            sx={{
+              color: 'rgba(255, 255, 255, 0.65)',
+              fontFamily: '"Instrument Sans", sans-serif',
+              fontSize: '0.74rem',
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase'
+            }}
+          >
+            ← DRAG TO EXPLORE →
+          </Typography>
+
+          {/* Sleek Horizontal Progress Bar Indicator */}
+          <Box
+            sx={{
+              width: 140,
+              height: 2.5,
+              bgcolor: 'rgba(255, 255, 255, 0.15)',
+              mx: 'auto',
+              mt: 1.4,
+              borderRadius: '99px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                bgcolor: '#D92672',
+                width: `${Math.max(12, scrollProgress)}%`,
+                borderRadius: '99px',
+                transition: prefersReducedMotion ? 'none' : 'width 0.12s ease-out'
+              }}
+            />
+          </Box>
         </Box>
       </Box>
     </Box>
