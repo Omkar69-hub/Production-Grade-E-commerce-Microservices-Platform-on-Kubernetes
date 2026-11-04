@@ -314,8 +314,8 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${NOTIFICATION_RABBITMQ_USER:-${RABBITMQ_USER:?RABBITMQ_USER must be set}}
       - RABBITMQ_PASSWORD=${NOTIFICATION_RABBITMQ_PASSWORD:-${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}}
-      - SPRING_MAIL_HOST=mailpit
-      - SPRING_MAIL_PORT=1025
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - JAVA_OPTS=${JAVA_OPTS:--XX:+UseZGC -Xms128m -Xmx256m}
     networks:
@@ -398,4 +398,4 @@ volumes:
 
 secrets:
   redis_password:
-    file: ${REDIS_PASSWORD_FILE:-C:/Users/Asus/.lumiere/redis_password.txt}
+    file: ${REDIS_PASSWORD_FILE:?REDIS_PASSWORD_FILE must be set in .env.staging}

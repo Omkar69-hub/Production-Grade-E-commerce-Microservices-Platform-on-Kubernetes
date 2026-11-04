@@ -38,8 +38,10 @@ jobs:
           cache: maven
 
       - name: Build Shared Library
-        working-directory: shared-library
-        run: mvn clean install -DskipTests
+        working-directory: shared
+        run: |
+          mvn -f parent-pom/pom.xml clean install -N
+          mvn -f common-library/pom.xml clean install -DskipTests
 
       - name: Build Microservice (jar)
         working-directory: services/${{ matrix.service }}

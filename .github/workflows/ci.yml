@@ -32,6 +32,8 @@ jobs:
 
       - name: Build React App
         working-directory: services/frontend
+        env:
+          VITE_API_GATEWAY_URL: "/api"
         run: npm run build
 
   build-backend:
@@ -59,8 +61,10 @@ jobs:
           cache: maven
 
       - name: Build Shared Library
-        working-directory: shared-library
-        run: mvn clean install -DskipTests
+        working-directory: shared
+        run: |
+          mvn -f parent-pom/pom.xml clean install -N
+          mvn -f common-library/pom.xml clean install -DskipTests
 
       - name: Build and Test Microservice
         working-directory: services/${{ matrix.service }}
