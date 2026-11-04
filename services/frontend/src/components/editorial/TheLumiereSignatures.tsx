@@ -52,8 +52,7 @@ const CATEGORY_CAPSULES: CategoryCapsule[] = [
     label: 'AFTER DARK',
     dotColor: '#0F4734', // Forest emerald
     imageUrl: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=900',
-    link: '/products?category=evening',
-    hasArrow: true
+    link: '/products?category=evening'
   },
   {
     id: 'cap-6',
@@ -87,11 +86,16 @@ export const TheLumiereSignatures: React.FC = () => {
 
   // Check user preference for reduced motion
   const prefersReducedMotion = typeof window !== 'undefined'
-    && window.matchMedia
+    && typeof window.matchMedia === 'function'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Staggered reveal observer on viewport entrance
+  // Staggered reveal observer on viewport entrance with safe jsdom fallback
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      setIsRevealed(true);
+      return;
+    }
+
     const el = sectionRef.current;
     if (!el) return;
 
@@ -138,7 +142,7 @@ export const TheLumiereSignatures: React.FC = () => {
 
   // Page vertical scroll drives subtle horizontal translation & parallax
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || typeof window === 'undefined') return;
 
     let rafId: number;
     const handleWindowScroll = () => {
@@ -159,8 +163,7 @@ export const TheLumiereSignatures: React.FC = () => {
           if (!isPointerDownRef.current && trackRef.current) {
             const maxScroll = trackRef.current.scrollWidth - trackRef.current.clientWidth;
             if (maxScroll > 0) {
-              // Smoothly glide horizontal track proportionally
-              const targetScroll = clamped * (maxScroll * 0.7);
+              const targetScroll = clamped * (maxScroll * 0.6);
               trackRef.current.scrollLeft = targetScroll;
             }
           }
@@ -185,6 +188,8 @@ export const TheLumiereSignatures: React.FC = () => {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handleWindowPointerMove = (e: PointerEvent) => {
       if (!isPointerDownRef.current || !trackRef.current) return;
       const deltaX = e.clientX - startXRef.current;
@@ -232,7 +237,7 @@ export const TheLumiereSignatures: React.FC = () => {
 
   const scroll = (direction: 'left' | 'right') => {
     if (trackRef.current) {
-      const scrollAmount = direction === 'left' ? -380 : 380;
+      const scrollAmount = direction === 'left' ? -300 : 300;
       trackRef.current.scrollBy({ left: scrollAmount, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
   };
@@ -243,7 +248,7 @@ export const TheLumiereSignatures: React.FC = () => {
       ref={sectionRef}
       aria-label="The Lumière Signatures Arched Categories"
       sx={{
-        py: { xs: 8, md: 12 },
+        py: { xs: 7, md: 10 },
         bgcolor: '#17111b', // Dark LUMIÈRE background as requested
         color: '#FFFFFF',
         position: 'relative',
@@ -251,33 +256,63 @@ export const TheLumiereSignatures: React.FC = () => {
         borderBottom: '1px solid rgba(229, 220, 203, 0.12)'
       }}
     >
-      {/* Background Watermark Outlined Text */}
+      {/* =========================================================================
+          BACKGROUND WATERMARK: OUTLINED "SIGNATURES" WITH SUBTLE MARQUEE GLIDE
+      ========================================================================= */}
       <Box
         aria-hidden="true"
         sx={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '100%',
-          textAlign: 'center',
-          fontFamily: '"Fraunces", Georgia, serif',
-          fontSize: 'clamp(70px, 15vw, 210px)',
-          fontWeight: 800,
-          color: 'transparent',
-          WebkitTextStroke: '1px rgba(255, 255, 255, 0.06)',
+          top: '58%',
+          left: 0,
+          width: '200%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           zIndex: 1,
-          letterSpacing: '0.04em',
-          userSelect: 'none'
+          userSelect: 'none',
+          animation: prefersReducedMotion ? 'none' : 'signaturesWatermarkGlide 60s linear infinite',
+          '@keyframes signaturesWatermarkGlide': {
+            '0%': { transform: 'translate3d(0, -50%, 0)' },
+            '100%': { transform: 'translate3d(-50%, -50%, 0)' }
+          }
         }}
       >
-        SIGNATURES • SIGNATURES
+        <Typography
+          component="span"
+          sx={{
+            fontFamily: '"Fraunces", Georgia, serif',
+            fontSize: 'clamp(70px, 13vw, 180px)',
+            fontWeight: 800,
+            color: 'transparent',
+            WebkitTextStroke: '1px rgba(255, 255, 255, 0.07)',
+            letterSpacing: '0.06em',
+            pr: 6
+          }}
+        >
+          SIGNATURES • SIGNATURES • SIGNATURES • SIGNATURES •&nbsp;
+        </Typography>
+        <Typography
+          component="span"
+          sx={{
+            fontFamily: '"Fraunces", Georgia, serif',
+            fontSize: 'clamp(70px, 13vw, 180px)',
+            fontWeight: 800,
+            color: 'transparent',
+            WebkitTextStroke: '1px rgba(255, 255, 255, 0.07)',
+            letterSpacing: '0.06em',
+            pr: 6
+          }}
+        >
+          SIGNATURES • SIGNATURES • SIGNATURES • SIGNATURES •&nbsp;
+        </Typography>
       </Box>
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 3, mb: { xs: 4, md: 6 } }}>
-        {/* Section Editorial Header */}
+      {/* =========================================================================
+          SECTION EDITORIAL HEADER: "CHOOSE YOUR ATELIER UNIVERSE"
+      ========================================================================= */}
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 3, mb: { xs: 4, md: 5.5 } }}>
         <Box
           sx={{
             display: 'flex',
@@ -287,8 +322,9 @@ export const TheLumiereSignatures: React.FC = () => {
             gap: 2
           }}
         >
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.4 }}>
+          <Box sx={{ maxWidth: 760 }}>
+            {/* Overline with Accent Dot */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
               <Box
                 sx={{
                   width: 8,
@@ -303,7 +339,7 @@ export const TheLumiereSignatures: React.FC = () => {
                   color: 'rgba(255, 255, 255, 0.82)',
                   fontWeight: 700,
                   letterSpacing: '0.18em',
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   fontFamily: '"Instrument Sans", sans-serif'
                 }}
               >
@@ -311,28 +347,34 @@ export const TheLumiereSignatures: React.FC = () => {
               </Typography>
             </Box>
 
+            {/* Restored Original Heading */}
             <Typography
               variant="h2"
               sx={{
                 fontFamily: '"Fraunces", Georgia, serif',
-                fontSize: { xs: '2.4rem', sm: '3.2rem', md: '3.8rem' },
-                fontWeight: 500,
+                fontSize: { xs: '2.1rem', sm: '2.8rem', md: '3.4rem' },
+                fontWeight: 400,
                 color: '#FFFFFF',
-                letterSpacing: '-0.025em',
-                lineHeight: 1.08
+                letterSpacing: '-0.02em',
+                lineHeight: 1.12
               }}
             >
-              Cut to Be{' '}
-              <Box
-                component="span"
-                sx={{
-                  fontStyle: 'italic',
-                  color: '#D92672',
-                  fontFamily: '"Fraunces", Georgia, serif'
-                }}
-              >
-                Remembered
-              </Box>
+              CHOOSE YOUR ATELIER UNIVERSE
+            </Typography>
+
+            {/* Editorial Description */}
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.65)',
+                fontSize: { xs: '0.88rem', md: '0.98rem' },
+                fontFamily: '"Instrument Sans", sans-serif',
+                mt: 1,
+                lineHeight: 1.5,
+                maxWidth: 640
+              }}
+            >
+              Explore dedicated fashion portfolios tailored to women’s couture, men’s bespoke sartorial suiting, and exquisite young heritage wear.
             </Typography>
           </Box>
 
@@ -366,8 +408,8 @@ export const TheLumiereSignatures: React.FC = () => {
                 aria-label="Previous signature category"
                 size="small"
                 sx={{
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   bgcolor: 'rgba(255, 255, 255, 0.08)',
@@ -377,15 +419,15 @@ export const TheLumiereSignatures: React.FC = () => {
                   '&:hover': { bgcolor: '#FFFFFF', color: '#17111b' }
                 }}
               >
-                <ArrowBackIosNewOutlined sx={{ fontSize: 14 }} />
+                <ArrowBackIosNewOutlined sx={{ fontSize: 13 }} />
               </IconButton>
               <IconButton
                 onClick={() => scroll('right')}
                 aria-label="Next signature category"
                 size="small"
                 sx={{
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   bgcolor: 'rgba(255, 255, 255, 0.08)',
@@ -395,7 +437,7 @@ export const TheLumiereSignatures: React.FC = () => {
                   '&:hover': { bgcolor: '#FFFFFF', color: '#17111b' }
                 }}
               >
-                <ArrowForwardIosOutlined sx={{ fontSize: 14 }} />
+                <ArrowForwardIosOutlined sx={{ fontSize: 13 }} />
               </IconButton>
             </Box>
           </Box>
@@ -403,7 +445,7 @@ export const TheLumiereSignatures: React.FC = () => {
       </Container>
 
       {/* =========================================================================
-          THE SIX ARCHED CATEGORY CARDS — CINEMATIC SCROLLING ANIMATION EXPERIENCE
+          THE SIX ARCHED CATEGORY CARDS — REFINED SIZES & CINEMATIC SCROLLING
       ========================================================================= */}
       <Box
         sx={{
@@ -424,13 +466,13 @@ export const TheLumiereSignatures: React.FC = () => {
               top: dragBadge.y,
               left: dragBadge.x,
               transform: 'translate(-50%, -50%)',
-              width: 58,
-              height: 58,
+              width: 52,
+              height: 52,
               borderRadius: '50%',
               bgcolor: 'var(--lime, #d8f25a)',
               color: '#1a1420',
               fontWeight: 800,
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               letterSpacing: '0.1em',
               fontFamily: '"Instrument Sans", sans-serif',
               alignItems: 'center',
@@ -452,10 +494,10 @@ export const TheLumiereSignatures: React.FC = () => {
           onClickCapture={handleClickCapture}
           sx={{
             display: 'flex',
-            gap: { xs: 2.5, sm: 3, md: 3.8 },
+            gap: { xs: 2.2, sm: 2.8, md: 3.2 },
             overflowX: 'auto',
-            pb: 3,
-            pt: 1,
+            pb: 2.5,
+            pt: 0.5,
             px: { xs: 2.5, md: 'calc((100vw - 1536px) / 2 + 24px)' },
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
@@ -465,8 +507,8 @@ export const TheLumiereSignatures: React.FC = () => {
           }}
         >
           {CATEGORY_CAPSULES.map((capsule, index) => {
-            // Calculate subtle inner parallax offset based on horizontal scroll
-            const parallaxShift = (scrollOffset * 0.08) - (index * 12);
+            // Subtle inner parallax offset based on horizontal scroll
+            const parallaxShift = (scrollOffset * 0.06) - (index * 8);
 
             return (
               <Box
@@ -474,11 +516,12 @@ export const TheLumiereSignatures: React.FC = () => {
                 component={Link}
                 to={capsule.link}
                 sx={{
+                  // Refined, smaller card dimensions matching reference proportions (173px x 259px on desktop)
                   flex: {
-                    xs: '0 0 240px',
-                    sm: '0 0 280px',
-                    md: '0 0 320px',
-                    lg: '0 0 350px'
+                    xs: '0 0 148px',
+                    sm: '0 0 162px',
+                    md: '0 0 176px',
+                    lg: '0 0 185px'
                   },
                   textDecoration: 'none',
                   color: 'inherit',
@@ -489,16 +532,16 @@ export const TheLumiereSignatures: React.FC = () => {
                   opacity: isRevealed || prefersReducedMotion ? 1 : 0,
                   transform: isRevealed || prefersReducedMotion
                     ? 'translateY(0) scale(1)'
-                    : 'translateY(40px) scale(0.96)',
+                    : 'translateY(28px) scale(0.97)',
                   transition: prefersReducedMotion
                     ? 'none'
-                    : `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 80}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 80}ms`,
+                    : `opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1) ${index * 70}ms, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1) ${index * 70}ms`,
                   '&:hover .arched-portal': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: `0 24px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px ${capsule.dotColor}`
+                    transform: 'translateY(-6px)',
+                    boxShadow: `0 20px 42px rgba(0, 0, 0, 0.6), 0 0 0 1px ${capsule.dotColor}`
                   },
                   '&:hover .arched-image': {
-                    transform: 'scale(1.08)'
+                    transform: 'scale(1.09)'
                   },
                   '&:hover .arrow-button': {
                     transform: 'scale(1.12)',
@@ -507,20 +550,20 @@ export const TheLumiereSignatures: React.FC = () => {
                   }
                 }}
               >
-                {/* Arched Top Image Container (Preserved Proportion & Shape) */}
+                {/* Arched Top Image Container — Refined Proportions */}
                 <Box
                   className="arched-portal"
                   sx={{
                     position: 'relative',
                     width: '100%',
-                    pt: '145%', // Statuesque tall arched silhouette
-                    borderRadius: '160px 160px 20px 20px',
+                    pt: '148%', // Proportions matching 173px × 259px from reference video
+                    borderRadius: '96px 96px 14px 14px',
                     overflow: 'hidden',
                     bgcolor: '#211a27',
-                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
-                    mb: 2,
-                    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease'
+                    mb: 1.5,
+                    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease'
                   }}
                 >
                   {/* Inner Image with Parallax Movement */}
@@ -532,23 +575,23 @@ export const TheLumiereSignatures: React.FC = () => {
                     loading="lazy"
                     sx={{
                       position: 'absolute',
-                      inset: -15,
-                      width: 'calc(100% + 30px)',
-                      height: 'calc(100% + 30px)',
+                      inset: -10,
+                      width: 'calc(100% + 20px)',
+                      height: 'calc(100% + 20px)',
                       objectFit: 'cover',
                       transform: prefersReducedMotion
                         ? 'none'
                         : `translateX(${parallaxShift.toFixed(1)}px)`,
-                      transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                      transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
                   />
 
-                  {/* Subtle Gradient Shade at Arch Base for Contrast */}
+                  {/* Subtle Gradient Shade at Arch Base */}
                   <Box
                     sx={{
                       position: 'absolute',
                       inset: 0,
-                      background: 'linear-gradient(to top, rgba(23, 17, 27, 0.7) 0%, transparent 40%)',
+                      background: 'linear-gradient(to top, rgba(23, 17, 27, 0.65) 0%, transparent 38%)',
                       pointerEvents: 'none'
                     }}
                   />
@@ -559,10 +602,10 @@ export const TheLumiereSignatures: React.FC = () => {
                       className="arrow-button"
                       sx={{
                         position: 'absolute',
-                        bottom: 16,
-                        right: 16,
-                        width: 36,
-                        height: 36,
+                        bottom: 12,
+                        right: 12,
+                        width: 30,
+                        height: 30,
                         borderRadius: '50%',
                         bgcolor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(6px)',
@@ -570,34 +613,34 @@ export const TheLumiereSignatures: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)',
                         transition: 'transform 0.25s ease, background-color 0.25s ease',
                         zIndex: 4
                       }}
                     >
-                      <NorthEastOutlined sx={{ fontSize: 18 }} />
+                      <NorthEastOutlined sx={{ fontSize: 16 }} />
                     </Box>
                   )}
                 </Box>
 
                 {/* Category Label with Colored Indicator Dot */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.9, mt: 0.2 }}>
                   <Box
                     sx={{
-                      width: 7,
-                      height: 7,
+                      width: 6,
+                      height: 6,
                       borderRadius: '50%',
                       bgcolor: capsule.dotColor,
-                      boxShadow: `0 0 10px ${capsule.dotColor}`,
+                      boxShadow: `0 0 8px ${capsule.dotColor}`,
                       flexShrink: 0
                     }}
                   />
                   <Typography
                     sx={{
                       fontFamily: '"Instrument Sans", sans-serif',
-                      fontSize: { xs: '0.74rem', sm: '0.82rem' },
+                      fontSize: { xs: '0.68rem', sm: '0.74rem' },
                       fontWeight: 700,
-                      letterSpacing: '0.14em',
+                      letterSpacing: '0.12em',
                       color: '#FFFFFF',
                       textTransform: 'uppercase',
                       whiteSpace: 'nowrap'
@@ -612,14 +655,14 @@ export const TheLumiereSignatures: React.FC = () => {
         </Box>
 
         {/* Drag to Explore Indicator & Horizontal Progress Bar */}
-        <Box sx={{ textAlign: 'center', mt: 3, userSelect: 'none' }}>
+        <Box sx={{ textAlign: 'center', mt: 2.5, userSelect: 'none' }}>
           <Typography
             sx={{
-              color: 'rgba(255, 255, 255, 0.65)',
+              color: 'rgba(255, 255, 255, 0.6)',
               fontFamily: '"Instrument Sans", sans-serif',
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               fontWeight: 700,
-              letterSpacing: '0.18em',
+              letterSpacing: '0.16em',
               textTransform: 'uppercase'
             }}
           >
@@ -629,11 +672,11 @@ export const TheLumiereSignatures: React.FC = () => {
           {/* Sleek Horizontal Progress Bar Indicator */}
           <Box
             sx={{
-              width: 140,
+              width: 130,
               height: 2.5,
               bgcolor: 'rgba(255, 255, 255, 0.15)',
               mx: 'auto',
-              mt: 1.4,
+              mt: 1.2,
               borderRadius: '99px',
               overflow: 'hidden',
               position: 'relative'
@@ -646,7 +689,7 @@ export const TheLumiereSignatures: React.FC = () => {
                 top: 0,
                 bottom: 0,
                 bgcolor: '#D92672',
-                width: `${Math.max(12, scrollProgress)}%`,
+                width: `${Math.max(14, scrollProgress)}%`,
                 borderRadius: '99px',
                 transition: prefersReducedMotion ? 'none' : 'width 0.12s ease-out'
               }}

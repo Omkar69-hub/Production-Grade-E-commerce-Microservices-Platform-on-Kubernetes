@@ -89,7 +89,7 @@ describe('Stage 13A: Homepage Brand Ticker Removal & Auth Defect Fixes', () => {
       expect(screen.getByText(/AUTHENTICITY/i)).toBeInTheDocument();
 
       // Verify Atelier universe / curations section is intact
-      expect(screen.getByText(/Choose Your Atelier Universe/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Choose Your Atelier Universe/i)[0]).toBeInTheDocument();
       expect(screen.getByText(/DISTINCT CURATIONS/i)).toBeInTheDocument();
     });
   });
