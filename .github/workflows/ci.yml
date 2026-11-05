@@ -2,9 +2,13 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - preview/stage15b-editorial-discovery
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build-frontend:
